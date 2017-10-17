@@ -1,3 +1,4 @@
 #!/bin/bash
-python main.py
+sh clean.sh
+sh run.sh
 tensorboard --host=localhost --logdir='./log/'
