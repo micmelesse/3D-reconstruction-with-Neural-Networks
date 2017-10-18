@@ -1,1 +1,1 @@
-jupyter nbconvert --to notebook --execute experiments.ipynb
+jupyter nbconvert --to notebook --execute graphs.ipynb
