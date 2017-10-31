@@ -1,3 +1,6 @@
+*.gz
+*.tar
+
 log/*
-MNIST_data/*
 .ipynb_checkpoints/*
+MNIST_data/*
