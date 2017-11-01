@@ -1,34 +1,19 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 import os
-import sys
 import random
 import trimesh
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import tensorflow as tf
-get_ipython().magic('matplotlib inline')
 
+def get_ShapeNet:
 
-# In[2]:
+# default input is sysnet_id for airplanes
+def read_ShapeNet(sysnet_id='02691156'):
+    meshes = []
 
+    for root, subdirs, files in os.walk('./ShapeNet/'+sysnet_id+'/'):
+        for f in files:
+            if (f.endswith('.obj')):
+                meshes.append(root+'/'+f)
 
-meshes=[];
-for root, subdirs, files in os.walk('../ShapeNet/'):
-    for f in files:
-        if (f.endswith('.obj')):
-            meshes.append(root+'/'+f)
-            
-
-
-# In[4]:
-
-
-m= trimesh.load_mesh(meshes[50])
-m[0].show()
-
+    ri = random.randint(0, len(meshes))
+    m = trimesh.load_mesh(meshes[ri])
+    m = m[0] if (type(m) is list) else m
+    m.show()

@@ -3,7 +3,10 @@ import urllib
 import tarfile
 import numpy as np
 
-def read_256():
+
+def get_caltech:
+
+def read_caltech():
     caltech_path='256_ObjectCategories';
     cur_dir=os.listdir();
     if(caltech_path not in  cur_dir):

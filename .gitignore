@@ -5,6 +5,8 @@
 
 log/*
 .ipynb_checkpoints/*
+__pycache__/*
+ImageNet/*
+ShapeNet/*
 MNIST_data/*
 256_ObjectCategories/*
-__pycache__/*
