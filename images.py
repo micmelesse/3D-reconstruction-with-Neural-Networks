@@ -33,7 +33,7 @@ def constuct_input_matrix(im_dir="ImageNet"):
             except OSError:
                 pass;
 
-    return np.stack(ret2)
+    return np.stack(ret)
 
 
 # if __name__ == '__main__':
