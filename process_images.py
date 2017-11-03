@@ -5,7 +5,6 @@ import tarfile
 import zipfile
 import numpy as np
 from PIL import Image
-
 from urllib.request import urlretrieve
 
 
@@ -26,9 +25,10 @@ def constuct_input_matrix(im_dir="ImageNet"):
     for root, subdirs, files in os.walk(im_dir):
         for f in files:
             try:
-                im=np.array(Image.open(root+'/'+f));
+                im=Image.open(root+'/'+f);
+                im=im.resize((255,255))
+                im=np.array(im)
                 if im.ndim is 3:
-                    im.resize((255,255,3))
                     ret.append(im);
             except OSError:
                 pass;
