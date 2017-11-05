@@ -2,7 +2,7 @@
 *.gz
 *.tar
 *.jpg
-
+*.png
 log/*
 .ipynb_checkpoints/*
 __pycache__/*

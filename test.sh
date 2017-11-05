@@ -1,2 +1,4 @@
 #!/bin/bash
-sh run_with_tensorboard.sh
+python process_meshes.py
+read
+clear
