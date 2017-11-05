@@ -6,7 +6,6 @@
 log/*
 .ipynb_checkpoints/*
 __pycache__/*
-WordNet*
 ImageNet/*
 ShapeNet/*
 MNIST_data/*

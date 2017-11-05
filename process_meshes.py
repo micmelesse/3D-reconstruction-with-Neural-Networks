@@ -2,8 +2,6 @@ import os
 import random
 import trimesh
 
-def get_ShapeNet:
-
 # default input is sysnet_id for airplanes
 def read_ShapeNet(sysnet_id='02691156'):
     meshes = []
