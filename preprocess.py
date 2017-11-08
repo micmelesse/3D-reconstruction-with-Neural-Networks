@@ -2,10 +2,11 @@ import os
 import sys
 import random
 import trimesh
-import numpy as np
 import requests
 import tarfile
 import zipfile
+import pyglet.gl as gl
+import numpy as np
 from PIL import Image
 from urllib.request import urlretrieve
 
@@ -52,7 +53,7 @@ def generate_renders_from_mesh(mesh):
         camera_new = np.dot(camera_old, rotate)
 
         scene.graph['camera'] = camera_new
-
+        gl.glDisable(gl.GL_CULL_FACE);
         scene.save_image('Renders/render_' + str(i) + '.png')
 
 
