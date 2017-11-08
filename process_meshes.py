@@ -5,22 +5,30 @@ import trimesh
 import numpy as np
 
 # default input is sysnet_id for airplanes
-def generate_images_from_mesh(mesh):
-    scene = mesh.scene()
-    rotate = trimesh.transformations.rotation_matrix(np.radians(45.0), [0, 1, 0],
-                                                     scene.centroid)
-    for i in range(4):
-        trimesh.constants.log.info('Saving image %d', i)
-        camera_old, _geometry = scene.graph['camera']
-        camera_new = np.dot(camera_old, rotate)
-        scene.graph['camera'] = camera_new
-        file_name = 'render_' + str(i) + '.png'
 
-        if not '-nw' in sys.argv:
-            scene.save_image(file_name,
-                             resolution=np.array([1920, 1080]) * 2)
+
+def generate_images_from_mesh(mesh):
+    print("[generate_images_from_mesh]")
+    scene = mesh.scene();
+    N = random.randint(5, 20);
+    for i in range(N):
+        angle = np.radians(random.randint(30, 60))
+        axis = [random.randint(0, 2), random.randint(
+            0, 2), random.randint(0, 2)]
+        rotate = trimesh.transformations.rotation_matrix(
+            angle, axis, scene.centroid)
+        camera_old, _geometry = scene.graph['camera'];
+        camera_new = np.dot(camera_old, rotate);
+
+        print (scene.graph)
+        sys.exit()
+        scene.graph['camera'] = camera_new;
+
+        scene.save_image('Renders/render_' + str(i) + '.png');
+
 
 def read_ShapeNet(mesh_path='ShapeNet'):
+    print("[read_ShapeNet]")
     meshes = []
     materials = []
 
@@ -36,12 +44,15 @@ def read_ShapeNet(mesh_path='ShapeNet'):
 
 
 if __name__ == '__main__':
-    # trimesh.scene.SceneViewer.toggle_culling()
     meshes, materials = read_ShapeNet()
-    mesh = meshes[10]
-    mesh_list = trimesh.load_mesh(mesh)
-    compund_mesh = mesh_list.pop(0)
-    for m in mesh_list:
-        compund_mesh += m
+    mesh = meshes[random.randint(1, len(meshes))]
+    mesh_obj = trimesh.load_mesh(mesh)
+
+    if (type(mesh_obj)==list):
+        compund_mesh = mesh_obj.pop(0)
+        for m in mesh_obj:
+            compund_mesh += m
+    else:
+        compund_mesh=mesh_obj
 
     generate_images_from_mesh(compund_mesh)
