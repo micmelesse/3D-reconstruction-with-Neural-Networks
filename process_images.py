@@ -20,7 +20,7 @@ def read_images(archive_link):
             tarfile.open(im_path+'.tar').extractall()
 
 
-def constuct_input_matrix(im_dir="ImageNet"):
+def constuct_input_matrix(im_dir):
     ret=[];
     for root, subdirs, files in os.walk(im_dir):
         for f in files:
