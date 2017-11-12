@@ -5,8 +5,8 @@ import trimesh
 import requests
 import tarfile
 import zipfile
-import pyglet.gl as gl
 import numpy as np
+import pyglet.gl as gl
 from PIL import Image
 from urllib.request import urlretrieve
 
@@ -53,8 +53,9 @@ def generate_renders_from_mesh(mesh):
         camera_new = np.dot(camera_old, rotate)
 
         scene.graph['camera'] = camera_new
-        gl.glDisable(gl.GL_CULL_FACE);
+        gl.glDisable(gl.GL_CULL_FACE)
         scene.save_image('Renders/render_' + str(i) + '.png')
+
 
 
 def get_ShapeNet_paths(mesh_dir='ShapeNet'):
@@ -72,9 +73,8 @@ def get_ShapeNet_paths(mesh_dir='ShapeNet'):
 
 
 def main():
-    print("[main]")
+    print("[trimesh_main]")
     mesh_paths, material_paths = get_ShapeNet_paths()
-    print(len(mesh_paths))
     while True:
         try:
             ind = random.randint(0, len(mesh_paths))
