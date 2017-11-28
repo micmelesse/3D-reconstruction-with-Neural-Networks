@@ -6,7 +6,7 @@ import requests
 import tarfile
 import zipfile
 import numpy as np
-import pyglet.gl as gl
+import pyglet
 from PIL import Image
 from urllib.request import urlretrieve
 
@@ -40,10 +40,12 @@ def extract_archives(archive_link):
 
 
 def generate_renders_from_mesh(mesh):
-    print("[generate_images_from_mesh]")
+    print("[generate_renders_from_mesh]")
     os.system("rm -rf Renders/*")
     scene = mesh.scene()
-    N = random.randint(5, 15)
+    # N = random.randint(10, 15)
+    N = 5
+
     for i in range(N):
         angle = np.radians(random.randint(30, 60))
         axis = random.choice([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -53,9 +55,9 @@ def generate_renders_from_mesh(mesh):
         camera_new = np.dot(camera_old, rotate)
 
         scene.graph['camera'] = camera_new
-        gl.glDisable(gl.GL_CULL_FACE)
+        pyglet.gl.glDisable(pyglet.gl.GL_CULL_FACE)
         scene.save_image('Renders/render_' + str(i) + '.png')
-
+    pyglet.app.exit()
 
 
 def get_ShapeNet_paths(mesh_dir='ShapeNet'):

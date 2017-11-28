@@ -1,4 +1,4 @@
 #!/bin/bash
-rm -rf ./log/*
+rm -rf ./logs/*
 rm -f ./*.nbconvert.ipynb
 rm -rf Renders/*
