@@ -1,0 +1,1 @@
+jupyter notebook stop 8888
