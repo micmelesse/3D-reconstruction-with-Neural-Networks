@@ -40,7 +40,7 @@ def load_dataset(dataset_name="ShapeNet"):
 
 
 def write_renders_to_disk(mesh, render_dir="./Renders"):
-    print("[write_renders_to_disk]")
+    print("[write_renders_to_disk] writing to dir {}".format(render_dir))
     scene = mesh.scene()
     N = 5  # random.randint(10, 15)
     if os.path.isdir(render_dir):
@@ -62,9 +62,9 @@ def write_renders_to_disk(mesh, render_dir="./Renders"):
         pyglet.app.exit()
 
 
-def fetch_renders_from_disk(render_dir="Renders"):
+def fetch_renders_from_disk(render_dir="./Renders"):
     if(os.path.isdir(render_dir)):
-        print("[fetch_renders_from_disk]")
+        print("[fetch_renders_from_disk] in dir {}".format(render_dir))
 
         ret = []
         for root, _, files in os.walk(render_dir):
@@ -78,7 +78,7 @@ def fetch_renders_from_disk(render_dir="Renders"):
                         ret.append(im[:, :, 0:3])
                 except:
                     pass
-
+        print("[fetch_renders_from_disk] returning {0} renders from {1}".format(len(ret),render_dir))
         return np.stack(ret)
 
 
