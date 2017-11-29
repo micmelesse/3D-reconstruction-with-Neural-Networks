@@ -3,7 +3,7 @@
 *.tar
 *.jpg
 *.png
-log/*
+logs/*
 .ipynb_checkpoints/*
 __pycache__/*
 ImageNet/*
