@@ -5,8 +5,14 @@ import pyglet
 import trimesh
 import numpy as np
 from PIL import Image
-import tarfile
 import requests
+
+
+def download_dataset(dataset_name="ShapeNet"):
+    if(dataset_name is "ShapeNet"):
+        for synsetId in synsetId_list:
+            download_link = "http://shapenet.cs.stanford.edu/shapenet/"
+            download_link += "obj-zip/ShapeNetCore.v1/{}.zip".format(synsetId)
 
 
 def load_dataset(dataset_name="ShapeNet"):
@@ -78,7 +84,8 @@ def fetch_renders_from_disk(render_dir="./Renders"):
                         ret.append(im[:, :, 0:3])
                 except:
                     pass
-        print("[fetch_renders_from_disk] returning {0} renders from {1}".format(len(ret),render_dir))
+        print("[fetch_renders_from_disk] returning {0} renders from {1}".format(
+            len(ret), render_dir))
         return np.stack(ret)
 
 
