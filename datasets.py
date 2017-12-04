@@ -1,18 +1,40 @@
+from urllib.request import urlopen
+import requests
+import re
 import os
 import sys
 import random
 import pyglet
 import trimesh
 import numpy as np
+import pandas as pd
 from PIL import Image
-import requests
 
 
 def download_dataset(dataset_name="ShapeNet"):
+    print("[download_dataset]")
     if(dataset_name is "ShapeNet"):
-        for synsetId in synsetId_list:
-            download_link = "http://shapenet.cs.stanford.edu/shapenet/"
-            download_link += "obj-zip/ShapeNetCore.v1/{}.zip".format(synsetId)
+        f = requests.get("http://shapenet.cs.stanford.edu/\
+            shapenet/obj-zip/ShapeNetSem.v0/README.txt")
+
+        shapenet_urls = re.findall('https.*', (f.read()).decode("utf-8"))
+        shapenet_metadata = []
+        for s in shapenet_urls:
+            print("[download_dataset] {}".format(s))
+            shapenet_metadata.append(pd.read_csv(s))
+
+        index_metadata = 0
+        id_list = (shapenet_metadata[index_metadata])["wnsynset"]
+        for i, id in enumerate(id_list):
+            try:
+                download_link = "http://shapenet.cs.stanford.edu/shapenet/obj-zip/\
+                ShapeNetCore.v1/{}.zip".format(id)
+                archive_url = requests.get(download_link, stream=True)
+                print(archive_url.headers)
+                print("[download_dataset] downloaded {}".format(id))
+                sys.exit()
+            except:
+                print("[download_dataset] failed to download {} ".format(i))
 
 
 def load_dataset(dataset_name="ShapeNet"):

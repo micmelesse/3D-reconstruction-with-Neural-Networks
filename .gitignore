@@ -8,4 +8,4 @@
 *.jpeg
 events.out.tfevents*
 .ipynb_checkpoints/*
-__pycache__/*
+*/__pycache__/*
