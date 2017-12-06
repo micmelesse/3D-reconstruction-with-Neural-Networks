@@ -1,6 +1,7 @@
 *.tar.gz
 *.gz
 *.tar
+*.zip
 *.png
 *.mtl
 *.obj
