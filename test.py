@@ -1,7 +1,7 @@
-import datasets
+import download
 
 def main():
-    datasets.download_dataset()
+    download.download_dataset()
 
 if __name__ == '__main__':
     main()
