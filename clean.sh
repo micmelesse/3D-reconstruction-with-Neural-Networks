@@ -1,6 +1,6 @@
 #for i in $@
 #!/bin/bash
 # mv ./logs prev
-rm -rf ./logs
+rm -rf ./logs/*
 rm -f ./*.nbconvert.ipynb
-rm -rf ./Renders
+rm -rf ./ShapeNet_Renders/*

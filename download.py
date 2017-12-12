@@ -18,3 +18,14 @@ def download_dataset(dataset_name="ShapeNet"):
                 id)
             #urlretrieve(download_link, "./data/{}.zip" + id)
             #sys.exit()
+
+def extract_archives(archive_link):
+    im_path, im_arc = None, None
+   # archive_url = requests.get(archive_link, stream=True)
+   # print(archive_url.headers)
+    sys.exit()
+
+    cur_dir = os.listdir()
+    if(im_path not in cur_dir):
+        if(im_arc not in cur_dir):
+            tarfile.open(im_path + '.tar').extractall()
