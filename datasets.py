@@ -27,9 +27,10 @@ def load_dataset(dataset_dir="./ShapeNet"):
                     compund_mesh += m
             else:
                 compund_mesh = mesh_obj
+            print("[load_dataset] succeded in loading {}".format(mesh_path))
             write_renders_to_disk(render_path, compund_mesh, 10)
         except:
-            print("[load_dataset] failed to load a mesh")
+            print("[load_dataset] failed to load {}".format(mesh_path))
         
 
     return
