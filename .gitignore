@@ -10,4 +10,4 @@
 events.out.tfevents*
 .ipynb_checkpoints/*
 */__pycache__/*
-ShapeNet*/
+ShapeNet*

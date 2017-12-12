@@ -1,11 +1,12 @@
-import re
+"""deals with data for project"""
 import os
 import sys
-import pyglet
 import random
+import tarfile
+import pyglet
+import trimesh
 import numpy as np
 from PIL import Image
-from trimesh import load_mesh
 
 
 def load_dataset(dataset_dir="./ShapeNet"):
@@ -19,30 +20,26 @@ def load_dataset(dataset_dir="./ShapeNet"):
     pathlist = pathlist_tuple[0]
     for mesh_path in pathlist:
         render_path = str.replace(mesh_path, dataset_dir, render_dir)
-        try:
-            mesh_obj = load_mesh(mesh_path)
-            if isinstance(mesh_obj, list):
-                compund_mesh = mesh_obj.pop(0)
-                for m in mesh_obj:
-                    compund_mesh += m
-            else:
-                compund_mesh = mesh_obj
-            print("[load_dataset] succeded in loading {}".format(mesh_path))
-            write_renders_to_disk(render_path, compund_mesh, 10)
-        except:
-            print("[load_dataset] failed to load {}".format(mesh_path))
-        
 
-    return
+        mesh_obj = trimesh.load_mesh(mesh_path)
+        if isinstance(mesh_obj, list):
+            compund_mesh = mesh_obj.pop(0)
+            for m in mesh_obj:
+                compund_mesh += m
+        else:
+            compund_mesh = mesh_obj
+        # print("[load_dataset] succeded in loading {}".format(mesh_path))
+        write_renders_to_disk(render_path, compund_mesh, 10)
 
 
-def write_renders_to_disk(render_dir, mesh, N=1):
-    print("[write_renders_to_disk] writing to dir {}".format(render_dir))
+def write_renders_to_disk(render_dir, mesh, N=3):
     scene = mesh.scene()
-    if os.path.isdir(render_dir):
-        print("[write_renders_to_disk] existing dir  {}?".format(render_dir))
-        os.system("rm -rf {0}".format(render_dir))
 
+    # print("[write_renders_to_disk] writing to dir {}".format(render_dir))
+    # if os.path.isdir(render_dir):
+    #     print("[write_renders_to_disk] existing dir  {}?".format(render_dir))
+    #     os.system("rm -rf {0}".format(render_dir))
+    # FIXME:
     os.mkdir(render_dir)
 
     for i in range(N):
@@ -82,8 +79,8 @@ def fetch_renders_from_disk(render_dir="./ShapeNet_Renders"):
 
 def extract_archives(archive_link):
     im_path, im_arc = None, None
-    archive_url = requests.get(archive_link, stream=True)
-    print(archive_url.headers)
+   # archive_url = requests.get(archive_link, stream=True)
+   # print(archive_url.headers)
     sys.exit()
 
     cur_dir = os.listdir()
