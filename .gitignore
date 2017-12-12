@@ -1,6 +1,7 @@
 events.out.tfevents*
 .ipynb_checkpoints/*
-*/__pycache__/*
+__pycache__/*
+ShapeNet
 ShapeNet*
 *.tar.gz
 *.gz
@@ -11,3 +12,4 @@ ShapeNet*
 *.obj
 *.jpg
 *.jpeg
+*.pyc
