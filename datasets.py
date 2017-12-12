@@ -1,50 +1,45 @@
-import requests
 import re
 import os
 import sys
-import random
 import pyglet
-import trimesh
+import random
 import numpy as np
-import pandas as pd
 from PIL import Image
-from urllib.request import urlopen, urlretrieve
+from trimesh import load_mesh
 
 
-def load_dataset(dataset_name="ShapeNet"):
-    if(dataset_name is "ShapeNet"):
-        print("[load_dataset] loading {0}".format(dataset_name))
+def load_dataset(dataset_dir="./ShapeNet"):
+    print("[load_dataset] loading from {0}".format(dataset_dir))
+    render_dir = "./ShapeNet_Renders"
+    if os.path.isdir(render_dir):
+        fetch_renders_from_disk()
 
-        # second returned value is ignored
-        mesh_paths, _ = construct_paths(
-            dataset_name, file_types=['.obj', '.mtl'])
+    pathlist_tuple = construct_paths(dataset_dir, file_types=['.obj', '.mtl'])
 
-        while True:
-            try:
-                ind = 0, len(mesh_paths)
-                mesh_obj = trimesh.load_mesh(mesh_paths[ind])
-            except:
-                continue
-            break
+    pathlist = pathlist_tuple[0]
+    for mesh_path in pathlist:
+        render_path = str.replace(mesh_path, dataset_dir, render_dir)
+        try:
+            mesh_obj = load_mesh(mesh_path)
+            if isinstance(mesh_obj, list):
+                compund_mesh = mesh_obj.pop(0)
+                for m in mesh_obj:
+                    compund_mesh += m
+            else:
+                compund_mesh = mesh_obj
+            write_renders_to_disk(render_path, compund_mesh, 10)
+        except:
+            print("[load_dataset] failed to load a mesh")
+        
 
-        if isinstance(mesh_obj, list):
-            compund_mesh = mesh_obj.pop(0)
-            for m in mesh_obj:
-                compund_mesh += m
-        else:
-            compund_mesh = mesh_obj
-        if not os.path.isdir("Renders"):
-            write_renders_to_disk(compund_mesh)
-
-        return fetch_renders_from_disk()
-    else:
-        print("[load_dataset] failed to load {0}".format(dataset_name))
+    return
 
 
-def write_renders_to_disk(mesh, render_dir="./Renders", N=10):
+def write_renders_to_disk(render_dir, mesh, N=1):
     print("[write_renders_to_disk] writing to dir {}".format(render_dir))
     scene = mesh.scene()
     if os.path.isdir(render_dir):
+        print("[write_renders_to_disk] existing dir  {}?".format(render_dir))
         os.system("rm -rf {0}".format(render_dir))
 
     os.mkdir(render_dir)
@@ -59,11 +54,11 @@ def write_renders_to_disk(mesh, render_dir="./Renders", N=10):
 
         scene.graph['camera'] = camera_new
         pyglet.gl.glDisable(pyglet.gl.GL_CULL_FACE)
-        scene.save_image('Renders/render_' + str(i) + '.png')
+        scene.save_image('{}/render_'.format(render_dir) + str(i) + '.png')
         pyglet.app.exit()
 
 
-def fetch_renders_from_disk(render_dir="./Renders"):
+def fetch_renders_from_disk(render_dir="./ShapeNet_Renders"):
     if(os.path.isdir(render_dir)):
         print("[fetch_renders_from_disk] in dir {}".format(render_dir))
 
@@ -84,19 +79,6 @@ def fetch_renders_from_disk(render_dir="./Renders"):
         return np.stack(ret)
 
 
-def construct_paths(data_dir, file_types):
-    print("[construct_paths] for dir {}".format(data_dir))
-    paths = [[] for _ in range(len(file_types))]
-
-    for root, _, files in os.walk(data_dir):
-        for f_name in files:
-            for i, f_type in enumerate(file_types):
-                if (f_name.endswith(f_type)):
-                    (paths[i]).append(root + '/' + f_name)
-
-    return tuple(paths)
-
-
 def extract_archives(archive_link):
     im_path, im_arc = None, None
     archive_url = requests.get(archive_link, stream=True)
@@ -107,3 +89,19 @@ def extract_archives(archive_link):
     if(im_path not in cur_dir):
         if(im_arc not in cur_dir):
             tarfile.open(im_path + '.tar').extractall()
+
+
+def construct_paths(data_dir, file_types):
+    print("[construct_paths] parsing dir {} for {}".format(data_dir, file_types))
+    paths = [[] for _ in range(len(file_types))]
+
+    for root, _, files in os.walk(data_dir):
+        for f_name in files:
+            for i, f_type in enumerate(file_types):
+                if f_name.endswith(f_type):
+                    (paths[i]).append(root + '/' + f_name)
+    return tuple(paths)
+
+
+if __name__ == '__main__':
+    load_dataset()
