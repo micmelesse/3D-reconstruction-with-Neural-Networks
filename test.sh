@@ -1,2 +1,3 @@
 #!/bin/bash
-python test.py
+sh run.sh
+sh tensorboard.sh

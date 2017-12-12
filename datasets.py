@@ -21,7 +21,7 @@ def load_dataset(dataset_name="ShapeNet"):
 
         while True:
             try:
-                ind = random.randint(0, len(mesh_paths))
+                ind = 0, len(mesh_paths)
                 mesh_obj = trimesh.load_mesh(mesh_paths[ind])
             except:
                 continue
@@ -41,10 +41,9 @@ def load_dataset(dataset_name="ShapeNet"):
         print("[load_dataset] failed to load {0}".format(dataset_name))
 
 
-def write_renders_to_disk(mesh, render_dir="./Renders"):
+def write_renders_to_disk(mesh, render_dir="./Renders", N=10):
     print("[write_renders_to_disk] writing to dir {}".format(render_dir))
     scene = mesh.scene()
-    N = 10  # random.randint(10, 15)
     if os.path.isdir(render_dir):
         os.system("rm -rf {0}".format(render_dir))
 
