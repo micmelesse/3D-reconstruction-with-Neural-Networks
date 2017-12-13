@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 
-def load_dataset(dataset_dir="./ShapeNet", N=None):
+def load_dataset(dataset_dir, num_of_examples=None):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
     ret = []
@@ -17,7 +17,7 @@ def load_dataset(dataset_dir="./ShapeNet", N=None):
     # DANGER, RANDOM
     pathlist = pathlist_tuple[0]
     random.shuffle(pathlist)
-    pathlist = pathlist[:N] if N is not None else pathlist
+    pathlist = pathlist[:num_of_examples] if num_of_examples is not None else pathlist
     for mesh_path in pathlist:
         if not os.path.isfile(mesh_path):
             continue
@@ -47,14 +47,14 @@ def load_dataset(dataset_dir="./ShapeNet", N=None):
     return ret
 
 
-def write_renders_to_disk(mesh, render_path, N=5):
+def write_renders_to_disk(mesh, render_path, render_count=5):
     print("[write_renders_to_disk] writing renders to {0} ... ".format(
         render_path))
     # FIXME: stupid but clean
     os.system("rm -rf {}".format(render_path))
     os.makedirs(render_path)
     scene = mesh.scene()
-    for i in range(N):
+    for i in range(render_count):
         angle = np.radians(random.randint(30, 60))
         axis = random.choice([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         rotate = trimesh.transformations.rotation_matrix(
@@ -105,4 +105,4 @@ def construct_paths(data_dir, file_types):
 
 
 if __name__ == '__main__':
-    load_dataset(N=1)
+    load_dataset(num_of_examples=1)
