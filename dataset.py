@@ -64,7 +64,7 @@ def write_renders_to_disk(mesh, render_path, render_count=5):
         scene.graph['camera'] = camera_new
         # backfaces culled if using original trimesh package
         scene.save_image(
-            '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i))
+            '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i), resolution=(640, 480))
     print("... done")
     return
 
@@ -105,4 +105,4 @@ def construct_paths(data_dir, file_types):
 
 
 if __name__ == '__main__':
-    load_dataset(num_of_examples=1)
+    load_dataset("./ShapeNet", num_of_examples=1)

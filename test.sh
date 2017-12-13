@@ -1,2 +1,4 @@
 #!/bin/bash
-python datasets.py
+sh clear.sh
+jupyter nbconvert --to notebook --execute demo.ipynb
+sh tensorboard.sh
