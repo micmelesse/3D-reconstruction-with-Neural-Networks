@@ -14,7 +14,9 @@ def load_dataset(dataset_dir="./ShapeNet", N=None):
 
     ret = []
     pathlist_tuple = construct_paths(dataset_dir, file_types=['.obj', '.mtl'])
+    # DANGER, RANDOM
     pathlist = pathlist_tuple[0]
+    random.shuffle(pathlist)
     pathlist = pathlist[:N] if N is not None else pathlist
     for mesh_path in pathlist:
         if not os.path.isfile(mesh_path):
@@ -33,22 +35,24 @@ def load_dataset(dataset_dir="./ShapeNet", N=None):
             compund_mesh = mesh_obj
 
         render_dir = "./ShapeNet_Renders"
-        render_path_tuple = os.path.split(
+        render_path = os.path.dirname(
             str.replace(mesh_path, dataset_dir, render_dir))
 
-        if os.path.isdir(render_path_tuple[0]) and os.listdir(render_path_tuple[0]) != []:
-            ret.append(fetch_renders_from_disk(render_path_tuple[0]))
+        if os.path.isdir(render_path) and os.listdir(render_path) != []:
+            ret.append(fetch_renders_from_disk(render_path))
         else:
-            write_renders_to_disk(compund_mesh, render_path_tuple, 10)
-            ret.append(fetch_renders_from_disk(render_path_tuple[0]))
+            write_renders_to_disk(compund_mesh, render_path, 10)
+            ret.append(fetch_renders_from_disk(render_path))
 
     return ret
 
 
-def write_renders_to_disk(mesh, render_path_tuple, N=5):
+def write_renders_to_disk(mesh, render_path, N=5):
+    print("[write_renders_to_disk] writing renders to {0} ... ".format(
+        render_path))
     # FIXME: stupid but clean
-    os.system("rm -rf {}".format(render_path_tuple[0]))
-    os.makedirs(render_path_tuple[0])
+    os.system("rm -rf {}".format(render_path))
+    os.makedirs(render_path)
     scene = mesh.scene()
     for i in range(N):
         angle = np.radians(random.randint(30, 60))
@@ -60,10 +64,14 @@ def write_renders_to_disk(mesh, render_path_tuple, N=5):
         scene.graph['camera'] = camera_new
         # backfaces culled if using original trimesh package
         scene.save_image(
-            '{0}/{1}_{2}.png'.format(render_path_tuple[0], os.path.splitext(render_path_tuple[1]), i))
+            '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i))
+    print("... done")
+    return
 
 
 def fetch_renders_from_disk(render_path):
+    print("[fetch_renders_from_disk] fetching renders from {0} ... ".format(
+        render_path))
     ret = []
     for root, _, files in os.walk(render_path):
         for f_name in files:
@@ -77,11 +85,14 @@ def fetch_renders_from_disk(render_path):
             except Exception as e:
                 print(e)
                 continue
+
+    print("... done")
     return np.stack(ret)
 
 
 def construct_paths(data_dir, file_types):
-    print("[construct_paths] parsing dir {} for {}".format(data_dir, file_types))
+    print("[construct_paths] parsing dir {} for {} ...".format(
+        data_dir, file_types))
     paths = [[] for _ in range(len(file_types))]
 
     for root, _, files in os.walk(data_dir):
@@ -89,8 +100,9 @@ def construct_paths(data_dir, file_types):
             for i, f_type in enumerate(file_types):
                 if f_name.endswith(f_type):
                     (paths[i]).append(root + '/' + f_name)
+    print("... done")
     return tuple(paths)
 
 
 if __name__ == '__main__':
-    load_dataset(N=5)
+    load_dataset(N=1)
