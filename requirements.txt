@@ -1,2 +1,2 @@
-https://github.com/micmelesse/trimesh.git
-https://github.com/micmelesse/keras.git
+git+https://github.com/micmelesse/trimesh.git
+git+https://github.com/micmelesse/keras.git
