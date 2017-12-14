@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 
-def load_dataset(dataset_dir, num_of_examples=None):
+def load_dataset(dataset_dir, render_count, num_of_examples=None):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
     ret = []
@@ -41,13 +41,13 @@ def load_dataset(dataset_dir, num_of_examples=None):
         if os.path.isdir(render_path) and os.listdir(render_path) != []:
             ret.append(fetch_renders_from_disk(render_path))
         else:
-            write_renders_to_disk(compund_mesh, render_path, 10)
+            write_renders_to_disk(compund_mesh, render_path, render_count)
             ret.append(fetch_renders_from_disk(render_path))
 
     return ret
 
 
-def write_renders_to_disk(mesh, render_path, render_count=5):
+def write_renders_to_disk(mesh, render_path, render_count=10):
     print("[write_renders_to_disk] writing renders to {0} ... ".format(
         render_path))
     # FIXME: stupid but clean
@@ -55,7 +55,7 @@ def write_renders_to_disk(mesh, render_path, render_count=5):
     os.makedirs(render_path)
     scene = mesh.scene()
     for i in range(render_count):
-        angle = np.radians(random.randint(30, 60))
+        angle = np.radians(random.randint(15, 30))
         axis = random.choice([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         rotate = trimesh.transformations.rotation_matrix(
             angle, axis, scene.centroid)
