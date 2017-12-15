@@ -1,0 +1,6 @@
++ echo Logging output to ./output/GRUNet/default_model/log.2017-12-15_00-11-09
+Logging output to ./output/GRUNet/default_model/log.2017-12-15_00-11-09
++ export 'THEANO_FLAGS=floatX=float32,device=gpu,assert_no_cpu_op='\''raise'\'''
++ THEANO_FLAGS='floatX=float32,device=gpu,assert_no_cpu_op='\''raise'\'''
++ python main.py --batch-size 24 --iter 60000 --out ./output/GRUNet/default_model --model GRUNet
+python: can't open file 'main.py': [Errno 2] No such file or directory
