@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 
-def load_dataset(dataset_dir, render_count, num_of_examples=None):
+def load_dataset(dataset_dir, render_count=1, num_of_examples=None):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
     ret = []
