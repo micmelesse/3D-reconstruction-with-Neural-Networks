@@ -77,7 +77,7 @@ def fetch_renders_from_disk(render_path):
         for f_name in files:
             try:
                 im = Image.open(root + '/' + f_name)
-                im = im.resize((512, 512))
+                im = im.resize((127, 127))
                 im = np.array(im)
                 if im.ndim is 3:
                     # remove alpha channel
