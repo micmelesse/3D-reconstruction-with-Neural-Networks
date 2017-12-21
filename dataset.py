@@ -85,7 +85,7 @@ def write_renders_to_disk(mesh, render_path, render_count=10):
         scene.graph['camera'] = camera_new
         # backfaces culled if using original trimesh package
         scene.save_image(
-            '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i), resolution=(640, 480))
+            '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i), resolution=(127, 127))
     
     return
 
@@ -103,13 +103,12 @@ def fetch_renders_from_disk(render_path="ShapeNetRendering", num_of_examples=Non
     for png_file in pathlist:
         try:
             im = Image.open(png_file)
-            im = im.resize((127, 127))
             im = np.array(im)
             if im.ndim is 3:
                 # remove alpha channel
                 png_list.append(im[:, :, 0:3])
         except Exception as e:
-            print("[fetch_renders_from_disk] {0} ... ".format(
+            print("[fetch_renders_from_disk] failed on {0} ... ".format(
                 render_path))
             continue
 
@@ -131,6 +130,3 @@ def construct_path_lists(data_dir, file_types):
     return tuple(paths)
 
 
-if __name__ == '__main__':
-    # load_dataset("./ShapeNet", num_of_examples=1)
-    load_labels()
