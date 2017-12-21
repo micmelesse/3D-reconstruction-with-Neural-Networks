@@ -15,7 +15,8 @@ def load_dataset(dataset_dir="ShapeNetRendering", num_of_examples=None):
 
 
 def load_labels(dataset_dir="ShapeNetVox32", num_of_examples=None):
-    pathlist_tuple = construct_path_lists(dataset_dir, file_types=['.binvox'])
+    pathlist_tuple = construct_path_lists(
+        dataset_dir, file_types=['.binvox'])
     pathlist = pathlist_tuple[0]
     random.shuffle(pathlist)
     pathlist = pathlist[:num_of_examples] if num_of_examples is not None else pathlist
@@ -23,15 +24,15 @@ def load_labels(dataset_dir="ShapeNetVox32", num_of_examples=None):
 
     for voxel_path in pathlist:
         with open(voxel_path, 'rb') as f:
-            voxel_list.append(binvox_rw.read_as_3d_array(f))
+            voxel_list.append(
+                (binvox_rw.read_as_3d_array(f)).data.astype(float))
 
-    return voxel_list
+    return np.stack(voxel_list)
 
 
-def render_dataset(dataset_dir="ShapeNet",num_of_examples=None,render_count=24):
+def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
-    
     pathlist_tuple = construct_path_lists(
         dataset_dir, file_types=['.obj', '.mtl'])
     pathlist = pathlist_tuple[0]  # DANGER, RANDOM
@@ -86,7 +87,7 @@ def write_renders_to_disk(mesh, render_path, render_count=10):
         # backfaces culled if using original trimesh package
         scene.save_image(
             '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i), resolution=(127, 127))
-    
+
     return
 
 
@@ -112,7 +113,6 @@ def fetch_renders_from_disk(render_path="ShapeNetRendering", num_of_examples=Non
                 render_path))
             continue
 
-    
     return np.stack(png_list)
 
 
@@ -126,7 +126,5 @@ def construct_path_lists(data_dir, file_types):
             for i, f_type in enumerate(file_types):
                 if f_name.endswith(f_type):
                     (paths[i]).append(root + '/' + f_name)
-    
+
     return tuple(paths)
-
-
