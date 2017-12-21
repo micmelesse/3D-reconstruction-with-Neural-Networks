@@ -117,8 +117,7 @@ def fetch_renders_from_disk(render_path="ShapeNetRendering", num_of_examples=Non
 
 
 def construct_path_lists(data_dir, file_types):
-    print("[construct_path_lists] parsing dir {} for {} ...".format(
-        data_dir, file_types))
+    #print("[construct_path_lists] parsing dir {} for {} ...".format(data_dir, file_types))
     paths = [[] for _ in range(len(file_types))]
 
     for root, _, files in os.walk(data_dir):
@@ -126,5 +125,8 @@ def construct_path_lists(data_dir, file_types):
             for i, f_type in enumerate(file_types):
                 if f_name.endswith(f_type):
                     (paths[i]).append(root + '/' + f_name)
+
+    if len(file_types) == 1:
+        return paths[0]
 
     return tuple(paths)
