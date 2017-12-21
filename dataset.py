@@ -5,19 +5,40 @@ import random
 import tarfile
 import pyglet
 import trimesh
+import binvox_rw
 import numpy as np
 from PIL import Image
 
 
-def load_dataset(dataset_dir, render_count=1, num_of_examples=None):
-    print("[load_dataset] loading from {0}".format(dataset_dir))
+def load_dataset(dataset_dir="ShapeNetRendering", num_of_examples=None):
+    return fetch_renders_from_disk(dataset_dir, num_of_examples)
 
-    ret = []
-    pathlist_tuple = construct_paths(dataset_dir, file_types=['.obj', '.mtl'])
-    # DANGER, RANDOM
+
+def load_labels(dataset_dir="ShapeNetVox32", num_of_examples=None):
+    pathlist_tuple = construct_path_lists(dataset_dir, file_types=['.binvox'])
     pathlist = pathlist_tuple[0]
     random.shuffle(pathlist)
     pathlist = pathlist[:num_of_examples] if num_of_examples is not None else pathlist
+    voxel_list = []
+
+    for voxel_path in pathlist:
+        with open(voxel_path, 'rb') as f:
+            voxel_list.append(binvox_rw.read_as_3d_array(f))
+
+    return voxel_list
+
+
+def render_dataset(dataset_dir="ShapeNet",num_of_examples=None,render_count=24):
+    print("[load_dataset] loading from {0}".format(dataset_dir))
+
+    
+    pathlist_tuple = construct_path_lists(
+        dataset_dir, file_types=['.obj', '.mtl'])
+    pathlist = pathlist_tuple[0]  # DANGER, RANDOM
+    random.shuffle(pathlist)
+    pathlist = pathlist[:num_of_examples] if num_of_examples is not None else pathlist
+    render_list = []
+
     for mesh_path in pathlist:
         if not os.path.isfile(mesh_path):
             continue
@@ -39,12 +60,12 @@ def load_dataset(dataset_dir, render_count=1, num_of_examples=None):
             str.replace(mesh_path, dataset_dir, render_dir))
 
         if os.path.isdir(render_path) and os.listdir(render_path) != []:
-            ret.append(fetch_renders_from_disk(render_path))
+            render_list.append(fetch_renders_from_disk(render_path))
         else:
             write_renders_to_disk(compund_mesh, render_path, render_count)
-            ret.append(fetch_renders_from_disk(render_path))
+            render_list.append(fetch_renders_from_disk(render_path))
 
-    return ret
+    return render_list
 
 
 def write_renders_to_disk(mesh, render_path, render_count=10):
@@ -65,33 +86,39 @@ def write_renders_to_disk(mesh, render_path, render_count=10):
         # backfaces culled if using original trimesh package
         scene.save_image(
             '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i), resolution=(640, 480))
-    print("... done")
+    
     return
 
 
-def fetch_renders_from_disk(render_path):
+def fetch_renders_from_disk(render_path="ShapeNetRendering", num_of_examples=None):
     print("[fetch_renders_from_disk] fetching renders from {0} ... ".format(
         render_path))
-    ret = []
-    for root, _, files in os.walk(render_path):
-        for f_name in files:
-            try:
-                im = Image.open(root + '/' + f_name)
-                im = im.resize((127, 127))
-                im = np.array(im)
-                if im.ndim is 3:
-                    # remove alpha channel
-                    ret.append(im[:, :, 0:3])
-            except Exception as e:
-                print(e)
-                continue
 
-    print("... done")
-    return np.stack(ret)
+    pathlist_tuple = construct_path_lists(render_path, file_types=['.png'])
+    pathlist = pathlist_tuple[0]
+    random.shuffle(pathlist)
+    pathlist = pathlist[:num_of_examples] if num_of_examples is not None else pathlist
+    png_list = []
+
+    for png_file in pathlist:
+        try:
+            im = Image.open(png_file)
+            im = im.resize((127, 127))
+            im = np.array(im)
+            if im.ndim is 3:
+                # remove alpha channel
+                png_list.append(im[:, :, 0:3])
+        except Exception as e:
+            print("[fetch_renders_from_disk] {0} ... ".format(
+                render_path))
+            continue
+
+    
+    return np.stack(png_list)
 
 
-def construct_paths(data_dir, file_types):
-    print("[construct_paths] parsing dir {} for {} ...".format(
+def construct_path_lists(data_dir, file_types):
+    print("[construct_path_lists] parsing dir {} for {} ...".format(
         data_dir, file_types))
     paths = [[] for _ in range(len(file_types))]
 
@@ -100,9 +127,10 @@ def construct_paths(data_dir, file_types):
             for i, f_type in enumerate(file_types):
                 if f_name.endswith(f_type):
                     (paths[i]).append(root + '/' + f_name)
-    print("... done")
+    
     return tuple(paths)
 
 
 if __name__ == '__main__':
-    load_dataset("./ShapeNet", num_of_examples=1)
+    # load_dataset("./ShapeNet", num_of_examples=1)
+    load_labels()
