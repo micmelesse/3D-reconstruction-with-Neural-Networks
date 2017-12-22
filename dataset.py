@@ -61,7 +61,7 @@ class ShapeNet:
         else:
             return self.paths[prev_index:self.test_index]
 
-    def reset():
+    def reset(self):
         np.random.shuffle(self.paths)
         self.train_index = 0
         self.test_index = split_index
