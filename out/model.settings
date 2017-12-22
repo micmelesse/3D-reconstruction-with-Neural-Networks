@@ -1,0 +1,14 @@
+// camera = <pos x> <pos y> <pos z> <lookat x> <lookat y> <lookat z> <up x> <up y> <up z>
+camera = 0.374641 1.93199 0.665544 0.484375 0.484375 0.484375 0 1 0
+show_single_slice = 0
+slice_index = 16
+alternate_colours = 0
+show_neighbours = 0
+transparent_neighbours = 0
+show_numbers = 0
+projection = perspective
+ortho_top = -0.5
+ortho_left = -0.5
+ortho_size = 1
+window_width = 640
+window_height = 480

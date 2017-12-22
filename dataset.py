@@ -29,7 +29,7 @@ class ShapeNet:
         self.split_index = math.ceil(self.count * 0.8)
         self.train_index = 0
         self.test_index = self.split_index
-        self.batch_size = 32
+        self.batch_size = 24
 
     def next_train_batch(self, batch_size=None):
         if batch_size is None:
