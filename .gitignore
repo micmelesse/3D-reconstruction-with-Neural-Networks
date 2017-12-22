@@ -2,7 +2,10 @@ events.out.tfevents*
 .ipynb_checkpoints/*
 __pycache__/*
 ShapeNet
-ShapeNet*
+ShapeNet_Renders
+ShapeNetRendering
+ShapeNetVox32
+*.binvox
 *.tar.gz
 *.gz
 *.tar
@@ -13,3 +16,5 @@ ShapeNet*
 *.jpg
 *.jpeg
 *.pyc
+*.txt
+*.csv
