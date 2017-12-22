@@ -7,8 +7,8 @@ import pyglet
 import trimesh
 import binvox_rw
 import math
-import numpy as np
 import pandas as pd
+import numpy as np
 from PIL import Image
 from filecmp import dircmp
 
@@ -37,11 +37,11 @@ class ShapeNet:
 
         prev_index = self.train_index
         self.train_index += batch_size
+
         if prev_index >= self.split_index:
             self.train_index = 0
             return None
         elif self.train_index >= self.split_index:
-
             return self.paths[prev_index:self.split_index]
         else:
             return self.paths[prev_index:self.train_index]
@@ -64,7 +64,7 @@ class ShapeNet:
     def reset(self):
         np.random.shuffle(self.paths)
         self.train_index = 0
-        self.test_index = split_index
+        self.test_index = self.split_index
 
 
 def load_dataset(dataset_path_list):
@@ -204,7 +204,7 @@ def construct_path_lists(data_dir, file_types):
     return tuple(paths)
 
 
-def download_dataset(dataset_name="ShapeNet"):
+def download_raw_dataset(dataset_name="ShapeNet"):
     print("[download_dataset]")
     if(dataset_name is "ShapeNet"):
         f = urlopen(
@@ -238,5 +238,8 @@ def extract_archives(archive_link):
             tarfile.open(im_path + '.tar').extractall()
 
 
+def download_data(data_link="ftp://cs.stanford.edu/cs/cvgl/ShapeNetRendering.tgz", label_link="ftp://cs.stanford.edu/cs/cvgl/ShapeNetVox32.tgz")
+
+
 if __name__ == '__main__':
-    main()
+    download_data()
