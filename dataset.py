@@ -160,7 +160,7 @@ def write_renders_to_disk(mesh, render_path, render_count=10):
     return
 
 
-def get_paths(data_dir="ShapeNetRendering", label_dir="ShapeNetVox32"):
+def get_common_paths(data_dir, label_dir):
 
     common_paths = []
     for dir_top, subdir_cmps in dircmp(data_dir, label_dir).subdirs.items():
@@ -204,42 +204,24 @@ def construct_path_lists(data_dir, file_types):
     return tuple(paths)
 
 
-def download_raw_dataset(dataset_name="ShapeNet"):
-    print("[download_dataset]")
-    if(dataset_name is "ShapeNet"):
-        f = urlopen(
-            "http://shapenet.cs.stanford.edu/shapenet/obj-zip/ShapeNetSem.v0/README.txt")
+def _download(_link):
+    _dir = os.path.splitext(os.path.basename(_link))[0]
+    _archive = _dir + ".tgz"
 
-        shapenet_urls = re.findall('https.*', (f.read()).decode("utf-8"))
-        shapenet_metadata = []
-        for s in shapenet_urls:
-            shapenet_metadata.append(pd.read_csv(s))
-
-        index_metadata = 0
-        id_list = (shapenet_metadata[index_metadata])["wnsynset"]
-        for i, id in enumerate(id_list):
-            id = 0
-            print(id)
-            download_link = "http://shapenet.cs.stanford.edu/shapenet/obj-zip/ShapeNetCore.v1/{}.zip".format(
-                id)
-            # urlretrieve(download_link, "./data/{}.zip" + id)
-            # sys.exit()
-
-
-def extract_archives(archive_link):
-    im_path, im_arc = None, None
-   # archive_url = requests.get(archive_link, stream=True)
-   # print(archive_url.headers)
-    sys.exit()
-
-    cur_dir = os.listdir()
-    if(im_path not in cur_dir):
-        if(im_arc not in cur_dir):
-            tarfile.open(im_path + '.tar').extractall()
-
-
-def download_data(data_link="ftp://cs.stanford.edu/cs/cvgl/ShapeNetRendering.tgz", label_link="ftp://cs.stanford.edu/cs/cvgl/ShapeNetVox32.tgz")
+    if not os.path.isdir(_dir) and not os.path.isfile(_archive):
+        os.system('wget -c {0}'.format(_link))
+        os.system("tar -xvzf {0}".format(_archive))
+        os.system("rm -rf {0}".format(_archive))
+    elif not os.path.isdir(_dir) and os.path.isfile(_archive):
+        os.system("tar -xvzf {0}".format(_archive))
+        os.system("rm -rf {0}".format(_archive))
+    return _dir
 
 
 if __name__ == '__main__':
-    download_data()
+    LABEL_LINK = 'ftp://cs.stanford.edu/cs/cvgl/ShapeNetVox32.tgz'
+    DATA_LINK = "ftp://cs.stanford.edu/cs/cvgl/ShapeNetRendering.tgz"
+
+    LABEL_DIR = _download(LABEL_LINK)
+    DATA_DIR = _download(DATA_LINK)
+    get_common_paths(LABEL_DIR, DATA_DIR)

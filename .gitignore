@@ -6,6 +6,7 @@ ShapeNet_Renders
 ShapeNetRendering
 ShapeNetVox32
 *.binvox
+*.tgz
 *.tar.gz
 *.gz
 *.tar
