@@ -1,1 +1,1 @@
-ssh -i "thesis.pem" ubuntu@ec2-107-21-79-72.compute-1.amazonaws.com
+ssh -i "thesis.pem" ec2-user@ec2-54-160-221-92.compute-1.amazonaws.com
