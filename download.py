@@ -19,4 +19,4 @@ if __name__ == '__main__':
 
     LABEL_DIR = _download(LABEL_LINK)
     DATA_DIR = _download(DATA_LINK)
-    dataset.get_common_paths(LABEL_DIR, DATA_DIR)
+    dataset.get_common_paths(DATA_DIR,LABEL_DIR)
