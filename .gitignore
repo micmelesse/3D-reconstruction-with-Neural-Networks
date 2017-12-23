@@ -2,6 +2,7 @@ events.out.tfevents*
 .ipynb_checkpoints/*
 __pycache__/*
 ShapeNet
+ShapeNet*
 ShapeNet_Renders
 ShapeNetRendering
 ShapeNetVox32

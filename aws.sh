@@ -1,0 +1,1 @@
+ssh -i "thesis.pem" ubuntu@ec2-107-21-79-72.compute-1.amazonaws.com
