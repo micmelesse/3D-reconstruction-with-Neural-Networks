@@ -15,7 +15,7 @@ from filecmp import dircmp
 
 def main():
     shapenet = ShapeNet()
-    train = shapenet.next_train_batch(25)
+    train = shapenet.next_train_batch()
     X = load_dataset(train[:, 0])
     Y = load_labels(train[:, 1])
 
