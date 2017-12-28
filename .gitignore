@@ -1,6 +1,7 @@
 events.out.tfevents*
 .ipynb_checkpoints/*
 __pycache__/*
+train_dir*
 ShapeNet
 ShapeNet*
 ShapeNet_Renders

@@ -14,6 +14,7 @@ from filecmp import dircmp
 
 
 def main():
+    print("test run")
     shapenet = ShapeNet()
     train = shapenet.next_train_batch()
     X = load_dataset(train[:, 0])
@@ -23,7 +24,7 @@ def main():
 class ShapeNet:
     def __init__(self):
 
-        self.paths = pd.DataFrame.from_csv("paths.csv").as_matrix()
+        self.paths = pd.read_csv("paths.csv",index_col=0).as_matrix()
         np.random.shuffle(self.paths)
         self.count = len(self.paths)
         self.split_index = math.ceil(self.count * 0.8)
@@ -202,3 +203,9 @@ def construct_path_lists(data_dir, file_types):
         return paths[0]
 
     return tuple(paths)
+
+
+    
+
+if __name__ == '__main__':
+    main()
