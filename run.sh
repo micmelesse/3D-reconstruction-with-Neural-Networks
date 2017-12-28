@@ -1,2 +1,3 @@
-jupyter nbconvert --to notebook --execute demo.ipynb
-
+rm -f demo.py
+jupyter nbconvert --to script demo.ipynb
+python demo.py
