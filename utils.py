@@ -1,26 +1,36 @@
 import math
 import numpy as np
 import tensorflow as tf
-from PIL import Image
 
 
 def main():
     pass
 
 
-def imshow_multichannel(im):
+def flatten_multichannel_image(im):
     n_channels = im.shape[-1]
-    n_tile = math.floor(math.sqrt(n_channels))
-
+    n_tile = math.ceil(math.sqrt(n_channels))
     rows = []
-    for i in range(0, n_channels, n_tile):
-        if(i + n_tile < n_channels):
-            rows.append(np.concatenate(im[:, :, i:i + n_tile],axis=1))
-        else:
-            padding = np.concatenate(np.zeros([im.shape[0],im.shape[1],i + n_tile - n_channels]),axis=1)
-            data=np.concatenate(im[:, :, i:n_channels],axis=1)
-            rows.append(np.concatenate((data,padding),axis=1))
-    return rows
+    for i in range(n_tile):
+        c = i * n_tile
+        if c < n_channels:
+            a = im[:, :, c]
+            for j in range(1, n_tile):
+                c = i * n_tile + j
+                if c < n_channels:
+                    b = im[:, :, c]
+                    a = np.hstack((a, b))
+                else:
+                    b = np.zeros([im.shape[0], im.shape[1]],)
+                    a = np.hstack((a, b))
+            rows.append(a)
+
+    n = len(rows)
+    a = rows[0]
+    for i in range(1, n):
+        b = rows[i]
+        a = np.vstack((a, b))
+    return a
 
 
 def unpool(value, name='unpool'):
