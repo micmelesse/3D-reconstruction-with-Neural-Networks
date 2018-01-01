@@ -1,1 +1,1 @@
-source activate tensorflow_p36
+'source activate tensorflow_p36'
