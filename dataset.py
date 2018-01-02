@@ -13,20 +13,27 @@ from PIL import Image
 from filecmp import dircmp
 
 
-def main():
-    print("test run")
+def test_1():
+    print("writing path.csv")
+    print(len(write_path_csv("ShapeNetRendering", "ShapeNetVox32")))
+
+
+def test_2():
     shapenet = ShapeNet()
     train = shapenet.next_train_batch()
-    X = load_dataset(train[:, 0])
-    Y = load_labels(train[:, 1])
+    X = load_dataset(train[:, 1])
+    Y = load_labels(train[:, 25])
+
+
+def main():
+    test_2()
 
 
 class ShapeNet:
     def __init__(self):
-
         self.paths = pd.read_csv("paths.csv", index_col=0).as_matrix()
         np.random.shuffle(self.paths)
-        self.N = len(self.paths)
+        self.N = self.paths.shape[0]
         self.split_index = math.ceil(self.N * 0.8)
         self.train_index = 0
         self.test_index = self.split_index
@@ -157,7 +164,7 @@ def write_renders_to_disk(mesh, render_path, render_count=10):
     return
 
 
-def get_common_paths(data_dir, label_dir):
+def write_path_csv(data_dir, label_dir):
 
     common_paths = []
     for dir_top, subdir_cmps in dircmp(data_dir, label_dir).subdirs.items():
@@ -171,16 +178,15 @@ def get_common_paths(data_dir, label_dir):
     mapping['label_dirs'] = mapping.apply(
         lambda row: os.path.join(label_dir, row.common_dirs), axis=1)
 
-    data_paths = []
-    label_paths = []
-    for d, l in zip(mapping.data_dirs, mapping.label_dirs):
-        png_ls = construct_path_lists(d, [".png"])
-        binvox_ls = construct_path_lists(l, [".binvox"])
-        data_paths += png_ls
-        label_paths += binvox_ls * len(png_ls)
+    table = []
+    for i, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
+        row = []
+        row += [i]
+        row += construct_path_lists(d, [".png"])
+        row += construct_path_lists(l, [".binvox"])
+        table.append(row)
 
-    paths = pd.DataFrame(
-        {"data_paths": data_paths, "label_paths": label_paths})
+    paths = pd.DataFrame(table)
     paths.to_csv("paths.csv")
     return paths
 
