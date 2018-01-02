@@ -1,3 +1,2 @@
-jupyter notebook stop 8888
-jupyter notebook stop 8889
-jupyter notebook stop 8890
+port=8888
+jupyter notebook stop $port

@@ -15,5 +15,6 @@ ShapeNe*
 *.jpg
 *.jpeg
 *.pyc
+*.npy
 *.txt
 *.csv
