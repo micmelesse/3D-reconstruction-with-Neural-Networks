@@ -24,10 +24,10 @@ def main():
 class ShapeNet:
     def __init__(self):
 
-        self.paths = pd.read_csv("paths.csv",index_col=0).as_matrix()
+        self.paths = pd.read_csv("paths.csv", index_col=0).as_matrix()
         np.random.shuffle(self.paths)
-        self.count = len(self.paths)
-        self.split_index = math.ceil(self.count * 0.8)
+        self.N = len(self.paths)
+        self.split_index = math.ceil(self.N * 0.8)
         self.train_index = 0
         self.test_index = self.split_index
         self.batch_size = 24
@@ -39,11 +39,9 @@ class ShapeNet:
         prev_index = self.train_index
         self.train_index += batch_size
 
-        if prev_index >= self.split_index:
+        if self.train_index >= self.split_index:
             self.train_index = 0
             return None
-        elif self.train_index >= self.split_index:
-            return self.paths[prev_index:self.split_index]
         else:
             return self.paths[prev_index:self.train_index]
 
@@ -54,11 +52,9 @@ class ShapeNet:
         prev_index = self.test_index
         self.test_index += batch_size
 
-        if prev_index >= self.count:
+        if self.test_index >= self.N:
             self.test_index = self.split_index
             return None
-        elif self.test_index >= self.count:
-            return self.paths[prev_index:self.count]
         else:
             return self.paths[prev_index:self.test_index]
 
@@ -204,8 +200,6 @@ def construct_path_lists(data_dir, file_types):
 
     return tuple(paths)
 
-
-    
 
 if __name__ == '__main__':
     main()

@@ -1,2 +1,3 @@
-ssh -i "thesis.pem" ec2-user@$1
+dns=$(cat dns.txt)
+ssh -i "thesis.pem" ec2-user@$dns
 
