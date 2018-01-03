@@ -7,23 +7,26 @@ import matplotlib.pyplot as plt
 def main():
     pass
 
+
 def imshow_multichannel(im):
     # print ("use %matplotlib inline if you want to display result in a notebook")
     plt.figure()
     return plt.imshow(flatten_multichannel_image(im))
 
+
 def flatten_multichannel_image(im):
+    assert(len(im.shape) == 3)
     n_channels = im.shape[-1]
     n_tile = math.ceil(math.sqrt(n_channels))
     rows = []
     for i in range(n_tile):
-        c = i * n_tile
-        if c < n_channels:
-            a = im[:, :, c]
+        c_first = i * n_tile
+        if c_first < n_channels:
+            a = im[:, :, c_first]
             for j in range(1, n_tile):
-                c = i * n_tile + j
-                if c < n_channels:
-                    b = im[:, :, c]
+                c_last = c_first + j
+                if c_last < n_channels:
+                    b = im[:, :, c_last]
                     a = np.hstack((a, b))
                 else:
                     b = np.zeros([im.shape[0], im.shape[1]],)

@@ -20,9 +20,9 @@ def test_1():
 
 def test_2():
     shapenet = ShapeNet()
-    train = shapenet.next_train_batch()
-    X = load_dataset(train[:, 1])
-    Y = load_labels(train[:, 25])
+    data, label = shapenet.next_train_batch()
+    print(data.shape)
+    print(label.shape)
 
 
 def main():
@@ -40,6 +40,14 @@ class ShapeNet:
         self.batch_size = 36
 
     def next_train_batch(self, batch_size=None):
+        paths_ls = self.next_train_batch_paths(batch_size)
+        return (load_dataset_batch(paths_ls[:,0:-2]), load_labels(paths_ls[:,-2]))
+
+    def next_test_batch(self, batch_size=None):
+        paths_ls = self.next_test_batch_paths(batch_size)
+        return (load_dataset_batch(paths_ls[:,0:-2]), load_labels(paths_ls[:,-2]))
+
+    def next_train_batch_paths(self, batch_size=None):
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -52,7 +60,7 @@ class ShapeNet:
         else:
             return self.paths[prev_index:self.train_index]
 
-    def next_test_batch(self, batch_size=None):
+    def next_test_batch_paths(self, batch_size=None):
         if batch_size is None:
             batch_size = self.batch_size
 
@@ -72,6 +80,9 @@ class ShapeNet:
 
 
 def load_dataset_batch(batch_path_list):
+    if isinstance(batch_path_list, np.ndarray):
+        batch_path_list = batch_path_list.tolist()
+
     ret = []
     for b in batch_path_list:
         ret.append(load_dataset(b))
@@ -188,9 +199,9 @@ def write_path_csv(data_dir, label_dir):
     table = []
     for i, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
         row = []
-        row += [i]
         row += construct_path_lists(d, [".png"])
         row += construct_path_lists(l, [".binvox"])
+        row += [i]
         table.append(row)
 
     paths = pd.DataFrame(table)
