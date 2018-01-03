@@ -1,11 +1,16 @@
 import math
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 
 def main():
     pass
 
+def imshow_multichannel(im):
+    # print ("use %matplotlib inline if you want to display result in a notebook")
+    plt.figure()
+    return plt.imshow(flatten_multichannel_image(im))
 
 def flatten_multichannel_image(im):
     n_channels = im.shape[-1]

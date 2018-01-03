@@ -71,6 +71,13 @@ class ShapeNet:
         self.test_index = self.split_index
 
 
+def load_dataset_batch(batch_path_list):
+    ret = []
+    for b in batch_path_list:
+        ret.append(load_dataset(b))
+    return np.stack(ret)
+
+
 def load_dataset(dataset_path_list):
     if isinstance(dataset_path_list, np.ndarray):
         dataset_path_list = dataset_path_list.tolist()
