@@ -3,10 +3,10 @@ import tensorflow as tf
 
 
 class lstm_grid:
-    def __init__(self):
+    def __init__(self, batch_size):
+        state_shape = [4, 4, 4, batch_size, 256]
         self.state = tf.contrib.rnn.LSTMStateTuple(
-            tf.zeros([4, 4, 4, 36, 256]), tf.zeros([4, 4, 4, 36, 256]))
-
+            tf.fill(state_shape, tf.to_float(0)), tf.fill(state_shape, tf.to_float(0)))
         self.W_f = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_f")
         self.W_i = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_i")
         self.W_o = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_o")
@@ -27,7 +27,7 @@ class lstm_grid:
             hidden_state, prev_state = prev_state_tuple
             Wx = tf.matmul(x, W)
             Uh = tf.nn.conv3d(hidden_state, U, strides=[
-                              1, 1, 1, 1, 1], padding="SAME")
+                1, 1, 1, 1, 1], padding="SAME")
             return tf.sigmoid(Wx + Uh + b)
 
         hidden_state, prev_state = prev_state_tuple
@@ -45,7 +45,7 @@ class lstm_grid:
 def unpool3D(value, name='unpool3D'):
     with tf.name_scope(name) as scope:
         sh = value.get_shape().as_list()
-        dim = len(sh[1:-1])
+        dim = len(sh[1: -1])
         out = (tf.reshape(value, [-1] + sh[-dim:]))
         for i in range(dim, 0, -1):
             out = tf.concat([out, tf.zeros_like(out)], i)
