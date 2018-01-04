@@ -53,7 +53,7 @@ def unpool(value, name='unpool'):
     return out
 
 
-def grid3D(element, N=2):
+def grid3D(element, N=4):
     return np.array([[[element for k in range(N)] for j in range(N)] for i in range(N)])
 
 
