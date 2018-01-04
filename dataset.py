@@ -41,11 +41,19 @@ class ShapeNet:
 
     def next_train_batch(self, batch_size=None):
         paths_ls = self.next_train_batch_paths(batch_size)
-        return (load_dataset_batch(paths_ls[:,0:-2]), load_labels(paths_ls[:,-2]))
+        data_label_tuple = (load_dataset_batch(
+            paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
+        if data_label_tuple[0] is None:
+            return None, None
+        return data_label_tuple
 
     def next_test_batch(self, batch_size=None):
         paths_ls = self.next_test_batch_paths(batch_size)
-        return (load_dataset_batch(paths_ls[:,0:-2]), load_labels(paths_ls[:,-2]))
+        data_label_tuple = (load_dataset_batch(
+            paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
+        if data_label_tuple[0] is None:
+            return None, None
+        return data_label_tuple
 
     def next_train_batch_paths(self, batch_size=None):
         if batch_size is None:
