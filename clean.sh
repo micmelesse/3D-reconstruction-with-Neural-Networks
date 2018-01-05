@@ -1,5 +1,7 @@
 rm -rf ./train_dir/*
 rm -rf ./out_dir/*
+rm -rf ./train_dir_aws/*
+rm -rf ./out_dir_aws/*
 rm -rf ./logs/*
 rm -rf ./ShapeNet_Renders/*
 rm -f ./*.nbconvert.ipynb
