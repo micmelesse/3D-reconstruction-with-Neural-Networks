@@ -8,6 +8,12 @@ def main():
     pass
 
 
+def imsave_multichannel(im, f_name):
+    # print ("use %matplotlib inline if you want to display result in a notebook")
+
+    return plt.imsave(f_name, (flatten_multichannel_image(im)))
+
+
 def imshow_multichannel(im):
     # print ("use %matplotlib inline if you want to display result in a notebook")
     plt.figure()
@@ -15,7 +21,7 @@ def imshow_multichannel(im):
 
 
 def flatten_multichannel_image(im):
-    assert(len(im.shape) == 3)
+    print(im.shape)
     n_channels = im.shape[-1]
     n_tile = math.ceil(math.sqrt(n_channels))
     rows = []

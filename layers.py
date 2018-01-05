@@ -3,7 +3,7 @@ import tensorflow as tf
 
 
 class GRU_R2N2:
-    def __init__(self, batch_size):
+    def __init__(self):
         self.W_u = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_u")
         self.W_r = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_r")
         self.W_h = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_h")
