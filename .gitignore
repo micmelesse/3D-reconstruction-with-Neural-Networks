@@ -4,6 +4,7 @@ __pycache__/*
 train_di*
 out_di*
 ShapeNe*
+*.config
 *.binvox
 *.tgz
 *.tar.gz
@@ -19,3 +20,4 @@ ShapeNe*
 *.npy
 *.txt
 *.csv
+

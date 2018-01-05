@@ -1,2 +1,2 @@
-rm -f demo.py
-jupyter nbconvert --to script demo.ipynb
+rm -f $1.py
+jupyter nbconvert --to script $1.ipynb
