@@ -2,6 +2,7 @@ events.out.tfevents*
 .ipynb_checkpoints/*
 __pycache__/*
 train_di*
+out_di*
 ShapeNe*
 *.binvox
 *.tgz
