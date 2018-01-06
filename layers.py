@@ -1,8 +1,79 @@
-
+import numpy as np
 import tensorflow as tf
+import utils
+
+
+def main():
+    W_grid =
+    print(W_grid[0, 0, 0])
+
+
+def bias_grid(name, N, n_h):
+    i_list = []
+    for i in range(N):
+        j_list = []
+        for j in range(N):
+            k_list = []
+            for k in range(N):
+                k_list.append(tf.Variable(tf.random_normal(
+                    [n_h]), name="W{}_{}{}{}".format(name, i, j, k)))
+            j_list.append(k_list)
+        i_list.append(j_list)
+
+    return np.array(i_list)
+
+
+def weight_grid(name, N, n_x, n_h):
+    i_list = []
+    for i in range(N):
+        j_list = []
+        for j in range(N):
+            k_list = []
+            for k in range(N):
+                k_list.append(tf.Variable(tf.random_normal(
+                    [n_x, n_h]), name="W{}_{}{}{}".format(name, i, j, k)))
+            j_list.append(k_list)
+        i_list.append(j_list)
+
+    return np.array(i_list)
 
 
 class GRU_R2N2:
+    def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
+        self.W_u = weight_grid('u', n_cells, n_input, n_hidden_state)
+        self.W_r = weight_grid('r', n_cells, n_input, n_hidden_state)
+        self.W_h = weight_grid('h', n_cells, n_input, n_hidden_state)
+
+        self.b_u = bias_grid('u', n_cells, n_hidden_state)
+        self.b_r = bias_grid('r', n_cells, n_hidden_state)
+        self.b_h = bias_grid('h', n_cells, n_hidden_state)
+
+        self.U_u = tf.Variable(tf.random_normal(
+            [3, 3, 3, n_hidden_state, n_hidden_state]), name="U_u")
+        self.U_r = tf.Variable(tf.random_normal(
+            [3, 3, 3, n_hidden_state, n_hidden_state]), name="U_r")
+        self.U_h = tf.Variable(tf.random_normal(
+            [3, 3, 3, n_hidden_state, n_hidden_state]), name="U_h")
+
+    def call(self, fc_input, prev_state):
+        def linear(x, W, U, h, b):
+            Wx = tf.matmul(x, W)
+            Uh = tf.nn.conv3d(h, U, strides=[
+                1, 1, 1, 1, 1], padding="SAME")
+            return Wx + Uh + b
+
+        u_t = tf.sigmoid(
+            linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
+        r_t = tf.sigmoid(
+            linear(fc_input, self.W_r, self.U_r, prev_state,  self.b_r))
+        h_t = tf.multiply(1 - u_t, prev_state) + tf.multiply(u_t, tf.tanh(
+            linear(fc_input, self.W_h, self.U_h, tf.multiply(r_t, prev_state), self.b_h)))
+
+        return h_t
+
+
+class GRU_R2N2_MD_Weight:
+
     def __init__(self, n_cells=4, n_hidden_state=256):
         N = n_cells
         h_n = n_hidden_state
@@ -91,3 +162,7 @@ def unpool3D(value, name='unpool3D'):
         out_size = [-1] + [s * 2 for s in sh[1:-1]] + [sh[-1]]
         out = tf.reshape(out, out_size, name=scope)
     return out
+
+
+if __name__ == '__main__':
+    main()
