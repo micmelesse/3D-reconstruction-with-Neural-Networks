@@ -3,18 +3,26 @@ import tensorflow as tf
 
 
 class GRU_R2N2:
-    def __init__(self):
-        self.W_u = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_u")
-        self.W_r = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_r")
-        self.W_h = tf.Variable(tf.ones([4, 4, 4, 1024, 256]), name="W_h")
+    def __init__(self, n_cells=4, n_hidden_state=256):
+        N = n_cells
+        h_n = n_hidden_state
+        self.W_u = tf.Variable(tf.random_normal(
+            [N, N, N, 1024, h_n]), name="W_u")
+        self.W_r = tf.Variable(tf.random_normal(
+            [N, N, N, 1024, h_n]), name="W_r")
+        self.W_h = tf.Variable(tf.random_normal(
+            [N, N, N, 1024, h_n]), name="W_h")
 
-        self.U_u = tf.Variable(tf.ones([3, 3, 3, 256, 256]), name="U_u")
-        self.U_r = tf.Variable(tf.ones([3, 3, 3, 256, 256]), name="U_r")
-        self.U_h = tf.Variable(tf.ones([3, 3, 3, 256, 256]), name="U_h")
+        self.b_u = tf.Variable(tf.random_normal([N, N, N, 1, h_n]), name="b_u")
+        self.b_r = tf.Variable(tf.random_normal([N, N, N, 1, h_n]), name="b_r")
+        self.b_h = tf.Variable(tf.random_normal([N, N, N, 1, h_n]), name="b_h")
 
-        self.b_u = tf.Variable(tf.ones([4, 4, 4, 1, 256]), name="b_u")
-        self.b_r = tf.Variable(tf.ones([4, 4, 4, 1, 256]), name="b_r")
-        self.b_h = tf.Variable(tf.ones([4, 4, 4, 1, 256]), name="b_h")
+        self.U_u = tf.Variable(tf.random_normal(
+            [3, 3, 3, h_n, h_n]), name="U_u")
+        self.U_r = tf.Variable(tf.random_normal(
+            [3, 3, 3, h_n, h_n]), name="U_r")
+        self.U_h = tf.Variable(tf.random_normal(
+            [3, 3, 3, h_n, h_n]), name="U_h")
 
     def call(self, fc_input, prev_state):
         def linear(x, W, U, h, b):
