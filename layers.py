@@ -1,11 +1,13 @@
+import os
+import sys
+import math
 import numpy as np
 import tensorflow as tf
 import utils
 
 
 def main():
-    W_grid =
-    print(W_grid[0, 0, 0])
+    pass
 
 
 def bias_grid(name, N, n_h):
@@ -15,12 +17,12 @@ def bias_grid(name, N, n_h):
         for j in range(N):
             k_list = []
             for k in range(N):
-                k_list.append(tf.Variable(tf.random_normal(
-                    [n_h]), name="W{}_{}{}{}".format(name, i, j, k)))
+                k_list.append(tf.Variable(
+                    tf.fill([n_h], 1 / math.sqrt(1024)), name="W{}_{}{}{}".format(name, i, j, k)))
             j_list.append(k_list)
         i_list.append(j_list)
 
-    return np.array(i_list)
+    return i_list
 
 
 def weight_grid(name, N, n_x, n_h):
@@ -30,12 +32,26 @@ def weight_grid(name, N, n_x, n_h):
         for j in range(N):
             k_list = []
             for k in range(N):
-                k_list.append(tf.Variable(tf.random_normal(
-                    [n_x, n_h]), name="W{}_{}{}{}".format(name, i, j, k)))
+                k_list.append(tf.Variable(tf.fill(
+                    [n_x, n_h], 1 / math.sqrt(n_x)), name="W{}_{}{}{}".format(name, i, j, k)))
             j_list.append(k_list)
         i_list.append(j_list)
 
-    return np.array(i_list)
+    return i_list
+
+
+def weight_grid_multiply(x, W, N=4):
+    W = np.array(W)
+    i_list = []
+    for i in range(N):
+        j_list = []
+        for j in range(N):
+            k_list = []
+            for k in range(N):
+                k_list.append(tf.matmul(x, W[i, j, k]))
+            j_list.append(k_list)
+        i_list.append(j_list)
+    return tf.transpose(tf.convert_to_tensor(i_list), [3, 0, 1, 2, 4])
 
 
 class GRU_R2N2:
@@ -57,10 +73,9 @@ class GRU_R2N2:
 
     def call(self, fc_input, prev_state):
         def linear(x, W, U, h, b):
-            Wx = tf.matmul(x, W)
-            Uh = tf.nn.conv3d(h, U, strides=[
-                1, 1, 1, 1, 1], padding="SAME")
-            return Wx + Uh + b
+            Wx = weight_grid_multiply(x, W)
+            Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
+            return Wx + Uh + tf.convert_to_tensor(b)
 
         u_t = tf.sigmoid(
             linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
