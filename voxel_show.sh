@@ -1,0 +1,1 @@
+./viewvox -ki out/*.binvox
