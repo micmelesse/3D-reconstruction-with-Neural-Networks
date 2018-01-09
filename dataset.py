@@ -25,8 +25,27 @@ def test_2():
     print(label.shape)
 
 
+def test_3():
+    shapenet = ShapeNet()
+    all_labels = load_labels((shapenet.paths[:, -2]))
+    np.save('all_labels', all_labels)
+
+def test_4():
+    print("test_4")
+    shapenet = ShapeNet()
+    column_1 = load_data_sequences((shapenet.paths[:, 0]))
+    np.save('column_1', column_1)
+
+def test_5():
+    print("test_5")
+    shapenet = ShapeNet()
+    all_data = load_data_sequences((shapenet.paths[:, 0:-2]))
+    np.save('all_data', all_data)
+
+
 def main():
-    test_2()
+    test_5()
+    test_3()
 
 
 class ShapeNet:
@@ -42,7 +61,7 @@ class ShapeNet:
     def next_train_batch(self, batch_size=None):
         paths_ls = self.next_train_batch_paths(batch_size)
         if paths_ls is not None:
-            data_label_tuple = (load_dataset_batch(
+            data_label_tuple = (load_data_sequences(
                 paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
         if data_label_tuple[0] is None:
             return None, None
@@ -51,7 +70,7 @@ class ShapeNet:
     def next_test_batch(self, batch_size=None):
         paths_ls = self.next_test_batch_paths(batch_size)
         if paths_ls is not None:
-            data_label_tuple = (load_dataset_batch(
+            data_label_tuple = (load_data_sequences(
                 paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
         if data_label_tuple[0] is None:
             return None, None
@@ -89,7 +108,7 @@ class ShapeNet:
         self.test_index = self.split_index
 
 
-def load_dataset_batch(batch_path_list):
+def load_data_sequences(batch_path_list):
     if isinstance(batch_path_list, np.ndarray):
         batch_path_list = batch_path_list.tolist()
 
