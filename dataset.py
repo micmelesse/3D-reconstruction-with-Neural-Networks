@@ -43,10 +43,9 @@ def test_5():
     np.save('all_data', all_data)
 
 
-def main():
-    test_5()
+def main(): 
     test_3()
-
+    test_5()
 
 class ShapeNet:
     def __init__(self):
