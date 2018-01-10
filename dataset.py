@@ -28,13 +28,13 @@ def test_2():
 def test_3():
     print("save labels to npy")
     shapenet = ShapeNet()
-    all_labels = load_labels((shapenet.paths[:, ]))
+    all_labels = load_labels((shapenet.paths[:,-2]))
     np.save('all_labels', all_labels)
 
 
 def test_4():
     shapenet = ShapeNet()
-    for i in range(24):
+    for i in range(1,5):
         print("save column_{} to npy".format(i))
         column = load_data_matrix(shapenet.paths[:, i])
         np.save('column_{}'.format(i), column)
@@ -48,7 +48,7 @@ def test_5():
 
 
 def main():
-    test_4()
+    test_5()
 
 
 class ShapeNet:
