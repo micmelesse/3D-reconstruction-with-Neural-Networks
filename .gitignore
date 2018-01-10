@@ -2,6 +2,9 @@ events.out.tfevents*
 .ipynb_checkpoints/*
 __pycache__/*
 aws_*
+train_*
+out*
+logs*
 ShapeNe*
 *.config
 *.binvox
