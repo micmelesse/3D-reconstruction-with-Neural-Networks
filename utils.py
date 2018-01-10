@@ -2,6 +2,7 @@ import math
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 def main():
     pass
@@ -13,6 +14,13 @@ def imsave_multichannel(im, f_name):
 # print ("use %matplotlib inline if you want to display result in a notebook")
 def imshow_multichannel(im):  
     return plt.imshow(flatten_multichannel_image(im))
+
+def imshow_voxel(vox):
+    fig=plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.voxels(vox,edgecolor='k')
+    ax.view_init(30, 30)
+    return plt.show()
 
 
 def flatten_multichannel_image(im):

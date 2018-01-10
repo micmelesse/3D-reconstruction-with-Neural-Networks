@@ -28,21 +28,21 @@ def save_data_to_npy(paths,N=None):
     if N is None:
         N=len(paths)
     for i in range(24):
-        print("save column_{} for mac".format(i))
+        print("save column_{} for {} examples".format(i,N))
         column = load_data_matrix(paths[0:N, i])
         np.save('column_{}'.format(i), column)
     
-    print("save labels to for mac")
+    print("save labels to for {} examples".format(N))
     all_labels = load_labels((paths[0:N,-2]))
     np.save('all_labels', all_labels)
-    print("save data to for mac")
+    print("save data to for {} examples".format(N))
     all_data = load_data_matrix((paths[0:N, 0:-2]))
     np.save('all_data', all_data)
     
     
 def main():
     shapenet = ShapeNet()
-    save_data_to_npy(shapenet.paths, N=None)
+    save_data_to_npy(shapenet.paths, N=100)
 
 
 class ShapeNet:
