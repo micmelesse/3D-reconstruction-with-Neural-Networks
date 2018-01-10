@@ -41,7 +41,7 @@ def save_data_to_npy(paths,N=None):
     
     
 def main():
-    with open("dataset.config") as f:
+    with open("dataset.params") as f:
         example_count=int(f.readline())
 
     shapenet = ShapeNet()
