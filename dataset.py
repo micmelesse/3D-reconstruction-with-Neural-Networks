@@ -26,26 +26,30 @@ def test_2():
 
 
 def test_3():
+    print("save labels to npy")
     shapenet = ShapeNet()
-    all_labels = load_labels((shapenet.paths[:, -2]))
+    all_labels = load_labels((shapenet.paths[:, ]))
     np.save('all_labels', all_labels)
 
+
 def test_4():
-    print("test_4")
+    print("save column to npy")
     shapenet = ShapeNet()
-    column_1 = load_data_sequences((shapenet.paths[:, 0]))
-    np.save('column_1', column_1)
+    for i in range(24):
+        column = load_data_matrix(shapenet.paths[:, i])
+        np.save('column_{}'.format(i), column)
+
 
 def test_5():
-    print("test_5")
+    print("save data to npy")
     shapenet = ShapeNet()
-    all_data = load_data_sequences((shapenet.paths[:, 0:-2]))
+    all_data = load_data_matrix((shapenet.paths[:, 0:-2]))
     np.save('all_data', all_data)
 
 
-def main(): 
-    test_3()
-    test_5()
+def main():
+    test_4()
+
 
 class ShapeNet:
     def __init__(self):
@@ -60,7 +64,7 @@ class ShapeNet:
     def next_train_batch(self, batch_size=None):
         paths_ls = self.next_train_batch_paths(batch_size)
         if paths_ls is not None:
-            data_label_tuple = (load_data_sequences(
+            data_label_tuple = (load_data_matrix(
                 paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
         if data_label_tuple[0] is None:
             return None, None
@@ -69,7 +73,7 @@ class ShapeNet:
     def next_test_batch(self, batch_size=None):
         paths_ls = self.next_test_batch_paths(batch_size)
         if paths_ls is not None:
-            data_label_tuple = (load_data_sequences(
+            data_label_tuple = (load_data_matrix(
                 paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
         if data_label_tuple[0] is None:
             return None, None
@@ -107,29 +111,29 @@ class ShapeNet:
         self.test_index = self.split_index
 
 
-def load_data_sequences(batch_path_list):
-    if isinstance(batch_path_list, np.ndarray):
-        batch_path_list = batch_path_list.tolist()
+def load_data_matrix(data_columns):
+    if isinstance(data_columns, np.ndarray):
+        data_columns = data_columns.tolist()
 
-    ret = []
-    for b in batch_path_list:
-        ret.append(load_dataset(b))
-    return np.stack(ret)
-
-
-def load_dataset(dataset_path_list):
-    if isinstance(dataset_path_list, np.ndarray):
-        dataset_path_list = dataset_path_list.tolist()
-
-    return fetch_render_from_disk(dataset_path_list)
+    mat = []
+    for c in data_columns:
+        mat.append(load_dataset_row(c))
+    return np.stack(mat)
 
 
-def load_labels(label_path_list):
-    if isinstance(label_path_list, np.ndarray):
-        label_path_list = label_path_list.tolist()
+def load_dataset_row(data_row):
+    if isinstance(data_row, np.ndarray):
+        data_row = data_row.tolist()
+
+    return fetch_renders_from_disk(data_row)
+
+
+def load_labels(label_column):
+    if isinstance(label_column, np.ndarray):
+        label_column = label_column.tolist()
 
     voxel_list = []
-    for voxel_path in label_path_list:
+    for voxel_path in label_column:
         with open(voxel_path, 'rb') as f:
             voxel_list.append(
                 (binvox_rw.read_as_3d_array(f)).data.astype(float))
@@ -137,14 +141,13 @@ def load_labels(label_path_list):
     return np.stack(voxel_list)
 
 
-def fetch_render_from_disk(render_path_list):
+def fetch_renders_from_disk(renders):
+    if isinstance(renders, str):
+        return np.expand_dims(np.array(Image.open(renders)), axis=0)
+
     png_list = []
-    for png_file in render_path_list:
-        im = Image.open(png_file)
-        im = np.array(im)
-        if im.ndim is 3:
-            # remove alpha channel
-            png_list.append(im[:, :, 0:3])
+    for png_file in renders:
+        png_list.append(np.array(Image.open(png_file)))
 
     return np.stack(png_list)
 
@@ -176,24 +179,24 @@ def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24
             compund_mesh = mesh_obj
 
         render_dir = "./ShapeNet_Renders"
-        render_path = os.path.dirname(
+        renders = os.path.dirname(
             str.replace(mesh_path, dataset_dir, render_dir))
 
-        if os.path.isdir(render_path) and os.listdir(render_path) != []:
-            render_list.append(fetch_render_from_disk(render_path))
+        if os.path.isdir(renders) and os.listdir(renders) != []:
+            render_list.append(fetch_render_from_disk(renders))
         else:
-            write_renders_to_disk(compund_mesh, render_path, render_count)
-            render_list.append(fetch_render_from_disk(render_path))
+            write_renders_to_disk(compund_mesh, renders, render_count)
+            render_list.append(fetch_render_from_disk(renders))
 
     return render_list
 
 
-def write_renders_to_disk(mesh, render_path, render_count=10):
+def write_renders_to_disk(mesh, renders, render_count=10):
     print("[write_renders_to_disk] writing renders to {0} ... ".format(
-        render_path))
+        renders))
     # FIXME: stupid but clean
-    os.system("rm -rf {}".format(render_path))
-    os.makedirs(render_path)
+    os.system("rm -rf {}".format(renders))
+    os.makedirs(renders)
     scene = mesh.scene()
     for i in range(render_count):
         angle = np.radians(random.randint(15, 30))
@@ -205,7 +208,7 @@ def write_renders_to_disk(mesh, render_path, render_count=10):
         scene.graph['camera'] = camera_new
         # backfaces culled if using original trimesh package
         scene.save_image(
-            '{0}/{1}_{2}.png'.format(render_path, os.path.basename(render_path), i), resolution=(127, 127))
+            '{0}/{1}_{2}.png'.format(renders, os.path.basename(renders), i), resolution=(127, 127))
 
     return
 
@@ -217,20 +220,20 @@ def write_path_csv(data_dir, label_dir):
         for dir_bot in subdir_cmps.common_dirs:
             common_paths.append(os.path.join(dir_top, dir_bot))
 
-    mapping = pd.DataFrame(common_paths, columns=["common_dirs"])
+    mapping = pd.DataFrame(common_paths, data_columns=["common_dirs"])
     mapping['data_dirs'] = mapping.apply(
-        lambda row: os.path.join(data_dir, row.common_dirs), axis=1)
+        lambda data_row: os.path.join(data_dir, data_row.common_dirs), axis=1)
 
     mapping['label_dirs'] = mapping.apply(
-        lambda row: os.path.join(label_dir, row.common_dirs), axis=1)
+        lambda data_row: os.path.join(label_dir, data_row.common_dirs), axis=1)
 
     table = []
     for i, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
-        row = []
-        row += construct_path_lists(d, [".png"])
-        row += construct_path_lists(l, [".binvox"])
-        row += [i]
-        table.append(row)
+        data_row = []
+        data_row += construct_path_lists(d, [".png"])
+        data_row += construct_path_lists(l, [".binvox"])
+        data_row += [i]
+        table.append(data_row)
 
     paths = pd.DataFrame(table)
     paths.to_csv("paths.csv")
