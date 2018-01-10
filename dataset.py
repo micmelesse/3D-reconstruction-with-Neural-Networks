@@ -24,31 +24,25 @@ def test_2():
     print(data.shape)
     print(label.shape)
 
-
-def test_3():
-    print("save labels to npy")
-    shapenet = ShapeNet()
-    all_labels = load_labels((shapenet.paths[:,-2]))
-    np.save('all_labels', all_labels)
-
-
-def test_4():
-    shapenet = ShapeNet()
-    for i in range(1,5):
-        print("save column_{} to npy".format(i))
-        column = load_data_matrix(shapenet.paths[:, i])
+def save_data_to_npy(paths,N=None):
+    if N is None:
+        N=len(paths)
+    for i in range(24):
+        print("save column_{} for mac".format(i))
+        column = load_data_matrix(paths[0:N, i])
         np.save('column_{}'.format(i), column)
-
-
-def test_5():
-    print("save data to npy")
-    shapenet = ShapeNet()
-    all_data = load_data_matrix((shapenet.paths[:, 0:-2]))
+    
+    print("save labels to for mac")
+    all_labels = load_labels((paths[0:N,-2]))
+    np.save('all_labels', all_labels)
+    print("save data to for mac")
+    all_data = load_data_matrix((paths[0:N, 0:-2]))
     np.save('all_data', all_data)
-
-
+    
+    
 def main():
-    test_5()
+    shapenet = ShapeNet()
+    save_data_to_npy(shapenet.paths, N=None)
 
 
 class ShapeNet:
