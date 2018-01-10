@@ -1,8 +1,9 @@
-rm -rf ./train_dir/*
-rm -rf ./train_dir_aws/*
-rm -rf ./out_aws/*
 rm -rf ./logs/*
 rm -rf ./out/*
+rm -rf ./train_dir/*
+rm -rf ./aws_train/*
+rm -rf ./aws_out/*
+rm -rf ./aws_logs/*
 rm -rf ./ShapeNet_Renders/*
 rm -f ./*.nbconvert.ipynb
 rm -f train.py
