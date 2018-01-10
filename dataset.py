@@ -33,9 +33,9 @@ def test_3():
 
 
 def test_4():
-    print("save column to npy")
     shapenet = ShapeNet()
     for i in range(24):
+        print("save column_{} to npy".format(i))
         column = load_data_matrix(shapenet.paths[:, i])
         np.save('column_{}'.format(i), column)
 
