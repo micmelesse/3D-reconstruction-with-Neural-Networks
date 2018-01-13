@@ -122,10 +122,11 @@ with tf.name_scope("cost"):
     accuracies=tf.reduce_sum(tf.to_float(tf.equal(y,prediction)),axis=[1,2,3])/tf.constant(32*32*32,dtype=tf.float32)
     mean_loss=tf.reduce_mean(cross_entropies)
     mean_accuracy=tf.reduce_mean(accuracies)
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cross_entropies)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+    optimizing_op=optimizer.minimize(cross_entropies)
 
 
-# In[7]:
+# In[ ]:
 
 
 # output
@@ -137,7 +138,7 @@ writer = tf.summary.FileWriter("./logs/")
 writer.add_graph(sess.graph)
 
 
-# In[8]:
+# In[ ]:
 
 
 data_all=np.load("all_data.npy")  
@@ -147,7 +148,7 @@ print(data_all.shape)
 print(label_all.shape)
 
 
-# In[10]:
+# In[ ]:
 
 
 # setup training
@@ -176,7 +177,7 @@ for e in range(epoch):
     batch_number=0
     for data,label in zip(data_batchs,label_batchs):
         fd={x:data, y: label};
-        batch_info=sess.run([mean_loss,mean_accuracy],feed_dict=fd)
+        batch_info=sess.run([mean_loss,mean_accuracy,optimizing_op],feed_dict=fd)
         loss_batch=batch_info[0]
         acc_batch=batch_info[1]
         loss_epoch.append(loss_batch)
@@ -197,46 +198,7 @@ for e in range(epoch):
     plt.close()
     fig = plt.figure()
     plt.plot((np.array(acc_session)).flatten())
+    plt.ylim(0,1)
     plt.savefig("{}/epoch_acc.png".format(epoch_dir),bbox_inches='tight')
     plt.close()
-
-
-# In[ ]:
-
-
-# %matplotlib inline
-# bat=3
-# ind=5
-# utils.imshow_multichannel(data_batchs[bat][ind,0])
-# utils.imshow_voxel(label_batchs[bat][ind])
-
-
-# In[12]:
-
-
-l=np.load("/Users/micmelesse/Documents/thesis/train_dir/2018|01|10 06:05:12 PM/epoch_001/losses.npy")
-
-
-# In[14]:
-
-
-l.shape
-
-
-# In[ ]:
-
-
-get_ipython().run_line_magic('matplotlib', 'inline')
-plt.figure()
-#flattened in row major form
-plt.plot(l.flatten())
-
-
-# In[ ]:
-
-
-global_step = tf.Variable(0, trainable=False)
-starter_learning_rate = 0.1
-learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step,
-                                           100000, 0.96, staircase=True)
 
