@@ -9,8 +9,10 @@ def _download(_link):
     if not os.path.isdir(_dir) and not os.path.isfile(_archive):
         os.system('wget -c {0}'.format(_link))
         os.system("tar -xvzf {0}".format(_archive))
+        os.system("rm -f {0}".format(_archive))
     elif not os.path.isdir(_dir) and os.path.isfile(_archive):
         os.system("tar -xvzf {0}".format(_archive))
+        os.system("rm -f {0}".format(_archive))
     return _dir
 
 
@@ -20,4 +22,3 @@ if __name__ == '__main__':
 
     LABEL_DIR = _download(LABEL_LINK)
     DATA_DIR = _download(DATA_LINK)
-    dataset.write_path_csv(DATA_DIR, LABEL_DIR)
