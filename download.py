@@ -1,6 +1,7 @@
 import os
 import dataset
 
+
 def _download(_link):
     _dir = os.path.splitext(os.path.basename(_link))[0]
     _archive = _dir + ".tgz"
@@ -19,4 +20,4 @@ if __name__ == '__main__':
 
     LABEL_DIR = _download(LABEL_LINK)
     DATA_DIR = _download(DATA_LINK)
-    dataset.get_common_paths(DATA_DIR,LABEL_DIR)
+    dataset.write_path_csv(DATA_DIR, LABEL_DIR)
