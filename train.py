@@ -23,7 +23,7 @@ from datetime import datetime
 
 
 #read params
-with open("net.params") as f:
+with open("train.params") as f:
     batch_size=int(f.readline())
     epoch=int(f.readline())
     learning_rate=float(f.readline())
@@ -70,7 +70,7 @@ with tf.name_scope("recurrent_module"):
 
     # initial hidden state
     hidden_state_list=[]
-    with open("net.params") as f:
+    with open("train.params") as f:
         batch_size=int(f.readline())
         hidden_state= tf.zeros([1,4,4,4,256])
     
