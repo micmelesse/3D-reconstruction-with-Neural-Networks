@@ -36,13 +36,14 @@ def save_data_to_npy(paths,N=None):
     all_data = load_data_matrix((paths[0:N, 0:-2]))
     np.save('all_data', all_data)
     
-    
 def main():
-    with open("dataset.params") as f:
-        example_count=int(f.readline())
+    # with open("dataset.params") as f:
+    #     example_count=int(f.readline())
 
-    shapenet = ShapeNet()
-    save_data_to_npy(shapenet.paths, N=example_count)
+    # shapenet = ShapeNet()
+    # save_data_to_npy(shapenet.paths, N=example_count)
+   test_1()
+    
 
 
 class ShapeNet:
