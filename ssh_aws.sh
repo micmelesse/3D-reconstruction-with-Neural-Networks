@@ -1,2 +1,2 @@
 dns=$(cat aws.params)
-ssh -i "thesis.pem" ec2-user@$dns
+ssh -i "ml_ami_key.pem" ec2-user@$dns
