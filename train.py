@@ -27,6 +27,7 @@ with open("train.params") as f:
     batch_size=int(f.readline())
     epoch=int(f.readline())
     learning_rate=float(f.readline())
+    print("training with a learning rate of {} for {} epochs with batchs of size {}".format(learning_rate,epoch,batch_size))
 
 
 # In[ ]:
