@@ -215,7 +215,7 @@ def write_path_csv(data_dir, label_dir):
         for dir_bot in subdir_cmps.common_dirs:
             common_paths.append(os.path.join(dir_top, dir_bot))
 
-    mapping = pd.DataFrame(common_paths, data_columns=["common_dirs"])
+    mapping = pd.DataFrame(common_paths, columns=["common_dirs"])
     mapping['data_dirs'] = mapping.apply(
         lambda data_row: os.path.join(data_dir, data_row.common_dirs), axis=1)
 
