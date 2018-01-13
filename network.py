@@ -83,11 +83,13 @@ class network:
             softmax_output[:, :, :, :, 1])
         self.cross_entropies = - tf.reduce_sum(tf.multiply(log_p, self.Y) +
                                                tf.multiply(log_q, 1 - self.Y), [1, 2, 3])
+        self.mean_loss = tf.reduce_mean(self.cross_entropies)
         self.optimizing_op = tf.train.GradientDescentOptimizer(
-            learning_rate=learn_rate).minimize(tf.reduce_mean(self.cross_entropies))
+            learning_rate=learn_rate).minimize(tf.reduce_mean(self.mean_loss))
         print(self.cross_entropies.shape)
 
         print("metrics")
-        accuracies = tf.reduce_sum(tf.to_float(tf.equal(self.Y, prediction)), axis=[
+        self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(self.Y, prediction)), axis=[
             1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
-        self.mean_accuracy = tf.reduce_mean(accuracies)
+        self.mean_accuracy = tf.reduce_mean(self.accuracies)
+        print(self.accuracies.shape)
