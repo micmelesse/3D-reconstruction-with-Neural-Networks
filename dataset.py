@@ -3,6 +3,9 @@ import os
 import sys
 import random
 import tarfile
+import pyglet
+import trimesh
+import binvox_rw
 import math
 import pandas as pd
 import numpy as np
