@@ -1,1 +1,0 @@
-screen sh run.sh
