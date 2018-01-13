@@ -1,4 +1,4 @@
-rm -f ShapNetRendering.tgz
-rm -f ShapNetVox32.tgz
-rm -rf ShapNetRenderin*
-rm -rf ShapNetVox3*
+rm -f ShapeNetRendering.tgz
+rm -f ShapeNetVox32.tgz
+rm -rf ShapeNetRenderin*
+rm -rf ShapeNetVox3*
