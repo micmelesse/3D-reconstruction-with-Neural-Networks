@@ -80,10 +80,10 @@ class network:
         print(self.prediction.shape)
 
         print("losses")
-        log_p, log_q = tf.log(self.softmax_output[:, :, :, :, 0]), tf.log(
+        self.log_p, self.log_q = tf.log(self.softmax_output[:, :, :, :, 0]), tf.log(
             self.softmax_output[:, :, :, :, 1])
-        self.cross_entropies = - tf.reduce_sum(tf.multiply(log_p, self.Y) +
-                                               tf.multiply(log_q, 1 - self.Y), [1, 2, 3])
+        self.cross_entropies = - tf.reduce_sum(tf.multiply(self.log_p, self.Y) +
+                                               tf.multiply(self.log_q, 1 - self.Y), [1, 2, 3])
         self.mean_loss = tf.reduce_mean(self.cross_entropies)
         self.optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=learn_rate).minimize(tf.reduce_mean(self.mean_loss))
