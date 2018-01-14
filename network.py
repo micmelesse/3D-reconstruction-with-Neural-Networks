@@ -17,13 +17,13 @@ class network:
             conv_filter_count = [96, 128, 256, 256, 256, 256]
             for i in range(6):
                 k_s = [7, 7] if i is 0 else k_s
-                    cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
-                    cur_tensor = tf.map_fn(
-                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
-                    cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
-                    print(cur_tensor.shape)
-                    self.encoder_outputs.append(cur_tensor)
+                cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
+                    a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
+                cur_tensor = tf.map_fn(
+                    lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
+                cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
+                print(cur_tensor.shape)
+                self.encoder_outputs.append(cur_tensor)
 
             cur_tensor = tf.map_fn(tf.contrib.layers.flatten,  cur_tensor)
             cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
