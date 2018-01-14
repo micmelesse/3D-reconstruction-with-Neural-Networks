@@ -54,6 +54,7 @@ writer.add_graph(sess.graph)
 data_all=np.load("all_data.npy")  
 label_all=np.load("all_labels.npy")
 N=len(data_all)
+n=2
 print(data_all.shape)
 print(label_all.shape)
 
@@ -86,14 +87,13 @@ for e in range(epoch):
     
     batch_number=0
     for data,label in zip(data_batchs,label_batchs):
-        fd={net.X:data, net.Y: label};
-        batch_info=sess.run([net.mean_loss,net.mean_accuracy,net.optimizing_op],feed_dict=fd)
+        batch_info=sess.run([net.mean_loss,net.mean_accuracy,net.optimizing_op],feed_dict={net.X:data, net.Y: label};)
         loss_batch=batch_info[0]
         acc_batch=batch_info[1]
         loss_epoch.append(loss_batch)
         acc_epoch.append(acc_batch)
         batch_number+=1
-        if batch_number%batch_size==0:
+        if batch_number%10==0:
             print("epoch_{:03d}-batch_{:03d}: loss={}, acc={}".format(e,batch_number,loss_batch,acc_batch))
     
     print("saving checkpoint for epoch {}".format(e))
