@@ -74,7 +74,7 @@ class network:
                 self.decoder_outputs.append(cur_tensor)
 
         print("predictions")
-        softmax_output = tf.nn.softmax(self.decoder_outputs[-1])
+        softmax_output = tf.map_fn(lambda a: tf.nn.softmax(a), cur_tensor)
         prediction = tf.to_float(tf.argmax(softmax_output, axis=4))
         print(prediction.shape)
 
