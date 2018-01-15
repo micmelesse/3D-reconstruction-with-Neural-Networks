@@ -1,2 +1,2 @@
-dns=$(cat aws.params)
-ssh -i "ml_ami_key.pem" ec2-user@$dns
+source aws.params
+ssh -i $key ec2-user@$dns

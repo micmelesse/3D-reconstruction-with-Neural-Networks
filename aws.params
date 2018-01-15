@@ -1,1 +1,2 @@
-ec2-52-23-164-42.compute-1.amazonaws.com
+key=ml_ami_key.pem
+dns=ec2-52-55-234-91.compute-1.amazonaws.com

@@ -6,7 +6,7 @@ class network:
     def __init__(self, learn_rate):
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
-        self.Y = tf.placeholder(tf.float32, [None, 32, 32, 32])
+        self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
@@ -76,17 +76,15 @@ class network:
         self.softmax_output = tf.map_fn(lambda a: tf.nn.softmax(a), cur_tensor)
         print(self.softmax_output.shape)
         print("prediction")
-        self.prediction = tf.to_float(tf.argmax(self.softmax_output, axis=4))
+        self.prediction = tf.argmax(self.softmax_output, axis=4)
         print(self.prediction.shape)
 
         print("losses")
-        self.log_p, self.log_q = tf.log(self.softmax_output[:, :, :, :, 0]), tf.log(
-            self.softmax_output[:, :, :, :, 1])
-        self.cross_entropies = - tf.reduce_sum(tf.multiply(self.log_p, self.Y) +
-                                               tf.multiply(self.log_q, 1 - self.Y), [1, 2, 3])
+        self.cross_entropies = tf.reduce_sum(tf.multiply(
+            tf.log(self.softmax_output), tf.one_hot(self.Y, 2)), axis=[1, 2, 3, 4])
         self.mean_loss = tf.reduce_mean(self.cross_entropies)
         self.optimizing_op = tf.train.GradientDescentOptimizer(
-            learning_rate=learn_rate).minimize(tf.reduce_mean(self.mean_loss))
+            learning_rate=learn_rate).minimize(self.mean_loss)
         print(self.cross_entropies.shape)
 
         print("metrics")
