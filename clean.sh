@@ -1,10 +1,2 @@
-rm -rf ./logs/*
-rm -rf ./out/*
-rm -rf ./train_dir/*
-rm -rf ./aws_train/*
-rm -rf ./aws_out/*
-rm -rf ./aws_logs/*
-rm -rf ./ShapeNet_Renders/*
-rm -f ./*.nbconvert.ipynb
-rm -f train.py
-rm -f debug.py
+rm -rf ./model/*
+rm -rf ./aws_model/*

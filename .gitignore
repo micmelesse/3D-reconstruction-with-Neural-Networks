@@ -1,12 +1,3 @@
-events.out.tfevents*
-.ipynb_checkpoints/*
-__pycache__/*
-aws_*
-train_*
-out*
-logs*
-ShapeNe*
-*.config
 *.binvox
 *.tgz
 *.tar.gz
@@ -22,4 +13,10 @@ ShapeNe*
 *.npy
 *.txt
 *.csv
+aws_*
+model_*
+ShapeNe*
+*tfevents*
+.ipynb_checkpoint*
+__pycache*
 

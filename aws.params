@@ -1,2 +1,4 @@
+user=ec2-user
 key=ml_ami_key.pem
 dns=ec2-52-55-234-91.compute-1.amazonaws.com
+jup_password='sha1:4eabd631be6c:442882d83817a4a2d3cf63c361595e727cb844ef'
