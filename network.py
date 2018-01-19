@@ -126,11 +126,5 @@ class network:
     def filters(self, fd):
         return self.sess.run(self.sess, fd)
 
-    def encoder_layers(self, fd):
-        return self.sess.run(self.encoder_outputs, fd)
-
-    def decoder_layer(self, fd):
-        return self.sess.run(self.decoder_outputs, fd)
-
-    def recurrent_layer(self, fd):
-        return self.sess.run(self.hidden_state_list, fd)
+    def state(self, fd):
+        return self.sess.run([self.encoder_outputs, self.hidden_state_list, self.decoder_outputs], fd)

@@ -1,3 +1,0 @@
-user=ec2-user
-key=ml_ami_key.pem
-dns=ec2-52-90-90-98.compute-1.amazonaws.com
