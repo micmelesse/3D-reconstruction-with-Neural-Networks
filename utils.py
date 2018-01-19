@@ -20,7 +20,7 @@ def imshow_voxel(vox):
     ax = fig.gca(projection='3d')
     ax.voxels(vox,edgecolor='k')
     ax.view_init(30, 30)
-    return plt.show()
+    return plt.imshow()
 
 
 def flatten_multichannel_image(im):

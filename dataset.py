@@ -1,8 +1,10 @@
 """deals with data for project"""
 import os
+import params
 import sys
 import random
 import tarfile
+import binvox_rw
 import math
 import pandas as pd
 import numpy as np
@@ -10,28 +12,30 @@ from render import *
 
 from filecmp import dircmp
 
-def save_data_to_npy(paths,N=None):
+
+def save_data_to_npy(paths, N=None):
     # if N is None:
     #     N=len(paths)
     # for i in range(24):
     #     print("save column_{} for {} examples".format(i,N))
     #     column = load_data_matrix(paths[0:N, i])
     #     np.save('column_{}'.format(i), column)
-    
+
     print("save labels for {} examples".format(N))
-    all_labels = load_labels((paths[0:N,-2]))
+    all_labels = load_labels((paths[0:N, -2]))
     np.save('all_labels', all_labels)
     print("save data for {} examples".format(N))
     all_data = load_data_matrix((paths[0:N, 0:-2]))
     np.save('all_data', all_data)
-    
+
+
 def main():
     with open("dataset.params") as f:
-        example_count=int(f.readline())
+        example_count = int(params.read_param(f.readline()))
 
     shapenet = ShapeNet()
     save_data_to_npy(shapenet.paths, N=example_count)
-    
+
 
 class ShapeNet:
     def __init__(self):
@@ -92,6 +96,7 @@ class ShapeNet:
         self.train_index = 0
         self.test_index = self.split_index
 
+
 def load_data_matrix(data_columns):
     if isinstance(data_columns, np.ndarray):
         data_columns = data_columns.tolist()
@@ -101,11 +106,13 @@ def load_data_matrix(data_columns):
         mat.append(load_dataset_row(c))
     return np.stack(mat)
 
+
 def load_dataset_row(data_row):
     if isinstance(data_row, np.ndarray):
         data_row = data_row.tolist()
 
     return fetch_renders_from_disk(data_row)
+
 
 def load_labels(label_column):
     if isinstance(label_column, np.ndarray):
@@ -118,6 +125,7 @@ def load_labels(label_column):
                 (binvox_rw.read_as_3d_array(f)).data.astype(float))
 
     return np.stack(voxel_list)
+
 
 def write_path_csv(data_dir, label_dir):
 
@@ -145,6 +153,7 @@ def write_path_csv(data_dir, label_dir):
     paths.to_csv("paths.csv")
     return paths
 
+
 def construct_path_lists(data_dir, file_types):
     # print("[construct_path_lists] parsing dir {} for {} ...".format(data_dir, file_types))
     paths = [[] for _ in range(len(file_types))]
@@ -159,6 +168,7 @@ def construct_path_lists(data_dir, file_types):
         return paths[0]
 
     return tuple(paths)
+
 
 if __name__ == '__main__':
     main()

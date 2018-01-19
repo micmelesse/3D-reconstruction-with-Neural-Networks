@@ -13,6 +13,7 @@
 *.npy
 *.txt
 *.csv
+*.params
 aws_*
 model_*
 ShapeNe*

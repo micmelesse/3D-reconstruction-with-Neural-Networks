@@ -1,3 +1,4 @@
+import os
 import layers
 import numpy as np
 import tensorflow as tf
@@ -90,8 +91,8 @@ class network:
         print(self.cross_entropies.shape)
 
         print("metrics")
-        self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y),self.prediction)), axis=[
-            1, 2, 3]) / tf.constant(32 * 32 * 32,dtype=tf.float32)  # 32*32*32=32768
+        self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y), self.prediction)), axis=[
+            1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
         self.mean_accuracy = tf.reduce_mean(self.accuracies)
         print(self.accuracies.shape)
 
@@ -111,10 +112,25 @@ class network:
         plt.clf()
 
     def save(self, save_dir, loss, accuracy):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
         np.save("{}/losses".format(save_dir), np.array(loss))
         np.save("{}/accs".format(save_dir), np.array(accuracy))
-        self.saver.restore(self.sess, "{}/model.ckpt".format(save_dir))
+        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
+        self.plot(save_dir, loss, accuracy)
 
     def vis(self, log_dir="./log"):  # tensorboard/ vis tools
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
+
+    def filters(self, fd):
+        return self.sess.run(self.sess, fd)
+
+    def encoder_layers(self, fd):
+        return self.sess.run(self.encoder_outputs, fd)
+
+    def decoder_layer(self, fd):
+        return self.sess.run(self.decoder_outputs, fd)
+
+    def recurrent_layer(self, fd):
+        return self.sess.run(self.hidden_state_list, fd)
