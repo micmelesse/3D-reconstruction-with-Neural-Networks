@@ -2,23 +2,23 @@ import os
 import dataset
 
 
-def _download(_link):
-    _dir = os.path.splitext(os.path.basename(_link))[0]
-    _archive = _dir + ".tgz"
+def download_dataset(link):
+    download_dir = os.path.splitext(os.path.basename(link))[0]
+    archive = download_dir + ".tgz"
 
-    if not os.path.isdir(_dir) and not os.path.isfile(_archive):
-        os.system('wget -c {0}'.format(_link))
-        os.system("tar -xvzf {0}".format(_archive))
-        os.system("rm -f {0}".format(_archive))
-    elif not os.path.isdir(_dir) and os.path.isfile(_archive):
-        os.system("tar -xvzf {0}".format(_archive))
-        os.system("rm -f {0}".format(_archive))
-    return _dir
+    if not os.path.isdir(download_dir) and not os.path.isfile(archive):
+        os.system('wget -c {0}'.format(link))
+        os.system("tar -xvzf {0}".format(archive))
+        os.system("rm -f {0}".format(archive))
+    elif not os.path.isdir(download_dir) and os.path.isfile(archive):
+        os.system("tar -xvzf {0}".format(archive))
+        os.system("rm -f {0}".format(archive))
+    return download_dir
 
 
 if __name__ == '__main__':
     LABEL_LINK = 'ftp://cs.stanford.edu/cs/cvgl/ShapeNetVox32.tgz'
     DATA_LINK = "ftp://cs.stanford.edu/cs/cvgl/ShapeNetRendering.tgz"
 
-    LABEL_DIR = _download(LABEL_LINK)
-    DATA_DIR = _download(DATA_LINK)
+    LABEL_DIR = download_dataset(LABEL_LINK)
+    DATA_DIR = download_dataset(DATA_LINK)

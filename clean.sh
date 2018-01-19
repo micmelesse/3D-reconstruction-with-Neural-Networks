@@ -1,2 +1,2 @@
-rm -rf ./model/*
+rm -rf ./model_*
 rm -rf ./aws_model/*
