@@ -82,7 +82,7 @@ class network:
         print(self.prediction.shape)
 
         print("losses")
-        self.cross_entropies = tf.reduce_sum(tf.multiply(
+        self.cross_entropies = -tf.reduce_sum(tf.multiply(
             tf.log(self.softmax_output), tf.one_hot(self.Y, 2)), axis=[1, 2, 3, 4])
         self.mean_loss = tf.reduce_mean(self.cross_entropies)
         self.optimizing_op = tf.train.GradientDescentOptimizer(

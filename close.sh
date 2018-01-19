@@ -1,2 +1,2 @@
-port=$(cat jup.params)
+source jup.params
 jupyter notebook stop $port
