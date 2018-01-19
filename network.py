@@ -1,5 +1,7 @@
 import layers
+import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 
 class network:
@@ -92,3 +94,27 @@ class network:
             1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
         self.mean_accuracy = tf.reduce_mean(self.accuracies)
         print(self.accuracies.shape)
+
+        self.sess = tf.InteractiveSession()
+        self.saver = tf.train.Saver()
+        tf.global_variables_initializer().run()
+
+    def plot(self, plot_dir, loss, accuracy):
+        plt.plot((np.array(loss)).flatten())
+        plt.savefig("{}/loss.png".format(plot_dir),
+                    bbox_inches='tight')
+        plt.clf()
+        plt.plot((np.array(accuracy)).flatten())
+        plt.ylim(0, 1)
+        plt.savefig("{}/accuracy.png".format(plot_dir),
+                    bbox_inches='tight')
+        plt.clf()
+
+    def save(self, save_dir, loss, accuracy):
+        np.save("{}/losses".format(save_dir), np.array(loss))
+        np.save("{}/accs".format(save_dir), np.array(accuracy))
+        self.saver.restore(self.sess, "{}/model.ckpt".format(save_dir))
+
+    def vis(self, log_dir="./log"):  # tensorboard/ vis tools
+        writer = tf.summary.FileWriter(log_dir)
+        writer.add_graph(self.sess.graph)
