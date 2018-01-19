@@ -90,8 +90,8 @@ class network:
         print(self.cross_entropies.shape)
 
         print("metrics")
-        self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(self.Y, self.prediction)), axis=[
-            1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
+        self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y),self.prediction)), axis=[
+            1, 2, 3]) / tf.constant(32 * 32 * 32,dtype=tf.float32)  # 32*32*32=32768
         self.mean_accuracy = tf.reduce_mean(self.accuracies)
         print(self.accuracies.shape)
 
