@@ -7,7 +7,7 @@ import math
 import pandas as pd
 import numpy as np
 from render import *
-from PIL import Image
+
 from filecmp import dircmp
 
 def save_data_to_npy(paths,N=None):
