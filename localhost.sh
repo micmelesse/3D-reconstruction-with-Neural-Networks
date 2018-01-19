@@ -1,2 +1,2 @@
-port=$(cat jup.params)
+source jup.params
 open http://localhost:$port/
