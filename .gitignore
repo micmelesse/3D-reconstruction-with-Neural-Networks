@@ -13,6 +13,7 @@
 *.npy
 *.txt
 *.csv
+*.pdf
 *.params
 aws_*
 model_*

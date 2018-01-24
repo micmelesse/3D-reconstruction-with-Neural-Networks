@@ -1,1 +1,0 @@
-chmod 400 ml_ami_key.pem

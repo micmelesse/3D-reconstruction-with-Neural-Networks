@@ -1,1 +1,0 @@
-cd spider* && rm *.html; scrapy crawl ShapeNet
