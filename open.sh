@@ -1,3 +1,3 @@
 #!/bin/bash
-jupyter notebook list
+sh close.sh 8888
 jupyter notebook
