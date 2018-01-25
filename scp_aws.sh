@@ -1,2 +1,2 @@
-source aws.params
-scp -ri $key $user@$dns:thesis/model_* ./aws_models
+source config/aws.params
+scp -ri $KEY $USER@$DNS:thesis/model_* ./aws_models

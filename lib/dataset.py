@@ -1,16 +1,14 @@
 """deals with data for project"""
 import os
-import params
 import sys
 import random
 import tarfile
-import binvox_rw
 import math
 import pandas as pd
 import numpy as np
-from render import *
-
 from filecmp import dircmp
+import lib.params as params
+import third_party.binvox_rw as binvox_rw
 
 
 def save_data_to_npy(paths, N=None):

@@ -1,11 +1,12 @@
 import os
-import layers
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import lib.recurrent_module as recurrent_module
+import lib.utils as utils
 
-
-class network:
+# Recurrent Reconstruction Neural Network (R2N2)
+class R2N2:
     def __init__(self, learn_rate):
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
@@ -37,7 +38,7 @@ class network:
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
             N, n_x, n_h = 4, 1024, 256
-            self.recurrent_module = layers.GRU_R2N2(
+            self.recurrent_module = recurrent_module.GRU_GRID_2(
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
             self.hidden_state_list = []  # initial hidden state
@@ -54,7 +55,7 @@ class network:
         print("decoder_network")
         with tf.name_scope("decoder_network"):
             self.decoder_outputs = [cur_tensor]
-            cur_tensor = layers.unpool3D(cur_tensor)
+            cur_tensor = utils.unpool3D(cur_tensor)
             print(cur_tensor.shape)
             self.decoder_outputs.append(cur_tensor)
 
@@ -63,7 +64,7 @@ class network:
             for i in range(2, 4):
                 cur_tensor = tf.layers.conv3d(
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                cur_tensor = layers.unpool3D(cur_tensor)
+                cur_tensor = utils.unpool3D(cur_tensor)
                 cur_tensor = tf.nn.relu(cur_tensor)
                 print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)

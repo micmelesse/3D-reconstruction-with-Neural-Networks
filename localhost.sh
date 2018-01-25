@@ -1,2 +1,2 @@
-source jup.params
-open http://localhost:$port/
+source config/jup.params
+open http://localhost:$PORT/

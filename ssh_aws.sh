@@ -1,2 +1,2 @@
-source aws.params
-ssh -i $key $user@$dns
+source config/aws.params
+ssh -i $KEY $USER@$DNS

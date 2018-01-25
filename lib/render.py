@@ -1,5 +1,10 @@
-from dataset import *
+import os
+
+import random
+import trimesh
+import numpy as np
 from PIL import Image
+from lib.dataset import construct_path_lists
 
 def fetch_renders_from_disk(renders):
     if isinstance(renders, str):
@@ -43,10 +48,10 @@ def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24
             str.replace(mesh_path, dataset_dir, render_dir))
 
         if os.path.isdir(renders) and os.listdir(renders) != []:
-            render_list.append(fetch_render_from_disk(renders))
+            render_list.append(fetch_renders_from_disk(renders))
         else:
             write_renders_to_disk(compund_mesh, renders, render_count)
-            render_list.append(fetch_render_from_disk(renders))
+            render_list.append(fetch_renders_from_disk(renders))
 
     return render_list
 
