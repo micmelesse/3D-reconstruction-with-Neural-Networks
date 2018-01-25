@@ -7,8 +7,9 @@ import math
 import pandas as pd
 import numpy as np
 from filecmp import dircmp
-import lib.params as params
-import third_party.binvox_rw as binvox_rw
+import params as params
+import binvox_rw
+import render
 
 
 def save_data_to_npy(paths, N=None):
@@ -28,7 +29,7 @@ def save_data_to_npy(paths, N=None):
 
 
 def main():
-    with open("dataset.params") as f:
+    with open("config/dataset.params") as f:
         example_count = int(params.read_param(f.readline()))
 
     shapenet = ShapeNet()
@@ -37,7 +38,7 @@ def main():
 
 class ShapeNet:
     def __init__(self):
-        self.paths = pd.read_csv("paths.csv", index_col=0).as_matrix()
+        self.paths = pd.read_csv("./out/paths.csv", index_col=0).as_matrix()
         np.random.shuffle(self.paths)
         self.N = self.paths.shape[0]
         self.split_index = math.ceil(self.N * 0.8)
@@ -109,7 +110,7 @@ def load_dataset_row(data_row):
     if isinstance(data_row, np.ndarray):
         data_row = data_row.tolist()
 
-    return fetch_renders_from_disk(data_row)
+    return render.fetch_renders_from_disk(data_row)
 
 
 def load_labels(label_column):
@@ -118,7 +119,7 @@ def load_labels(label_column):
 
     voxel_list = []
     for voxel_path in label_column:
-        with open(voxel_path, 'rb') as f:
+        with open("./data/" + voxel_path, 'rb') as f:
             voxel_list.append(
                 (binvox_rw.read_as_3d_array(f)).data.astype(float))
 

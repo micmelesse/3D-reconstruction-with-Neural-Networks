@@ -4,7 +4,7 @@ import random
 import trimesh
 import numpy as np
 from PIL import Image
-from lib.dataset import construct_path_lists
+from dataset import construct_path_lists
 
 def fetch_renders_from_disk(renders):
     if isinstance(renders, str):
@@ -12,7 +12,7 @@ def fetch_renders_from_disk(renders):
 
     png_list = []
     for png_file in renders:
-        png_list.append(np.array(Image.open(png_file)))
+        png_list.append(np.array(Image.open("./data/" +png_file)))
 
     return np.stack(png_list)
 
