@@ -22,10 +22,10 @@ import render
 def save_data_to_npy(paths, N=None):
     print("save labels for {} examples".format(N))
     all_labels = load_labels((paths[0:N, -2]))
-    np.save('all_labels', all_labels)
+    np.save('out/all_labels', all_labels)
     print("save data for {} examples".format(N))
     all_data = load_data_matrix((paths[0:N, 0:-2]))
-    np.save('all_data', all_data)
+    np.save('out/all_data', all_data)
 
 
 def main():
