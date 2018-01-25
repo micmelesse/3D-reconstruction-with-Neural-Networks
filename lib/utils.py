@@ -5,23 +5,12 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-# print ("use %matplotlib inline if you want to display result in a notebook")
 def imsave_multichannel(im, f_name):
     return plt.imsave(f_name, (flatten_multichannel_image(im)))
-
-# print ("use %matplotlib inline if you want to display result in a notebook")
 
 
 def imshow_multichannel(im):
     return plt.imshow(flatten_multichannel_image(im))
-
-
-def imshow_voxel(vox):
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    ax.voxels(vox, edgecolor='k')
-    ax.view_init(30, 30)
-    return plt.imshow()
 
 
 def flatten_multichannel_image(im):
@@ -49,6 +38,24 @@ def flatten_multichannel_image(im):
         b = rows[i]
         a = np.vstack((a, b))
     return a
+
+
+# vis voxels
+def imshow_voxel(vox):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.voxels(vox, edgecolor='k')
+    ax.view_init(30, 30)
+    return plt.show()
+
+
+def imsave_voxel(vox, f_name):
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.voxels(vox, edgecolor='k')
+    ax.view_init(30, 30)
+    plt.savefig(f_name, bbox_inches='tight')
+    plt.close()
 
 
 # returns the neighboors of a cell including the cell
@@ -108,7 +115,37 @@ def weight_grid_multiply(x, W, N=4):
         i_list.append(j_list)
     return tf.transpose(tf.convert_to_tensor(i_list), [3, 0, 1, 2, 4])
 
-# from tensorflow github boards
+# #class Unpool3DLayer(Layer):
+#     """3D Unpooling layer for a convolutional network """
+
+#     def __init__(self, prev_layer, unpool_size=(2, 2, 2), padding=(0, 0, 0)):
+#         super().__init__(prev_layer)
+#         self._unpool_size = unpool_size
+#         self._padding = padding
+#         output_shape = (self._input_shape[0],  # batch
+#                         unpool_size[0] * self._input_shape[1] + 2 * padding[0],  # depth
+#                         self._input_shape[2],  # out channel
+#                         unpool_size[1] * self._input_shape[3] + 2 * padding[1],  # row
+#                         unpool_size[2] * self._input_shape[4] + 2 * padding[2])  # col
+#         self._output_shape = output_shape
+
+#     def set_output(self):
+#         output_shape = self._output_shape
+#         padding = self._padding
+#         unpool_size = self._unpool_size
+#         unpooled_output = tensor.alloc(0.0,  # Value to fill the tensor
+#                                        output_shape[0],
+#                                        output_shape[1] + 2 * padding[0],
+#                                        output_shape[2],
+#                                        output_shape[3] + 2 * padding[1],
+#                                        output_shape[4] + 2 * padding[2])
+
+#         unpooled_output = tensor.set_subtensor(unpooled_output[:, padding[0]:output_shape[
+#             1] + padding[0]:unpool_size[0], :, padding[1]:output_shape[3] + padding[1]:unpool_size[
+#                 1], padding[2]:output_shape[4] + padding[2]:unpool_size[2]],
+#                                                self._prev_layer.output)
+#         self._output = unpooled_output
+
 
 
 def unpool3D(value, name='unpool3D'):

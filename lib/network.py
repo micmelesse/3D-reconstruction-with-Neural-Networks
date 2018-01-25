@@ -52,7 +52,7 @@ class R2N2:
                 hidden_state = self.recurrent_module.call(
                     fc_batch_t, hidden_state)
             print(hidden_state.shape)
-        cur_tensor = tf.squeeze(hidden_state,[4])
+        cur_tensor = tf.squeeze(hidden_state, [4])
         print(cur_tensor.shape)
 
         print("decoder_network")
@@ -132,3 +132,39 @@ class R2N2:
 
     def state(self, fd):
         return self.sess.run([self.encoder_outputs, self.hidden_state_list, self.decoder_outputs], fd)
+
+    def train_step(self, fd):
+        return self.optimizing_op.eval(fd)
+
+    def encoder_state(self, save_dir, fd):
+        n_layers = len(self.encoder_outputs)
+        for l in range(n_layers):
+            state = self.encoder_outputs[l].eval(fd)
+            n_batch = state.shape[0]
+            for b in range(n_batch):
+                n_time = state.shape[1]
+                for t in range(n_time):
+                    utils.imsave_multichannel(
+                        state[b, t, :, :, :], save_dir + "/encoder_{}-{}-{}.png".format(l, b, t))
+
+    def decoder_state(self, save_dir, fd):
+        n_layers = len(self.decoder_outputs)
+        for l in range(n_layers):
+            state = self.decoder_outputs[l].eval(fd)
+            n_batch = state.shape[0]
+            for b in range(n_batch):
+                n_channels = state.shape[-1]
+                for c in range(n_channels):
+                    utils.imsave_voxel(state[b, :, :, :, c], save_dir +
+                                       "/decoder_{}-{}-{}.png".format(l, b, c))
+
+    def hidden_state(self, save_dir, fd):
+        n_layers = len(self.hidden_state_list)
+        for l in range(n_layers):
+            state = self.hidden_state_list[l].eval(fd)
+            n_batch = state.shape[0]
+            for b in range(n_batch):
+                n_channels = state.shape[-1]
+                for c in range(n_channels):
+                    utils.imsave_voxel(state[b, :, :, :, c], save_dir +
+                                       "/decoder_{}-{}-{}.png".format(l, b, c))
