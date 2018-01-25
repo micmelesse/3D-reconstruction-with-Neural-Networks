@@ -123,5 +123,10 @@ def unpool3D(value, name='unpool3D'):
     return out
 
 
+def stack_grid(x, N=4):
+    x = tf.expand_dims(x, axis=1)
+    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4, 5])
+
+
 def grid3D(element, N=4):
     return np.array([[[element for k in range(N)] for j in range(N)] for i in range(N)])

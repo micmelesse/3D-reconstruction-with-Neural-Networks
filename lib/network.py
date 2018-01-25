@@ -6,6 +6,8 @@ import lib.recurrent_module as recurrent_module
 import lib.utils as utils
 
 # Recurrent Reconstruction Neural Network (R2N2)
+
+
 class R2N2:
     def __init__(self, learn_rate):
         # place holders
@@ -38,11 +40,11 @@ class R2N2:
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
             N, n_x, n_h = 4, 1024, 256
-            self.recurrent_module = recurrent_module.GRU_GRID_2(
+            self.recurrent_module = recurrent_module.GRU_GRID(
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
             self.hidden_state_list = []  # initial hidden state
-            hidden_state = tf.zeros([1, 4, 4, 4, 256])
+            hidden_state = tf.zeros([1, 4, 4, 4, 1, 256])
 
             for t in range(24):  # feed batches of seqeuences
                 fc_batch_t = cur_tensor[:, t, :]
@@ -50,7 +52,8 @@ class R2N2:
                 hidden_state = self.recurrent_module.call(
                     fc_batch_t, hidden_state)
             print(hidden_state.shape)
-        cur_tensor = hidden_state
+        cur_tensor = tf.squeeze(hidden_state,[4])
+        print(cur_tensor.shape)
 
         print("decoder_network")
         with tf.name_scope("decoder_network"):

@@ -7,7 +7,7 @@ import lib.utils as utils
 
 
 class GRU_GRID:
-    def __init__(self, n_cells=4,n_input=1024, n_hidden_state=256):
+    def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
         N = n_cells
         h_n = n_hidden_state
         self.W_u = tf.Variable(tf.random_normal(
@@ -29,11 +29,15 @@ class GRU_GRID:
             [3, 3, 3, h_n, h_n]), name="U_h")
 
     def call(self, fc_input, prev_state):
+
         def linear(x, W, U, h, b):
-            Wx = tf.matmul(x, W)
-            Uh = tf.nn.conv3d(h, U, strides=[
-                1, 1, 1, 1, 1], padding="SAME")
+            Wx = tf.map_fn(lambda a: tf.matmul(a, W), x)
+            Uh = tf.map_fn(lambda a: tf.nn.conv3d(a, U, strides=[
+                1, 1, 1, 1, 1], padding="SAME"), h)
+            # print(Wx.shape, Uh.shape, b.shape)
             return Wx + Uh + b
+        fc_input = utils.stack_grid(fc_input)
+        # print(fc_input.shape)
 
         u_t = tf.sigmoid(
             linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
@@ -41,8 +45,9 @@ class GRU_GRID:
             linear(fc_input, self.W_r, self.U_r, prev_state,  self.b_r))
         h_t = tf.multiply(1 - u_t, prev_state) + tf.multiply(u_t, tf.tanh(
             linear(fc_input, self.W_h, self.U_h, tf.multiply(r_t, prev_state), self.b_h)))
-
+        # print(h_t.shape)
         return h_t
+
 
 class GRU_GRID_2:
     def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
@@ -65,7 +70,9 @@ class GRU_GRID_2:
         def linear(x, W, U, h, b):
             Wx = utils.weight_grid_multiply(x, W)
             Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
-            return Wx + Uh + tf.convert_to_tensor(b)
+            b = tf.convert_to_tensor(b)
+            print(Wx.shape, Uh.shape, b.shape)
+            return Wx + Uh + b
 
         u_t = tf.sigmoid(
             linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
@@ -103,6 +110,7 @@ class LSTM_GRID:
             Wx = tf.matmul(x, W)
             Uh = tf.nn.conv3d(hidden_state, U, strides=[
                 1, 1, 1, 1, 1], padding="SAME")
+            print(Wx.shape, Uh.shape, b.shape)
             return Wx + Uh + b
 
         _, prev_output = prev_state_tuple
