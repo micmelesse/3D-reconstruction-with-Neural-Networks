@@ -2,17 +2,16 @@ import os
 
 
 def download_dataset(link):
-    download_dir = os.path.splitext(os.path.basename(link))[0]
-    archive = download_dir + ".tgz"
+    download_folder = os.path.splitext(os.path.basename(link))[0]
+    archive = download_folder + ".tgz"
 
-    if not os.path.isdir(download_dir) and not os.path.isfile(archive):
+    if not os.path.isfile(archive):
         os.system('wget -c {0}'.format(link))
-        os.system("tar -xvzf {0}".format(archive))
-        os.system("rm -f {0}".format(archive))
-    elif not os.path.isdir(download_dir) and os.path.isfile(archive):
-        os.system("tar -xvzf {0}".format(archive))
-        os.system("rm -f {0}".format(archive))
-    return download_dir
+
+    os.system("tar -xvzf {0}".format(archive))
+    os.system("mv {0} ./data".format(download_folder))
+    os.system("rm -f {0}".format(archive))
+    return download_folder
 
 
 if __name__ == '__main__':
