@@ -17,9 +17,9 @@ class GRU_GRID:
         self.W_h = tf.Variable(tf.random_normal(
             [N, N, N, n_input, h_n]), name="W_h")
 
-        self.b_u = tf.Variable(tf.random_normal([N, N, N, 1, h_n]), name="b_u")
-        self.b_r = tf.Variable(tf.random_normal([N, N, N, 1, h_n]), name="b_r")
-        self.b_h = tf.Variable(tf.random_normal([N, N, N, 1, h_n]), name="b_h")
+        self.b_u = tf.Variable(tf.random_normal([N, N, N, h_n]), name="b_u")
+        self.b_r = tf.Variable(tf.random_normal([N, N, N, h_n]), name="b_r")
+        self.b_h = tf.Variable(tf.random_normal([N, N, N, h_n]), name="b_h")
 
         self.U_u = tf.Variable(tf.random_normal(
             [3, 3, 3, h_n, h_n]), name="U_u")
@@ -29,23 +29,13 @@ class GRU_GRID:
             [3, 3, 3, h_n, h_n]), name="U_h")
 
     def call(self, fc_input, prev_state):
-
-        def linear(x, W, U, h, b):
-            Wx = tf.map_fn(lambda a: tf.matmul(a, W), x)
-            Uh = tf.map_fn(lambda a: tf.nn.conv3d(a, U, strides=[
-                1, 1, 1, 1, 1], padding="SAME"), h)
-            # print(Wx.shape, Uh.shape, b.shape)
-            return Wx + Uh + b
-        fc_input = utils.stack_grid(fc_input)
-        # print(fc_input.shape)
-
+        fc_input = utils.r2n2_stack(fc_input)
         u_t = tf.sigmoid(
-            linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
+            utils.r2n2_linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
         r_t = tf.sigmoid(
-            linear(fc_input, self.W_r, self.U_r, prev_state,  self.b_r))
+            utils.r2n2_linear(fc_input, self.W_r, self.U_r, prev_state,  self.b_r))
         h_t = tf.multiply(1 - u_t, prev_state) + tf.multiply(u_t, tf.tanh(
-            linear(fc_input, self.W_h, self.U_h, tf.multiply(r_t, prev_state), self.b_h)))
-        # print(h_t.shape)
+            utils.r2n2_linear(fc_input, self.W_h, self.U_h, tf.multiply(r_t, prev_state), self.b_h)))
         return h_t
 
 

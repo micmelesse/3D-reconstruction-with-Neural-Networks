@@ -1,1 +1,1 @@
-python download.py
+python lib/download.py

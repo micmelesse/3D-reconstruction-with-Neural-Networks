@@ -58,7 +58,12 @@ def imsave_voxel(vox, f_name):
     plt.close()
 
 
+def grid3D(element, N=4):
+    return np.array([[[element for k in range(N)] for j in range(N)] for i in range(N)])
+
 # returns the neighboors of a cell including the cell
+
+
 def get_neighbors(grid, loc=(0, 0, 0), dist=1):
     i, j, k = loc[0], loc[1], loc[2]
     i_min, i_max = max(
@@ -147,8 +152,7 @@ def weight_grid_multiply(x, W, N=4):
 #         self._output = unpooled_output
 
 
-
-def unpool3D(value, name='unpool3D'):
+def r2n2_unpool3D(value, name='unpool3D'):
     with tf.name_scope(name) as scope:
         sh = value.get_shape().as_list()
         dim = len(sh[1: -1])
@@ -160,10 +164,24 @@ def unpool3D(value, name='unpool3D'):
     return out
 
 
-def stack_grid(x, N=4):
-    x = tf.expand_dims(x, axis=1)
-    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4, 5])
+def r2n2_matmul(a, b):
+    #print(a.shape, b.shape)
+    ret = tf.expand_dims(a, axis=-2)
+    #print(ret.shape, b.shape)
+    ret = tf.matmul(ret, b)
+    # print(ret.shape)
+    ret = tf.squeeze(ret, axis=-2)
+    # print(ret.shape)
+    return ret
 
 
-def grid3D(element, N=4):
-    return np.array([[[element for k in range(N)] for j in range(N)] for i in range(N)])
+def r2n2_linear(x, W, U, h, b):
+    #print(x.shape, W.shape, U.shape, h.shape, b.shape)
+    Wx = tf.map_fn(lambda a: r2n2_matmul(a, W), x)
+    Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
+    #print(Wx.shape, Uh.shape, b.shape)
+    return Wx + Uh + b
+
+
+def r2n2_stack(x, N=4):
+    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4])

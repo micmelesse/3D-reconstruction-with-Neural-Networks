@@ -1,2 +1,0 @@
-dir=
-echo $dir

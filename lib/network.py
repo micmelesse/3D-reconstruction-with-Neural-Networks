@@ -44,21 +44,20 @@ class R2N2:
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
             self.hidden_state_list = []  # initial hidden state
-            hidden_state = tf.zeros([1, 4, 4, 4, 1, 256])
+            hidden_state = tf.zeros([1, 4, 4, 4, 256])
 
             for t in range(24):  # feed batches of seqeuences
-                fc_batch_t = cur_tensor[:, t, :]
-                self.hidden_state_list.append(hidden_state)
                 hidden_state = self.recurrent_module.call(
-                    fc_batch_t, hidden_state)
+                    cur_tensor[:, t, :], hidden_state)
+                self.hidden_state_list.append(hidden_state)
             print(hidden_state.shape)
-        cur_tensor = tf.squeeze(hidden_state, [4])
+        cur_tensor = hidden_state
         print(cur_tensor.shape)
 
         print("decoder_network")
         with tf.name_scope("decoder_network"):
             self.decoder_outputs = [cur_tensor]
-            cur_tensor = utils.unpool3D(cur_tensor)
+            cur_tensor = utils.r2n2_unpool3D(cur_tensor)
             print(cur_tensor.shape)
             self.decoder_outputs.append(cur_tensor)
 
@@ -67,7 +66,7 @@ class R2N2:
             for i in range(2, 4):
                 cur_tensor = tf.layers.conv3d(
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                cur_tensor = utils.unpool3D(cur_tensor)
+                cur_tensor = utils.r2n2_unpool3D(cur_tensor)
                 cur_tensor = tf.nn.relu(cur_tensor)
                 print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
@@ -82,21 +81,21 @@ class R2N2:
         print("softmax_output")
         self.softmax_output = tf.map_fn(lambda a: tf.nn.softmax(a), cur_tensor)
         print(self.softmax_output.shape)
+
+        print("cross_entropy")
+        self.cross_entropy = -tf.multiply(
+            tf.log(self.softmax_output), tf.one_hot(self.Y, 2))
+        self.optimizing_op = tf.train.GradientDescentOptimizer(
+            learning_rate=learn_rate).minimize(self.cross_entropy)
+        print(self.cross_entropy.shape)
+
         print("prediction")
         self.prediction = tf.argmax(self.softmax_output, axis=4)
         print(self.prediction.shape)
 
-        print("losses")
-        self.cross_entropies = -tf.reduce_sum(tf.multiply(
-            tf.log(self.softmax_output), tf.one_hot(self.Y, 2)), axis=[1, 2, 3, 4])
-        self.mean_loss = tf.reduce_mean(self.cross_entropies)
-        self.optimizing_op = tf.train.GradientDescentOptimizer(
-            learning_rate=learn_rate).minimize(self.mean_loss)
-        print(self.cross_entropies.shape)
-
         print("metrics")
         self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y), self.prediction)), axis=[
-            1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
+                                        1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
         self.mean_accuracy = tf.reduce_mean(self.accuracies)
         print(self.accuracies.shape)
 
@@ -162,9 +161,10 @@ class R2N2:
         n_layers = len(self.hidden_state_list)
         for l in range(n_layers):
             state = self.hidden_state_list[l].eval(fd)
+            print(state.shape)
             n_batch = state.shape[0]
             for b in range(n_batch):
                 n_channels = state.shape[-1]
                 for c in range(n_channels):
                     utils.imsave_voxel(state[b, :, :, :, c], save_dir +
-                                       "/decoder_{}-{}-{}.png".format(l, b, c))
+                                       "/hidden_{}-{}-{}.png".format(l, b, c))

@@ -1,1 +1,1 @@
-rm -rf ./out/model_*
+rm -rf ./out/*
