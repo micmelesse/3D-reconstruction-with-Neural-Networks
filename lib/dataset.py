@@ -8,8 +8,8 @@ import pandas as pd
 import numpy as np
 from filecmp import dircmp
 import params as params
-import binvox_rw
 import render
+import third_party.binvox_rw as binvox_rw
 
 # if N is None:
 #     N=len(paths)
