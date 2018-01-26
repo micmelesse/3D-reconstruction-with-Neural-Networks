@@ -9,7 +9,7 @@ import numpy as np
 from filecmp import dircmp
 import params as params
 import render
-import third_party.binvox_rw as binvox_rw
+import binvox_rw
 
 # if N is None:
 #     N=len(paths)
