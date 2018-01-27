@@ -13,7 +13,7 @@ def download_dataset(link):
     os.system("rm -f {0}".format(archive))
 
 
-if __name__ == '__main__':
+def main():
     LABEL_LINK = 'ftp://cs.stanford.edu/cs/cvgl/ShapeNetVox32.tgz'
     DATA_LINK = "ftp://cs.stanford.edu/cs/cvgl/ShapeNetRendering.tgz"
 

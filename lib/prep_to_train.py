@@ -6,7 +6,7 @@ def check(train_dir):
         os.makedirs(train_dir)
 
 
-if __name__ == '__main__':
+def main():
     TRAIN_DIRS = ["out", "config", "data", "aws"]
     for d in TRAIN_DIRS:
         check(d)

@@ -1,37 +1,13 @@
 """deals with data for project"""
 import os
 import sys
+import math
 import random
 import tarfile
-import math
-import pandas as pd
 import numpy as np
-from filecmp import dircmp
-import params as params
-import render
-import binvox_rw
-
-
-def save_data_to_npy(paths, N=None):
-    if N is None:
-        N = len(paths)
-    print("save labels for {} examples".format(N))
-    all_labels = load_labels((paths[0:N, -2]))
-    np.save('out/labels_{}'.format(N), all_labels,)
-    print("save data for {} examples".format(N))
-    all_data = load_data_matrix((paths[0:N, 0:-2]))
-    np.save('out/data_{}'.format(N), all_data)
-
-
-def main():
-    with open("config/dataset.params") as f:
-        example_count = int(params.read_param(f.readline()))
-
-    if not os.path.isfile("out/paths.csv"):
-        write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
-
-    shapenet = ShapeNet()
-    save_data_to_npy(shapenet.paths, N=example_count)
+import pandas as pd
+from lib import path, params, render
+from third_party import binvox_rw
 
 
 class ShapeNet:
@@ -94,6 +70,13 @@ class ShapeNet:
         self.test_index = self.split_index
 
 
+def load_dataset_row(data_row):
+    if isinstance(data_row, np.ndarray):
+        data_row = data_row.tolist()
+
+    return render.fetch_renders_from_disk(data_row)
+
+
 def load_data_matrix(data_columns):
     if isinstance(data_columns, np.ndarray):
         data_columns = data_columns.tolist()
@@ -102,13 +85,6 @@ def load_data_matrix(data_columns):
     for c in data_columns:
         mat.append(load_dataset_row(c))
     return np.stack(mat)
-
-
-def load_dataset_row(data_row):
-    if isinstance(data_row, np.ndarray):
-        data_row = data_row.tolist()
-
-    return render.fetch_renders_from_disk(data_row)
 
 
 def load_labels(label_column):
@@ -124,49 +100,23 @@ def load_labels(label_column):
     return np.stack(voxel_list)
 
 
-def write_path_csv(data_dir, label_dir):
-    print("creating path csv for {} and {}".format(data_dir, label_dir))
-
-    common_paths = []
-    for dir_top, subdir_cmps in dircmp(data_dir, label_dir).subdirs.items():
-        for dir_bot in subdir_cmps.common_dirs:
-            common_paths.append(os.path.join(dir_top, dir_bot))
-
-    mapping = pd.DataFrame(common_paths, columns=["common_dirs"])
-    mapping['data_dirs'] = mapping.apply(
-        lambda data_row: os.path.join(data_dir, data_row.common_dirs), axis=1)
-
-    mapping['label_dirs'] = mapping.apply(
-        lambda data_row: os.path.join(label_dir, data_row.common_dirs), axis=1)
-
-    table = []
-    for i, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
-        data_row = []
-        data_row += construct_path_lists(d, [".png"])
-        data_row += construct_path_lists(l, [".binvox"])
-        data_row += [i]
-        table.append(data_row)
-
-    paths = pd.DataFrame(table)
-    paths.to_csv("out/paths.csv")
-    return paths
+def save_data_to_npy(paths, N=None):
+    if N is None or N <= 0:
+        N = len(paths)
+    print("save labels for {} examples".format(N))
+    all_labels = load_labels((paths[0:N, -2]))
+    np.save('out/labels_{}'.format(N), all_labels,)
+    print("save data for {} examples".format(N))
+    all_data = load_data_matrix((paths[0:N, 0:-2]))
+    np.save('out/data_{}'.format(N), all_data)
 
 
-def construct_path_lists(data_dir, file_types):
-    # print("[construct_path_lists] parsing dir {} for {} ...".format(data_dir, file_types))
-    paths = [[] for _ in range(len(file_types))]
+def main():
+    with open("config/dataset.params") as f:
+        example_count = int(params.read_param(f.readline()))
 
-    for root, _, files in os.walk(data_dir):
-        for f_name in files:
-            for i, f_type in enumerate(file_types):
-                if f_name.endswith(f_type):
-                    (paths[i]).append(root + '/' + f_name)
+    if not os.path.isfile("out/paths.csv"):
+        path.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
 
-    if len(file_types) == 1:
-        return paths[0]
-
-    return tuple(paths)
-
-
-if __name__ == '__main__':
-    main()
+    shapenet = ShapeNet()
+    save_data_to_npy(shapenet.paths, N=example_count)

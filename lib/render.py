@@ -1,10 +1,11 @@
 import os
-
+import sys
 import random
 import trimesh
 import numpy as np
 from PIL import Image
-from dataset import construct_path_lists
+import lib.path as path
+
 
 def fetch_renders_from_disk(renders):
     if isinstance(renders, str):
@@ -20,7 +21,7 @@ def fetch_renders_from_disk(renders):
 def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
-    pathlist_tuple = construct_path_lists(
+    pathlist_tuple = path.construct_path_lists(
         dataset_dir, file_types=['.obj', '.mtl'])
     pathlist = pathlist_tuple[0]  # DANGER, RANDOM
     random.shuffle(pathlist)
