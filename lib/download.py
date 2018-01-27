@@ -11,12 +11,14 @@ def download_dataset(link):
     os.system("tar -xvzf {0}".format(archive))
     os.system("mv {0} /data".format(download_folder))
     os.system("rm -f {0}".format(archive))
-    return download_folder
 
 
 if __name__ == '__main__':
     LABEL_LINK = 'ftp://cs.stanford.edu/cs/cvgl/ShapeNetVox32.tgz'
     DATA_LINK = "ftp://cs.stanford.edu/cs/cvgl/ShapeNetRendering.tgz"
 
-    LABEL_DIR = download_dataset(LABEL_LINK)
-    DATA_DIR = download_dataset(DATA_LINK)
+    if not os.path.isdir("data/ShapeNetVox32"):
+        download_dataset(LABEL_LINK)
+
+    if not os.path.isdir("data/ShapeNetRendering"):
+        download_dataset(DATA_LINK)
