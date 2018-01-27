@@ -83,7 +83,7 @@ class R2N2:
         # print("cross_entropy")
         self.logits = self.final_decoder_state = cur_tensor
         self.labels = tf.one_hot(self.Y, 2)
-        self.cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
+        self.cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(
             logits=self.logits, labels=self.labels)
         # print(self.cross_entropy.shape)
 
@@ -114,7 +114,7 @@ class R2N2:
         plt.plot((np.array(vals)).flatten())
         plt.savefig("{}/{}.png".format(plot_dir, plot_name),
                     bbox_inches='tight')
-        plt.clf()
+        plt.close()
 
     def save(self, save_dir, arr_name, vals):
         if not os.path.isdir(save_dir):

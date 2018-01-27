@@ -105,10 +105,10 @@ def save_data_to_npy(paths, N=None):
         N = len(paths)
     print("save labels for {} examples".format(N))
     all_labels = load_labels((paths[0:N, -2]))
-    np.save('out/labels_{}'.format(N), all_labels,)
+    np.save('out/labels_{:06d}'.format(N), all_labels,)
     print("save data for {} examples".format(N))
     all_data = load_data_matrix((paths[0:N, 0:-2]))
-    np.save('out/data_{}'.format(N), all_data)
+    np.save('out/data_{:06d}'.format(N), all_data)
 
 
 def main():
