@@ -12,7 +12,6 @@ import render
 import binvox_rw
 
 
-
 def save_data_to_npy(paths, N=None):
     if N is None:
         N = len(paths)
@@ -28,13 +27,16 @@ def main():
     with open("config/dataset.params") as f:
         example_count = int(params.read_param(f.readline()))
 
+    if not os.path.isfile("out/paths.csv"):
+        write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
+
     shapenet = ShapeNet()
     save_data_to_npy(shapenet.paths, N=example_count)
 
 
 class ShapeNet:
     def __init__(self):
-        self.paths = pd.read_csv("./out/paths.csv", index_col=0).as_matrix()
+        self.paths = pd.read_csv("out/paths.csv", index_col=0).as_matrix()
         np.random.shuffle(self.paths)
         self.N = self.paths.shape[0]
         self.split_index = math.ceil(self.N * 0.8)
@@ -115,7 +117,7 @@ def load_labels(label_column):
 
     voxel_list = []
     for voxel_path in label_column:
-        with open("./data/" + voxel_path, 'rb') as f:
+        with open(voxel_path, 'rb') as f:
             voxel_list.append(
                 (binvox_rw.read_as_3d_array(f)).data.astype(float))
 
@@ -123,6 +125,7 @@ def load_labels(label_column):
 
 
 def write_path_csv(data_dir, label_dir):
+    print("creating path csv for {} and {}".format(data_dir, label_dir))
 
     common_paths = []
     for dir_top, subdir_cmps in dircmp(data_dir, label_dir).subdirs.items():
@@ -145,7 +148,7 @@ def write_path_csv(data_dir, label_dir):
         table.append(data_row)
 
     paths = pd.DataFrame(table)
-    paths.to_csv("paths.csv")
+    paths.to_csv("out/paths.csv")
     return paths
 
 

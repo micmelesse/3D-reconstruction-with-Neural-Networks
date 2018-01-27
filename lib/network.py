@@ -16,7 +16,7 @@ class R2N2:
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
-            cur_tensor = self.X
+            self.input = cur_tensor = self.X
             print(cur_tensor.shape)
             self.encoder_outputs = [cur_tensor]
             k_s = [3, 3]
@@ -34,6 +34,7 @@ class R2N2:
             cur_tensor = tf.map_fn(tf.contrib.layers.flatten,  cur_tensor)
             cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
                 a, 1024, activation_fn=None), cur_tensor)
+            self.final_encoder_state = cur_tensor
             self.encoder_outputs.append(cur_tensor)
             print(cur_tensor.shape)
 
@@ -51,7 +52,7 @@ class R2N2:
                     cur_tensor[:, t, :], hidden_state)
                 self.hidden_state_list.append(hidden_state)
             print(hidden_state.shape)
-        cur_tensor = hidden_state
+        self.final_hidden_state = cur_tensor = hidden_state
         print(cur_tensor.shape)
 
         print("decoder_network")
@@ -78,26 +79,28 @@ class R2N2:
                 print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
 
-        print("softmax_output")
-        self.softmax_output = tf.map_fn(lambda a: tf.nn.softmax(a), cur_tensor)
-        print(self.softmax_output.shape)
-
         print("cross_entropy")
-        self.cross_entropy = -tf.multiply(
-            tf.log(self.softmax_output), tf.one_hot(self.Y, 2))
-        self.optimizing_op = tf.train.GradientDescentOptimizer(
-            learning_rate=learn_rate).minimize(self.cross_entropy)
+        self.logits = self.final_decoder_state = cur_tensor
+        self.labels = tf.one_hot(self.Y, 2)
+        self.cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(
+            logits=self.logits, labels=self.labels)
         print(self.cross_entropy.shape)
 
-        print("prediction")
-        self.prediction = tf.argmax(self.softmax_output, axis=4)
-        print(self.prediction.shape)
+        print("optimize loss")
+        self.losses = tf.reduce_mean(self.cross_entropy, axis=[1, 2, 3])
+        self.batch_loss = tf.reduce_mean(self.losses)
+        self.optimizing_op = tf.train.GradientDescentOptimizer(
+            learning_rate=learn_rate).minimize(self.batch_loss)
+        print(self.losses.shape)
 
-        print("metrics")
-        self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y), self.prediction)), axis=[
-                                        1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
-        self.mean_accuracy = tf.reduce_mean(self.accuracies)
-        print(self.accuracies.shape)
+        # print("prediction")
+        # self.prediction = tf.argmax(self.softm, axis=4)
+        # print(self.prediction.shape)
+        # print("metrics")
+        # self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y), self.prediction)), axis=[
+        #     1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
+        # self.mean_accuracy = tf.reduce_mean(self.accuracies)
+        # print(self.accuracies.shape)
 
         self.sess = tf.InteractiveSession()
         self.saver = tf.train.Saver()
@@ -133,7 +136,7 @@ class R2N2:
         return self.sess.run([self.encoder_outputs, self.hidden_state_list, self.decoder_outputs], fd)
 
     def train_step(self, fd):
-        return self.optimizing_op.eval(fd)
+        return self.sess.run([self.optimizing_op], fd)
 
     def encoder_state(self, save_dir, fd):
         n_layers = len(self.encoder_outputs)

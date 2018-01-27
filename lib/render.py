@@ -12,7 +12,7 @@ def fetch_renders_from_disk(renders):
 
     png_list = []
     for png_file in renders:
-        png_list.append(np.array(Image.open("./data/" +png_file)))
+        png_list.append(np.array(Image.open(png_file)))
 
     return np.stack(png_list)
 
