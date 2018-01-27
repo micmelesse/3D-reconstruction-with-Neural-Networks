@@ -101,7 +101,7 @@ def load_labels(label_column):
 
 
 def save_data_to_npy(paths, N=None):
-    if N is None or N <= 0:
+    if N is None or N <= 0 or N >= len(paths):
         N = len(paths)
     print("save labels for {} examples".format(N))
     all_labels = load_labels((paths[0:N, -2]))
