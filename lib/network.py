@@ -83,7 +83,7 @@ class R2N2:
         # print("cross_entropy")
         self.logits = self.final_decoder_state = cur_tensor
         self.labels = tf.one_hot(self.Y, 2)
-        self.cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(
+        self.cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
             logits=self.logits, labels=self.labels)
         # print(self.cross_entropy.shape)
 
