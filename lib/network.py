@@ -146,9 +146,9 @@ class R2N2:
                 n_time = state.shape[1]
                 for t in range(n_time):
                     np.save(save_dir + "/encoder_{}-{}-{}".format(l,
-                                                                  b, t), state[b, t, :, :, :])
+                                                                  b, t), state[b, t])
                     utils.imsave_multichannel(
-                        state[b, t, :, :, :], save_dir + "/encoder_{}-{}-{}.png".format(l, b, t))
+                        state[b, t], save_dir + "/encoder_{}-{}-{}.png".format(l, b, t))
 
     def save_decoder_state(self, save_dir, fd):
         n_layers = len(self.decoder_outputs)
