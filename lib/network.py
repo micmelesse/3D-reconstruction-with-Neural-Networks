@@ -107,34 +107,25 @@ class R2N2:
         self.saver = tf.train.Saver()
         tf.global_variables_initializer().run()
 
-    def plot(self, plot_dir, loss, accuracy):
-        plt.plot((np.array(loss)).flatten())
-        plt.savefig("{}/loss.png".format(plot_dir),
-                    bbox_inches='tight')
-        plt.clf()
-        plt.plot((np.array(accuracy)).flatten())
-        plt.ylim(0, 1)
-        plt.savefig("{}/accuracy.png".format(plot_dir),
+    def plot(self, plot_dir, plot_name, vals):
+        if not os.path.isdir(plot_dir):
+            os.makedirs(plot_dir)
+
+        plt.plot((np.array(vals)).flatten())
+        plt.savefig("{}/{}.png".format(plot_dir, plot_name),
                     bbox_inches='tight')
         plt.clf()
 
-    def save(self, save_dir, loss, accuracy):
+    def save(self, save_dir, arr_name, vals):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
-        np.save("{}/losses".format(save_dir), np.array(loss))
-        np.save("{}/accs".format(save_dir), np.array(accuracy))
+        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
         self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        self.plot(save_dir, loss, accuracy)
+        self.plot(save_dir, arr_name, vals)
 
     def vis(self, log_dir="./log"):  # tensorboard/ vis tools
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
-
-    def filters(self, fd):
-        return self.sess.run(self.sess, fd)
-
-    def state(self, fd):
-        return self.sess.run([self.encoder_outputs, self.hidden_state_list, self.decoder_outputs], fd)
 
     def train_step(self, fd):
         return self.sess.run([self.optimizing_op], fd)
