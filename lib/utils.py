@@ -6,7 +6,10 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 def imsave_multichannel(im, f_name):
-    return plt.imsave(f_name, (flatten_multichannel_image(im)))
+    plt.imsave(f_name, (flatten_multichannel_image(im)))
+    plt.clf()
+    plt.close()
+    return
 
 
 def imshow_multichannel(im):
@@ -55,6 +58,7 @@ def imsave_voxel(vox, f_name):
     ax.voxels(vox, edgecolor='k')
     ax.view_init(30, 30)
     plt.savefig(f_name, bbox_inches='tight')
+    plt.clf()
     plt.close()
 
 
