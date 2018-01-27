@@ -11,32 +11,35 @@ class GRU_GRID:
         N = n_cells
         h_n = n_hidden_state
         self.W_u = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n]), name="W_u")
+            [N, N, N, n_input, h_n], dtype=tf.float64), name="W_u")
         self.W_r = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n]), name="W_r")
+            [N, N, N, n_input, h_n], dtype=tf.float64), name="W_r")
         self.W_h = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n]), name="W_h")
+            [N, N, N, n_input, h_n], dtype=tf.float64), name="W_h")
 
-        self.b_u = tf.Variable(tf.random_normal([N, N, N, h_n]), name="b_u")
-        self.b_r = tf.Variable(tf.random_normal([N, N, N, h_n]), name="b_r")
-        self.b_h = tf.Variable(tf.random_normal([N, N, N, h_n]), name="b_h")
+        self.b_u = tf.Variable(tf.random_normal(
+            [N, N, N, h_n], dtype=tf.float64), name="b_u")
+        self.b_r = tf.Variable(tf.random_normal(
+            [N, N, N, h_n], dtype=tf.float64), name="b_r")
+        self.b_h = tf.Variable(tf.random_normal(
+            [N, N, N, h_n], dtype=tf.float64), name="b_h")
 
         self.U_u = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n]), name="U_u")
+            [3, 3, 3, h_n, h_n], dtype=tf.float64), name="U_u")
         self.U_r = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n]), name="U_r")
+            [3, 3, 3, h_n, h_n], dtype=tf.float64), name="U_r")
         self.U_h = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n]), name="U_h")
+            [3, 3, 3, h_n, h_n], dtype=tf.float64), name="U_h")
 
     def call(self, fc_input, prev_state):
-        fc_input = utils.r2n2_stack(fc_input)
+        fc_input = tf.cast(utils.r2n2_stack(fc_input), tf.float64)
         u_t = tf.sigmoid(
             utils.r2n2_linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
         r_t = tf.sigmoid(
             utils.r2n2_linear(fc_input, self.W_r, self.U_r, prev_state,  self.b_r))
         h_t = tf.multiply(1 - u_t, prev_state) + tf.multiply(u_t, tf.tanh(
             utils.r2n2_linear(fc_input, self.W_h, self.U_h, tf.multiply(r_t, prev_state), self.b_h)))
-        return h_t
+        return fc_input, u_t, r_t, h_t
 
 
 class GRU_GRID_2:
@@ -58,6 +61,7 @@ class GRU_GRID_2:
 
     def call(self, fc_input, prev_state):
         def linear(x, W, U, h, b):
+            x = tf.cast(x, tf.float64)
             Wx = utils.weight_grid_multiply(x, W)
             Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
             b = tf.convert_to_tensor(b)
