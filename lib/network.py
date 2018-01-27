@@ -138,7 +138,7 @@ class R2N2:
     def train_step(self, fd):
         return self.sess.run([self.optimizing_op], fd)
 
-    def encoder_state(self, save_dir, fd):
+    def save_encoder_state(self, save_dir, fd):
         n_layers = len(self.encoder_outputs)
         for l in range(n_layers):
             state = self.encoder_outputs[l].eval(fd)
@@ -146,10 +146,12 @@ class R2N2:
             for b in range(n_batch):
                 n_time = state.shape[1]
                 for t in range(n_time):
+                    np.save(save_dir + "/encoder_{}-{}-{}".format(l,
+                                                                  b, t), state[b, t, :, :, :])
                     utils.imsave_multichannel(
                         state[b, t, :, :, :], save_dir + "/encoder_{}-{}-{}.png".format(l, b, t))
 
-    def decoder_state(self, save_dir, fd):
+    def save_decoder_state(self, save_dir, fd):
         n_layers = len(self.decoder_outputs)
         for l in range(n_layers):
             state = self.decoder_outputs[l].eval(fd)
@@ -157,10 +159,12 @@ class R2N2:
             for b in range(n_batch):
                 n_channels = state.shape[-1]
                 for c in range(n_channels):
+                    np.save(save_dir + "/decoder_{}-{}-{}".format(l,
+                                                                  b, c), state[b, :, :, :, c])
                     utils.imsave_voxel(state[b, :, :, :, c], save_dir +
                                        "/decoder_{}-{}-{}.png".format(l, b, c))
 
-    def hidden_state(self, save_dir, fd):
+    def save_hidden_state(self, save_dir, fd):
         n_layers = len(self.hidden_state_list)
         for l in range(n_layers):
             state = self.hidden_state_list[l].eval(fd)
@@ -169,5 +173,7 @@ class R2N2:
             for b in range(n_batch):
                 n_channels = state.shape[-1]
                 for c in range(n_channels):
+                    np.save(save_dir + "/hidden_{}-{}-{}".format(l,
+                                                                 b, c), state[b, :, :, :, c])
                     utils.imsave_voxel(state[b, :, :, :, c], save_dir +
                                        "/hidden_{}-{}-{}.png".format(l, b, c))
