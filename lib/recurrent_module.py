@@ -33,7 +33,7 @@ class GRU_GRID:
             [3, 3, 3, h_n, h_n], dtype=data_type), name="U_h")
 
     def call(self, fc_input, prev_state):
-        fc_input = tf.cast(utils.r2n2_stack(fc_input), tf.float64)
+        fc_input = utils.r2n2_stack(fc_input)
         u_t = tf.sigmoid(
             utils.r2n2_linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
         r_t = tf.sigmoid(
@@ -62,7 +62,6 @@ class GRU_GRID_2:
 
     def call(self, fc_input, prev_state):
         def linear(x, W, U, h, b):
-            x = tf.cast(x, tf.float64)
             Wx = utils.weight_grid_multiply(x, W)
             Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
             b = tf.convert_to_tensor(b)
