@@ -9,7 +9,7 @@ def download_dataset(link):
         os.system('wget -c {0}'.format(link))
 
     os.system("tar -xvzf {0}".format(archive))
-    os.rename(download_folder, "data/{}".format(download_dataset))
+    os.rename(download_folder, "data/{}".format(download_folder))
     os.system("rm -f {0}".format(archive))
 
 
