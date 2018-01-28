@@ -180,12 +180,20 @@ def r2n2_matmul(a, b):
 
 
 def r2n2_linear(x, W, U, h, b):
-    #print(x.shape, W.shape, U.shape, h.shape, b.shape)
+    # print(x.shape, W.shape, U.shape, h.shape, b.shape)
     Wx = tf.map_fn(lambda a: r2n2_matmul(a, W), x)
     Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
     #print(Wx.shape, Uh.shape, b.shape)
     return Wx + Uh + b
 
 
-def r2n2_stack(x, dtype=tf.float32, N=4):
-    return tf.cast(tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4]), dtype)
+def r2n2_stack(x, N=4):
+    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4])
+
+
+def npy_stack(rows):
+    ret = []
+    for r in rows:
+        print(np.load(r).shape)
+        ret.append(np.load(r))
+    return np.stack(ret)

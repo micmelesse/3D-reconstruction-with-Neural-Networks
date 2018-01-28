@@ -7,22 +7,18 @@ from PIL import Image
 import lib.path as path
 
 
-def fetch_renders_from_disk(renders):
-    if isinstance(renders, str):
-        return np.expand_dims(np.array(Image.open(renders)), axis=0)
-
-    png_list = []
-    for png_file in renders:
-        png_list.append(np.array(Image.open(png_file)))
-
-    return np.stack(png_list)
+def get_render_sequence(render_paths):
+    ret = []
+    for r in render_paths:
+        ret.append(np.array(Image.open(r)))
+    return np.stack(ret)
 
 
 def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
     pathlist_tuple = path.construct_path_lists(
-        dataset_dir, file_types=['.obj', '.mtl'])
+        dataset_dir, ['.obj', '.mtl'])
     pathlist = pathlist_tuple[0]  # DANGER, RANDOM
     random.shuffle(pathlist)
     pathlist = pathlist[:num_of_examples] if num_of_examples is not None else pathlist

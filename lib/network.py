@@ -45,7 +45,7 @@ class R2N2:
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
             self.hidden_state_list = []  # initial hidden state
-            hidden_state = [tf.zeros([1, 4, 4, 4, 256], dtype=tf.float32)]
+            hidden_state = tf.zeros([1, 4, 4, 4, 256])
             self.hidden_state_list.append(hidden_state)
 
             for t in range(24):  # feed batches of seqeuences
@@ -82,9 +82,10 @@ class R2N2:
 
         # print("cross_entropy")
         self.logits = self.final_decoder_state = cur_tensor
-        self.labels = tf.one_hot(self.Y, 2)
-        self.cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
-            logits=self.logits, labels=self.labels)
+        self.labels = tf.one_hot(self.Y, 2, dtype=self.logits.dtype)
+        self.softmax = tf.nn.softmax(self.logits)
+        self.log_softmax = tf.log(self.softmax)
+        self.cross_entropy = tf.multiply(self.labels, self.log_softmax)
         # print(self.cross_entropy.shape)
 
         # print("optimize loss")

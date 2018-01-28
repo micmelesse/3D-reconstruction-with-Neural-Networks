@@ -70,40 +70,31 @@ class ShapeNet:
         self.test_index = self.split_index
 
 
-def load_dataset_row(data_row):
-    if isinstance(data_row, np.ndarray):
-        data_row = data_row.tolist()
-    if isinstance(data_row, str):
-        data_row = [data_row]
+def load_data(data_samples):
+    if data_samples.ndim == 1:
+        data_samples = [data_samples]
 
-    return render.fetch_renders_from_disk(data_row)
+    ret = []
+    for d in data_samples:
+        # print(d)
+        data_row = render.get_render_sequence(d)
+        # print(data_row.shape)
+        # print(data_row.shape)
+        ret.append(data_row)
 
-
-def load_data_matrix(data_columns):
-    if isinstance(data_columns, np.ndarray):
-        data_columns = data_columns.tolist()
-    if isinstance(data_columns, str):
-        data_columns = [data_columns]
-
-    mat = []
-    for c in data_columns:
-        mat.append(load_dataset_row(c))
-    return np.stack(mat)
+    return (np.stack(ret) if len(ret) != 1 else ret[0])
 
 
-def load_labels(label_column):
-    if isinstance(label_column, np.ndarray):
-        label_column = label_column.tolist()
-    if isinstance(label_column, str):
-        label_column = [label_column]
+def load_labels(label_samples):
+    if isinstance(label_samples, str):
+        label_samples = [label_samples]
 
-    voxel_list = []
-    for voxel_path in label_column:
+    ret = []
+    for voxel_path in label_samples:
         with open(voxel_path, 'rb') as f:
-            voxel_list.append(
-                (binvox_rw.read_as_3d_array(f)).data.astype(float))
+            ret.append((binvox_rw.read_as_3d_array(f)))
 
-    return np.stack(voxel_list)
+    return (np.stack(ret) if len(ret) != 1 else ret[0])
 
 
 def save_data_to_npy(paths, N=None):
@@ -113,8 +104,8 @@ def save_data_to_npy(paths, N=None):
     print("data and labels for {} examples".format(N))
     for i in range(N):
         np.save('out/data_{:06d}'.format(i),
-                load_data_matrix((paths[i, 0:-2])))
-        np.save('out/labels_{:06d}'.format(i), load_labels((paths[i, -2])))
+                load_data(paths[i, 0:-2]))
+        np.save('out/labels_{:06d}'.format(i), load_labels(paths[i, -2]))
 
 
 def main():

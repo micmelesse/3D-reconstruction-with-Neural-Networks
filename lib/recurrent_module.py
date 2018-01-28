@@ -33,7 +33,10 @@ class GRU_GRID:
             [3, 3, 3, h_n, h_n], dtype=data_type), name="U_h")
 
     def call(self, fc_input, prev_state):
-        fc_input = utils.r2n2_stack(fc_input, tf.float64)
+        fc_input = utils.r2n2_stack(fc_input)
+        fc_input = tf.cast(fc_input, self.W_h.dtype)
+        prev_state = tf.cast(prev_state, self.U_h.dtype)
+
         u_t = tf.sigmoid(
             utils.r2n2_linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
         r_t = tf.sigmoid(
