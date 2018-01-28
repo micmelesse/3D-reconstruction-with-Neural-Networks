@@ -187,5 +187,5 @@ def r2n2_linear(x, W, U, h, b):
     return Wx + Uh + b
 
 
-def r2n2_stack(x, N=4):
-    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4])
+def r2n2_stack(x, dtype=tf.float32, N=4):
+    return tf.cast(tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4]), dtype)

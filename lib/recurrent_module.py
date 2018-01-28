@@ -10,7 +10,7 @@ class GRU_GRID:
     def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
         N = n_cells
         h_n = n_hidden_state
-        data_type = tf.float32
+        data_type = tf.float64
         self.W_u = tf.Variable(tf.random_normal(
             [N, N, N, n_input, h_n], dtype=data_type), name="W_u")
         self.W_r = tf.Variable(tf.random_normal(
@@ -33,14 +33,14 @@ class GRU_GRID:
             [3, 3, 3, h_n, h_n], dtype=data_type), name="U_h")
 
     def call(self, fc_input, prev_state):
-        fc_input = utils.r2n2_stack(fc_input)
+        fc_input = utils.r2n2_stack(fc_input, tf.float64)
         u_t = tf.sigmoid(
             utils.r2n2_linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
         r_t = tf.sigmoid(
             utils.r2n2_linear(fc_input, self.W_r, self.U_r, prev_state,  self.b_r))
         h_t = tf.multiply(1 - u_t, prev_state) + tf.multiply(u_t, tf.tanh(
             utils.r2n2_linear(fc_input, self.W_h, self.U_h, tf.multiply(r_t, prev_state), self.b_h)))
-        return fc_input, u_t, r_t, h_t
+        return h_t
 
 
 class GRU_GRID_2:

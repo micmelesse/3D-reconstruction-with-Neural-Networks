@@ -50,11 +50,11 @@ class R2N2:
 
             for t in range(24):  # feed batches of seqeuences
                 hidden_state = self.recurrent_module.call(
-                    cur_tensor[:, t, :], hidden_state[-1])
+                    cur_tensor[:, t, :], hidden_state)
                 self.hidden_state_list.append(hidden_state)
             # print(hidden_state.shape)
         self.final_hidden_state = hidden_state
-        cur_tensor = hidden_state[-1]
+        cur_tensor = hidden_state
 
         # print("decoder_network")
         with tf.name_scope("decoder_network"):
