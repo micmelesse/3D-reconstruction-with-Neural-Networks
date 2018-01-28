@@ -45,7 +45,7 @@ class R2N2:
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
             self.hidden_state_list = []  # initial hidden state
-            hidden_state = [tf.zeros([1, 4, 4, 4, 256], dtype=tf.float64)]
+            hidden_state = [tf.zeros([1, 4, 4, 4, 256], dtype=tf.float32)]
             self.hidden_state_list.append(hidden_state)
 
             for t in range(24):  # feed batches of seqeuences

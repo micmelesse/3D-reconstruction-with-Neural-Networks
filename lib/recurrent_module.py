@@ -10,26 +10,27 @@ class GRU_GRID:
     def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
         N = n_cells
         h_n = n_hidden_state
+        data_type = tf.float32
         self.W_u = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n], dtype=tf.float64), name="W_u")
+            [N, N, N, n_input, h_n], dtype=data_type), name="W_u")
         self.W_r = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n], dtype=tf.float64), name="W_r")
+            [N, N, N, n_input, h_n], dtype=data_type), name="W_r")
         self.W_h = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n], dtype=tf.float64), name="W_h")
+            [N, N, N, n_input, h_n], dtype=data_type), name="W_h")
 
         self.b_u = tf.Variable(tf.random_normal(
-            [N, N, N, h_n], dtype=tf.float64), name="b_u")
+            [N, N, N, h_n], dtype=data_type), name="b_u")
         self.b_r = tf.Variable(tf.random_normal(
-            [N, N, N, h_n], dtype=tf.float64), name="b_r")
+            [N, N, N, h_n], dtype=data_type), name="b_r")
         self.b_h = tf.Variable(tf.random_normal(
-            [N, N, N, h_n], dtype=tf.float64), name="b_h")
+            [N, N, N, h_n], dtype=data_type), name="b_h")
 
         self.U_u = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n], dtype=tf.float64), name="U_u")
+            [3, 3, 3, h_n, h_n], dtype=data_type), name="U_u")
         self.U_r = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n], dtype=tf.float64), name="U_r")
+            [3, 3, 3, h_n, h_n], dtype=data_type), name="U_r")
         self.U_h = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n], dtype=tf.float64), name="U_h")
+            [3, 3, 3, h_n, h_n], dtype=data_type), name="U_h")
 
     def call(self, fc_input, prev_state):
         fc_input = tf.cast(utils.r2n2_stack(fc_input), tf.float64)
