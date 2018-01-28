@@ -73,6 +73,8 @@ class ShapeNet:
 def load_dataset_row(data_row):
     if isinstance(data_row, np.ndarray):
         data_row = data_row.tolist()
+    if isinstance(data_row, str):
+        data_row = [data_row]
 
     return render.fetch_renders_from_disk(data_row)
 
@@ -80,6 +82,8 @@ def load_dataset_row(data_row):
 def load_data_matrix(data_columns):
     if isinstance(data_columns, np.ndarray):
         data_columns = data_columns.tolist()
+    if isinstance(data_columns, str):
+        data_columns = [data_columns]
 
     mat = []
     for c in data_columns:
@@ -90,6 +94,8 @@ def load_data_matrix(data_columns):
 def load_labels(label_column):
     if isinstance(label_column, np.ndarray):
         label_column = label_column.tolist()
+    if isinstance(label_column, str):
+        label_column = [label_column]
 
     voxel_list = []
     for voxel_path in label_column:
@@ -103,12 +109,12 @@ def load_labels(label_column):
 def save_data_to_npy(paths, N=None):
     if N is None or N <= 0 or N >= len(paths):
         N = len(paths)
-    print("save labels for {} examples".format(N))
-    all_labels = load_labels((paths[0:N, -2]))
-    np.save('out/labels_{:06d}'.format(N), all_labels,)
-    print("save data for {} examples".format(N))
-    all_data = load_data_matrix((paths[0:N, 0:-2]))
-    np.save('out/data_{:06d}'.format(N), all_data)
+
+    print("data and labels for {} examples".format(N))
+    for i in range(N):
+        np.save('out/data_{:06d}'.format(i),
+                load_data_matrix((paths[i, 0:-2])))
+        np.save('out/labels_{:06d}'.format(i), load_labels((paths[i, -2])))
 
 
 def main():
