@@ -92,7 +92,7 @@ def load_labels(label_samples):
     ret = []
     for voxel_path in label_samples:
         with open(voxel_path, 'rb') as f:
-            ret.append((binvox_rw.read_as_3d_array(f)))
+            ret.append(binvox_rw.read_as_3d_array(f).data.astype(float))
 
     return (np.stack(ret) if len(ret) != 1 else ret[0])
 
