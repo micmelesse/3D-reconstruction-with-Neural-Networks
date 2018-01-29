@@ -85,9 +85,8 @@ class R2N2:
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
         self.log_softmax = tf.log(self.softmax)
-        self.cross_entropy = - \
-            tf.multiply(tf.cast(self.label, self.log_softmax.dtype),
-                        self.log_softmax)
+        self.cross_entropy = tf.reduce_sum(-tf.multiply(tf.cast(self.label, self.log_softmax.dtype),
+                                                        self.log_softmax), axis=-1)
 
         self.losses = tf.reduce_mean(self.cross_entropy, axis=[1, 2, 3])
         self.batch_loss = tf.reduce_mean(self.losses)
