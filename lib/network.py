@@ -11,12 +11,12 @@ import lib.utils as utils
 class R2N2:
     def __init__(self, learn_rate):
         # place holders
-        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
+        self.X = tf.placeholder(tf.uint8, [None, 24, 137, 137, 4])
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
 
         # print("encoder_network")
         with tf.name_scope("encoder_network"):
-            self.input = cur_tensor = self.X
+            self.input = cur_tensor = tf.cast(self.X, tf.float16)
             # print(cur_tensor.shape)
             self.encoder_outputs = [cur_tensor]
             k_s = [3, 3]
@@ -80,25 +80,22 @@ class R2N2:
                 # print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
 
-        # print("cross_entropy")
+        # print("loss")
         self.logits = self.final_decoder_state = cur_tensor
-        self.labels = tf.one_hot(self.Y, 2, dtype=self.logits.dtype)
+        self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
         self.log_softmax = tf.log(self.softmax)
-        self.cross_entropy = tf.multiply(self.labels, self.log_softmax)
-        # print(self.cross_entropy.shape)
+        self.cross_entropy = - \
+            tf.multiply(tf.cast(self.label, tf.float64), self.log_softmax)
 
-        # print("optimize loss")
         self.losses = tf.reduce_mean(self.cross_entropy, axis=[1, 2, 3])
         self.batch_loss = tf.reduce_mean(self.losses)
         self.optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=learn_rate).minimize(self.batch_loss)
-        # print(self.losses.shape)
 
-        # print("prediction")
+        # print("metrics")
         # self.prediction = tf.argmax(self.softm, axis=4)
         # print(self.prediction.shape)
-        # print("metrics")
         # self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y), self.prediction)), axis=[
         #     1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
         # self.mean_accuracy = tf.reduce_mean(self.accuracies)

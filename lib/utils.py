@@ -194,6 +194,5 @@ def r2n2_stack(x, N=4):
 def npy_stack(rows):
     ret = []
     for r in rows:
-        print(np.load(r).shape)
         ret.append(np.load(r))
     return np.stack(ret)

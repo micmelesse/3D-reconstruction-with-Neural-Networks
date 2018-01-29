@@ -73,13 +73,9 @@ class ShapeNet:
 def load_data(data_samples):
     if data_samples.ndim == 1:
         data_samples = [data_samples]
-
     ret = []
     for d in data_samples:
-        # print(d)
         data_row = render.get_render_sequence(d)
-        # print(data_row.shape)
-        # print(data_row.shape)
         ret.append(data_row)
 
     return (np.stack(ret) if len(ret) != 1 else ret[0])
@@ -92,7 +88,7 @@ def load_labels(label_samples):
     ret = []
     for voxel_path in label_samples:
         with open(voxel_path, 'rb') as f:
-            ret.append(binvox_rw.read_as_3d_array(f).data.astype(float))
+            ret.append(binvox_rw.read_as_3d_array(f).data)
 
     return (np.stack(ret) if len(ret) != 1 else ret[0])
 
