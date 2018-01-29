@@ -10,7 +10,7 @@ class GRU_GRID:
     def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
         N = n_cells
         h_n = n_hidden_state
-        data_type = tf.float64
+        data_type = tf.float32
         self.W_u = tf.Variable(tf.random_normal(
             [N, N, N, n_input, h_n], dtype=data_type), name="W_u")
         self.W_r = tf.Variable(tf.random_normal(
