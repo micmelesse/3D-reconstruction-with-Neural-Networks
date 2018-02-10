@@ -80,7 +80,7 @@ class R2N2:
                 # print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
 
-        print("setuping up loss function")
+        print("setup loss function")
         self.logits = self.final_decoder_state = cur_tensor
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
