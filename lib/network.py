@@ -9,7 +9,7 @@ import lib.utils as utils
 
 
 class R2N2:
-    def __init__(self, learn_rate):
+    def __init__(self, lr):
         # place holders
         self.X = tf.placeholder(tf.uint8, [None, 24, 137, 137, 4])
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
@@ -90,17 +90,13 @@ class R2N2:
 
         self.losses = tf.reduce_mean(self.cross_entropy, axis=[1, 2, 3])
         self.batch_loss = tf.reduce_mean(self.losses)
+        self.global_step = tf.Variable(0, trainable=False)
+        self.learning_rate = tf.train.inverse_time_decay(
+            lr, self.global_step, 1.0, 0.5)
         self.optimizing_op = tf.train.GradientDescentOptimizer(
-            learning_rate=learn_rate).minimize(self.batch_loss)
+            learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
 
-        # print("metrics")
-        # self.prediction = tf.argmax(self.softm, axis=4)
-        # print(self.prediction.shape)
-        # self.accuracies = tf.reduce_sum(tf.to_float(tf.equal(tf.to_int64(self.Y), self.prediction)), axis=[
-        #     1, 2, 3]) / tf.constant(32 * 32 * 32, dtype=tf.float32)  # 32*32*32=32768
-        # self.mean_accuracy = tf.reduce_mean(self.accuracies)
-        # print(self.accuracies.shape)
-
+        # init session
         self.sess = tf.InteractiveSession()
         self.saver = tf.train.Saver()
         tf.global_variables_initializer().run()

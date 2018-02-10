@@ -6,5 +6,5 @@ then
     sh localhost.sh
 else
     echo new jupyter session
-    jupyter notebook &> jupyter_session_$(date +"%Y-%m-%d_%H:%M:%S").txt&
+    jupyter notebook
 fi
