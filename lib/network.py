@@ -80,7 +80,7 @@ class R2N2:
                 # print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
 
-        print("loss")
+        print("setuping up loss function")
         self.logits = self.final_decoder_state = cur_tensor
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
@@ -96,7 +96,7 @@ class R2N2:
         self.optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
 
-        print("initialize network")
+        print("initializing network")
         self.sess = tf.InteractiveSession()
         self.saver = tf.train.Saver()
         tf.global_variables_initializer().run()
