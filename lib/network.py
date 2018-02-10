@@ -14,7 +14,7 @@ class R2N2:
         self.X = tf.placeholder(tf.uint8, [None, 24, 137, 137, 4])
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
 
-        # print("encoder_network")
+        print("encoder_network")
         with tf.name_scope("encoder_network"):
             self.input = cur_tensor = tf.cast(self.X, tf.float16)
             # print(cur_tensor.shape)
@@ -38,7 +38,7 @@ class R2N2:
             self.final_encoder_state = cur_tensor
             self.encoder_outputs.append(cur_tensor)
 
-        # print("recurrent_module")
+        print("recurrent_module")
         with tf.name_scope("recurrent_module"):
             N, n_x, n_h = 4, 1024, 256
             self.recurrent_module = recurrent_module.GRU_GRID(
@@ -56,7 +56,7 @@ class R2N2:
         self.final_hidden_state = hidden_state
         cur_tensor = hidden_state
 
-        # print("decoder_network")
+        print("decoder_network")
         with tf.name_scope("decoder_network"):
             self.decoder_outputs = [cur_tensor]
             cur_tensor = utils.r2n2_unpool3D(cur_tensor)
@@ -80,7 +80,7 @@ class R2N2:
                 # print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
 
-        # print("loss")
+        print("loss")
         self.logits = self.final_decoder_state = cur_tensor
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
@@ -96,7 +96,7 @@ class R2N2:
         self.optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
 
-        # init session
+        print("initialize network")
         self.sess = tf.InteractiveSession()
         self.saver = tf.train.Saver()
         tf.global_variables_initializer().run()
