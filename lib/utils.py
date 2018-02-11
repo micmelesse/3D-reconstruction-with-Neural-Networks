@@ -223,7 +223,9 @@ def r2n2_stack(x, N=4):
     return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4])
 
 
-def npy_stack(rows):
+def to_npy(rows):
+    if isinstance(rows, str):
+        return np.expand_dims(np.load(rows), 0)
     ret = []
     for r in rows:
         ret.append(np.load(r))
