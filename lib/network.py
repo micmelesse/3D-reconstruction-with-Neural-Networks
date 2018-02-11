@@ -16,8 +16,7 @@ class R2N2:
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
-            self.input = cur_tensor = tf.cast(self.X, tf.float16)
-            # print(cur_tensor.shape)
+            self.input = cur_tensor = tf.cast(self.X, tf.float32)
             self.encoder_outputs = [cur_tensor]
             k_s = [3, 3]
             conv_filter_count = [96, 128, 256, 256, 256, 256]
@@ -28,13 +27,11 @@ class R2N2:
                 cur_tensor = tf.map_fn(
                     lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
                 cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
-                # print(cur_tensor.shape)
                 self.encoder_outputs.append(cur_tensor)
 
             cur_tensor = tf.map_fn(tf.contrib.layers.flatten,  cur_tensor)
             cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
                 a, 1024, activation_fn=None), cur_tensor)
-            # print(cur_tensor.shape)
             self.final_encoder_state = cur_tensor
             self.encoder_outputs.append(cur_tensor)
 
@@ -44,23 +41,19 @@ class R2N2:
             self.recurrent_module = recurrent_module.GRU_GRID(
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
-            self.hidden_state_list = []  # initial hidden state
+            self.hidden_state_list = []
             hidden_state = tf.zeros([1, 4, 4, 4, 256])
             self.hidden_state_list.append(hidden_state)
-
             for t in range(24):  # feed batches of seqeuences
                 hidden_state = self.recurrent_module.call(
                     cur_tensor[:, t, :], hidden_state)
                 self.hidden_state_list.append(hidden_state)
-            # print(hidden_state.shape)
-        self.final_hidden_state = hidden_state
         cur_tensor = hidden_state
 
         print("decoder_network")
         with tf.name_scope("decoder_network"):
             self.decoder_outputs = [cur_tensor]
             cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-            # print(cur_tensor.shape)
             self.decoder_outputs.append(cur_tensor)
 
             k_s = [3, 3, 3]
@@ -70,14 +63,12 @@ class R2N2:
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                 cur_tensor = utils.r2n2_unpool3D(cur_tensor)
                 cur_tensor = tf.nn.relu(cur_tensor)
-                # print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
 
             for i in range(4, 6):
                 cur_tensor = tf.layers.conv3d(
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                 cur_tensor = tf.nn.relu(cur_tensor)
-                # print(cur_tensor.shape)
                 self.decoder_outputs.append(cur_tensor)
 
         print("setup loss function")
@@ -107,7 +98,7 @@ class R2N2:
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
 
     def predict(self, x):
-        return self.sess.run([self.logits], {self.X: x})[0]
+        return self.sess.run([self.softmax], {self.X: x})[0]
 
     def save(self, save_dir, arr_name, vals):
         if not os.path.isdir(save_dir):

@@ -9,7 +9,7 @@ def imshow_sequence(im):
     return plt.imshow(flatten_sequence(im))
 
 
-def imsave_sequence(im, f_name):
+def imsave_sequence(im, f_name="test.png"):
     plt.imsave(f_name, (flatten_sequence(im)))
     plt.clf()
     plt.close()
@@ -20,7 +20,7 @@ def imshow_multichannel(im):
     return plt.imshow(flatten_multichannel_image(im))
 
 
-def imsave_multichannel(im, f_name):
+def imsave_multichannel(im, f_name="test.png"):
     plt.imsave(f_name, (flatten_multichannel_image(im)))
     plt.clf()
     plt.close()
@@ -35,7 +35,7 @@ def imshow_voxel(vox):
     return plt.show()
 
 
-def imsave_voxel(vox, f_name):
+def imsave_voxel(vox, f_name="test.png"):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.voxels(vox, edgecolor='k')
@@ -155,37 +155,6 @@ def weight_grid_multiply(x, W, N=4):
             j_list.append(k_list)
         i_list.append(j_list)
     return tf.transpose(tf.convert_to_tensor(i_list), [3, 0, 1, 2, 4])
-
-# #class Unpool3DLayer(Layer):
-#     """3D Unpooling layer for a convolutional network """
-
-#     def __init__(self, prev_layer, unpool_size=(2, 2, 2), padding=(0, 0, 0)):
-#         super().__init__(prev_layer)
-#         self._unpool_size = unpool_size
-#         self._padding = padding
-#         output_shape = (self._input_shape[0],  # batch
-#                         unpool_size[0] * self._input_shape[1] + 2 * padding[0],  # depth
-#                         self._input_shape[2],  # out channel
-#                         unpool_size[1] * self._input_shape[3] + 2 * padding[1],  # row
-#                         unpool_size[2] * self._input_shape[4] + 2 * padding[2])  # col
-#         self._output_shape = output_shape
-
-#     def set_output(self):
-#         output_shape = self._output_shape
-#         padding = self._padding
-#         unpool_size = self._unpool_size
-#         unpooled_output = tensor.alloc(0.0,  # Value to fill the tensor
-#                                        output_shape[0],
-#                                        output_shape[1] + 2 * padding[0],
-#                                        output_shape[2],
-#                                        output_shape[3] + 2 * padding[1],
-#                                        output_shape[4] + 2 * padding[2])
-
-#         unpooled_output = tensor.set_subtensor(unpooled_output[:, padding[0]:output_shape[
-#             1] + padding[0]:unpool_size[0], :, padding[1]:output_shape[3] + padding[1]:unpool_size[
-#                 1], padding[2]:output_shape[4] + padding[2]:unpool_size[2]],
-#                                                self._prev_layer.output)
-#         self._output = unpooled_output
 
 
 def r2n2_unpool3D(value, name='unpool3D'):
