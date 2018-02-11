@@ -97,9 +97,21 @@ class R2N2:
             learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
 
         print("initializing network")
-        self.sess = tf.InteractiveSession()
         self.saver = tf.train.Saver()
+        self.sess = tf.InteractiveSession()
         tf.global_variables_initializer().run()
+
+    def restore(self, model_dir):
+        saver = tf.train.import_meta_graph(
+            "{}/model.ckpt.meta".format(model_dir))
+        saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
+
+    def save(self, save_dir, arr_name, vals):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
+        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
+        self.plot(save_dir, arr_name, vals)
 
     def plot(self, plot_dir, plot_name, vals):
         if not os.path.isdir(plot_dir):
@@ -109,13 +121,6 @@ class R2N2:
         plt.savefig("{}/{}.png".format(plot_dir, plot_name),
                     bbox_inches='tight')
         plt.close()
-
-    def save(self, save_dir, arr_name, vals):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
-        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        self.plot(save_dir, arr_name, vals)
 
     def vis(self, log_dir="./log"):  # tensorboard/ vis tools
         writer = tf.summary.FileWriter(log_dir)
