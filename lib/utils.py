@@ -199,3 +199,17 @@ def to_npy(rows):
     for r in rows:
         ret.append(np.load(r))
     return np.stack(ret)
+
+
+def get_batchs(data_all, label_all, batch_size):
+
+    N = len(data_all)
+    num_of_batches = math.ceil(N/batch_size)
+    assert(N == len(label_all))
+    perm = np.random.permutation(N)
+    data_all = data_all[perm]
+    label_all = label_all[perm]
+    data_batchs = np.array_split(data_all, num_of_batches)
+    label_batchs = np.array_split(label_all, num_of_batches)
+
+    return data_batchs, label_batchs

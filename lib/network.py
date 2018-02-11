@@ -116,12 +116,12 @@ class R2N2:
                     bbox_inches='tight')
         plt.close()
 
-    def vis(self, log_dir="./log"):  # tensorboard/ vis tools
+    def train_step(self, x, y):
+        return self.sess.run([self.batch_loss, self.optimizing_op], {self.X: x, self.Y: y})[0]
+
+    def vis(self, log_dir="./log"):
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
-
-    def train_step(self, x, y):
-        return self.sess.run([self.optimizing_op], {self.X: x, self.Y: y})
 
     def save_state(self, save_dir, x, y):
         if not os.path.isdir(save_dir):
