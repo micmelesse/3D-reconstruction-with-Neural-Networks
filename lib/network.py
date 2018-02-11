@@ -100,13 +100,6 @@ class R2N2:
     def predict(self, x):
         return self.sess.run([self.softmax], {self.X: x})[0]
 
-    def save(self, save_dir, arr_name, vals):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
-        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        self.plot(save_dir, arr_name, vals)
-
     def plot(self, plot_dir, plot_name, vals):
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
@@ -116,38 +109,44 @@ class R2N2:
                     bbox_inches='tight')
         plt.close()
 
-    def train_step(self, x, y):
+    def train_step(self, data, label):
+        x = utils.to_npy(data)
+        y = utils.to_npy(label)
         return self.sess.run([self.batch_loss, self.optimizing_op], {self.X: x, self.Y: y})[0]
 
     def vis(self, log_dir="./log"):
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
 
+    def save(self, save_dir, arr_name, vals):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+
+        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
+        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
+        self.plot(save_dir, arr_name, vals)
+
     def save_state(self, save_dir, x, y):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 
         fd = {self.X: x, self.Y: y}
-
-        n_layers = len(self.encoder_outputs)
-        encoder_outputs = []
-        for l in range(n_layers):
+        states = []
+        n_encoder = len(self.encoder_outputs)
+        for l in range(n_encoder):
             state = self.encoder_outputs[l].eval(fd)
-            np.save(save_dir + "/encoder_{}".format(l), state)
-            encoder_outputs.append(state)
+            states.append(state)
 
-        n_layers = len(self.hidden_state_list)
-        hidden_state = []
-        for l in range(n_layers):
+        n_hidden = len(self.hidden_state_list)
+        for l in range(n_hidden):
             state = self.hidden_state_list[l].eval(fd)
-            np.save(save_dir + "/hidden_{}".format(l), state)
-            hidden_state.append(state)
+            states.append(state)
 
-        n_layers = len(self.decoder_outputs)
-        decoder_outputs = []
-        for l in range(n_layers):
+        n_decoder = len(self.decoder_outputs)
+        for l in range(n_decoder):
             state = self.decoder_outputs[l].eval(fd)
-            np.save(save_dir + "/decoder_{}".format(l), state)
-            decoder_outputs.append(state)
+            states.append(state)
 
-        return encoder_outputs, hidden_state, decoder_outputs
+        states_all = np.stack(states)
+        np.save(save_dir, states_all)
+        return states_all
