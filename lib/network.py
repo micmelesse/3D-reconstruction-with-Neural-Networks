@@ -32,7 +32,6 @@ class R2N2:
             cur_tensor = tf.map_fn(tf.contrib.layers.flatten,  cur_tensor)
             cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
                 a, 1024, activation_fn=None), cur_tensor)
-            self.final_encoder_state = cur_tensor
             self.encoder_outputs.append(cur_tensor)
 
         print("recurrent_module")
@@ -72,7 +71,7 @@ class R2N2:
                 self.decoder_outputs.append(cur_tensor)
 
         print("setup loss function")
-        self.logits = self.final_decoder_state = cur_tensor
+        self.logits = cur_tensor
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
         self.log_softmax = tf.log(self.softmax)
@@ -118,7 +117,7 @@ class R2N2:
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
 
-    def save(self, save_dir, arr_name, vals):
+    def save(self, arr_name, vals, save_dir="./test"):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 
@@ -126,27 +125,26 @@ class R2N2:
         self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
         self.plot(save_dir, arr_name, vals)
 
-    def save_state(self, save_dir, x, y):
+    def get_states(self, x, y, save_dir="./test"):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 
         fd = {self.X: x, self.Y: y}
-        states = []
+        states_all = []
         n_encoder = len(self.encoder_outputs)
         for l in range(n_encoder):
             state = self.encoder_outputs[l].eval(fd)
-            states.append(state)
+            states_all.append(state)
 
         n_hidden = len(self.hidden_state_list)
         for l in range(n_hidden):
             state = self.hidden_state_list[l].eval(fd)
-            states.append(state)
+            states_all.append(state)
 
         n_decoder = len(self.decoder_outputs)
         for l in range(n_decoder):
             state = self.decoder_outputs[l].eval(fd)
-            states.append(state)
+            states_all.append(state)
 
-        states_all = np.stack(states)
-        np.save(save_dir, states_all)
+        states_all.append(self.softmax)
         return states_all
