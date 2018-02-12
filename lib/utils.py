@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
+def plot_features(im):
+    print im.shape
+
+
 def imshow_sequence(im):
     return plt.imshow(flatten_sequence(im))
 
@@ -27,6 +31,8 @@ def imsave_multichannel(im, f_name="test.png"):
     return
 
 # vis voxels
+
+
 def imshow_voxel(vox):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
@@ -92,7 +98,6 @@ def vstack(a, b):
     return np.vstack((a, b))
 
 
-
 def r2n2_unpool3D(value, name='unpool3D'):
     with tf.name_scope(name) as scope:
         sh = value.get_shape().as_list()
@@ -149,5 +154,3 @@ def get_batchs(data_all, label_all, batch_size):
     label_batchs = np.array_split(label_all, num_of_batches)
 
     return data_batchs, label_batchs
-
-

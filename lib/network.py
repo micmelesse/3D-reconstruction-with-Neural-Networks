@@ -89,7 +89,7 @@ class R2N2:
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
         self.prediction = tf.argmax(self.softmax, -1)
-        self.log_softmax = tf.log(self.softmax)
+        self.log_softmax = tf.log(self.softmax + 1e-10) # avoid log 0
         self.cross_entropy = tf.reduce_sum(-tf.multiply(tf.cast(self.label, self.log_softmax.dtype),
                                                         self.log_softmax), axis=-1)
 
