@@ -4,15 +4,27 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import lib.recurrent_module as recurrent_module
 import lib.utils as utils
+import lib.params as params
+from datetime import datetime
 
 # Recurrent Reconstruction Neural Network (R2N2)
 
 
 class R2N2:
-    def __init__(self, lr):
-        print("creating network...")
+    def __init__(self):
+        self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+
+        # read params
+        with open("config/train.params") as f:
+            self.learn_rate = float(params.read_param(f.readline()))
+            self.batch_size = int(params.read_param(f.readline()))
+            self.epoch = int(params.read_param(f.readline()))
+
+            print("learn_rate {}, epochs {}, batch_size {}".format(
+                self.learn_rate, self.epoch, self.batch_size))
 
         # place holders
+        print("creating network...")
         self.X = tf.placeholder(tf.uint8, [None, 24, 137, 137, 4])
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
 
@@ -85,7 +97,7 @@ class R2N2:
         self.batch_loss = tf.reduce_mean(self.losses)
         self.global_step = tf.Variable(0, trainable=False)
         self.learning_rate = tf.train.inverse_time_decay(
-            lr, self.global_step, 1.0, 0.5)
+            self.learn_rate, self.global_step, 1.0, 0.5)
         self.optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
 

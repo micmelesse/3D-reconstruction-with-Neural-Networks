@@ -14,34 +14,22 @@ import lib.path as path
 import lib.utils as utils
 from datetime import datetime
 
-# read params
-with open("config/train.params") as f:
-    learning_rate = float(params.read_param(f.readline()))
-    batch_size = int(params.read_param(f.readline()))
-    epoch = int(params.read_param(f.readline()))
-
-    print("training with a learning rate of {} for {} epochs with batchs of size {}".format(
-        learning_rate, epoch, batch_size))
-
-
 data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
 label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
-# print(data_all.shape,label_all.shape)
-net = network.R2N2(learning_rate)
+net = network.R2N2()
 
 model_dir = "out/model_{}_{}_{} {}".format(
-    learning_rate, epoch, batch_size, datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
+    net.learn_rate, net.epoch, net.batch_size, net.create_time)
 
 # train network
-loss_all = []
-acc_all = []
 print("training start")
-for e in range(epoch):
+loss_all = []
+for e in range(net.epoch):
     start_time = time.time()
     loss_epoch = []
     batch_number = 0
     data_batchs, label_batchs = utils.get_batchs(
-        data_all, label_all, batch_size)
+        data_all, label_all, net.batch_size)
     for data, label in zip(data_batchs, label_batchs):
         loss_epoch.append(net.train_step(data, label))
         print("epoch_{:03d}-batch_{:03d}: loss={}".format(e,
