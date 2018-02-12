@@ -115,9 +115,9 @@ class R2N2:
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
 
-    def get_encoder_state(self, x, y, save_dir="./test"):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
+    def get_encoder_state(self, x, y, state_dir="./out/state/"):
+        if not os.path.isdir(state_dir):
+            os.makedirs(state_dir)
         fd = {self.X: x, self.Y: y}
         states_all = []
 
@@ -128,9 +128,9 @@ class R2N2:
 
         return states_all
 
-    def get_hidden_state(self, x, y, save_dir="./test"):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
+    def get_hidden_state(self, x, y, state_dir="./out/state/"):
+        if not os.path.isdir(state_dir):
+            os.makedirs(state_dir)
         fd = {self.X: x, self.Y: y}
         states_all = []
 
@@ -141,9 +141,9 @@ class R2N2:
 
         return states_all
 
-    def get_decoder_state(self, x, y, save_dir="./test"):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
+    def get_decoder_state(self, x, y, state_dir="./out/state/"):
+        if not os.path.isdir(state_dir):
+            os.makedirs(state_dir)
         fd = {self.X: x, self.Y: y}
         states_all = []
 
@@ -160,7 +160,7 @@ class R2N2:
             "{}/model.ckpt.meta".format(model_dir))
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
 
-    def save(self, arr_name, vals, save_dir="./test"):
+    def save(self, arr_name, vals, save_dir):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 
