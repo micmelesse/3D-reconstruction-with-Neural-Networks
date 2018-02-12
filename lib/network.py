@@ -97,7 +97,7 @@ class R2N2:
         self.batch_loss = tf.reduce_mean(self.losses)
         self.global_step = tf.Variable(0, trainable=False)
         self.learning_rate = tf.train.inverse_time_decay(
-            self.learn_rate, self.global_step, 1.0, 0.5)
+            self.learn_rate, self.global_step, 10.0, 0.5)
         self.optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
 
@@ -105,6 +105,19 @@ class R2N2:
         self.saver = tf.train.Saver()
         self.sess = tf.InteractiveSession()
         tf.global_variables_initializer().run()
+
+    def restore(self, model_dir):
+        self.saver = tf.train.import_meta_graph(
+            "{}/model.ckpt.meta".format(model_dir))
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
+
+    def save(self, arr_name, vals, save_dir):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+
+        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
+        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
+        self.plot(save_dir, arr_name, vals)
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
@@ -166,16 +179,3 @@ class R2N2:
 
         states_all.append(self.softmax.eval(fd))
         return states_all
-
-    def restore(self, model_dir):
-        self.saver = tf.train.import_meta_graph(
-            "{}/model.ckpt.meta".format(model_dir))
-        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
-
-    def save(self, arr_name, vals, save_dir):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-
-        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
-        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        self.plot(save_dir, arr_name, vals)
