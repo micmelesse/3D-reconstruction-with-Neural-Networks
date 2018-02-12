@@ -10,6 +10,8 @@ import lib.utils as utils
 
 class R2N2:
     def __init__(self, lr):
+        print("creating network...")
+
         # place holders
         self.X = tf.placeholder(tf.uint8, [None, 24, 137, 137, 4])
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
@@ -70,10 +72,11 @@ class R2N2:
                 cur_tensor = tf.nn.relu(cur_tensor)
                 self.decoder_outputs.append(cur_tensor)
 
-        print("setup loss function")
+        print("loss_function")
         self.logits = cur_tensor
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
+        self.prediction = tf.argmax(self.softmax, -1)
         self.log_softmax = tf.log(self.softmax)
         self.cross_entropy = tf.reduce_sum(-tf.multiply(tf.cast(self.label, self.log_softmax.dtype),
                                                         self.log_softmax), axis=-1)
@@ -86,18 +89,13 @@ class R2N2:
         self.optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
 
-        print("initializing network")
+        print("...network created")
         self.saver = tf.train.Saver()
         self.sess = tf.InteractiveSession()
         tf.global_variables_initializer().run()
 
-    def restore(self, model_dir):
-        self.saver = tf.train.import_meta_graph(
-            "{}/model.ckpt.meta".format(model_dir))
-        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
-
     def predict(self, x):
-        return self.sess.run([self.softmax], {self.X: x})[0]
+        return self.sess.run([self.prediction], {self.X: x})[0]
 
     def plot(self, plot_dir, plot_name, vals):
         if not os.path.isdir(plot_dir):
@@ -116,14 +114,6 @@ class R2N2:
     def vis(self, log_dir="./log"):
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
-
-    def save(self, arr_name, vals, save_dir="./test"):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-
-        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
-        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        self.plot(save_dir, arr_name, vals)
 
     def get_encoder_state(self, x, y, save_dir="./test"):
         if not os.path.isdir(save_dir):
@@ -164,3 +154,16 @@ class R2N2:
 
         states_all.append(self.softmax.eval(fd))
         return states_all
+
+    def restore(self, model_dir):
+        self.saver = tf.train.import_meta_graph(
+            "{}/model.ckpt.meta".format(model_dir))
+        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
+
+    def save(self, arr_name, vals, save_dir="./test"):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+
+        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
+        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
+        self.plot(save_dir, arr_name, vals)
