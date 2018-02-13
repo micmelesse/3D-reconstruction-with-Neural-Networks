@@ -21,6 +21,8 @@ net = network.R2N2()
 model_dir = "out/model_{}_{}_{} {}".format(
     net.learn_rate, net.epoch, net.batch_size, net.create_time)
 
+if not os.path.isdir(model_dir):
+    os.makedirs(model_dir)
 # train network
 print("training start")
 loss_all = []
@@ -35,6 +37,8 @@ for e in range(net.epoch):
         print("epoch_{:03d}-batch_{:03d}: loss={}".format(e,
                                                           batch_number, loss_epoch[-1]))
         batch_number += 1
+    
     loss_all.append(loss_epoch)
     net.save("{}/epoch_{:03d}".format(model_dir, e), "loss", loss_all)
     print("epoch %d took %d seconds" % (e, time.time()-start_time))
+    sys.exit()

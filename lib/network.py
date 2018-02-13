@@ -88,7 +88,8 @@ class R2N2:
         self.logits = cur_tensor
         self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
-        self.log_softmax = tf.nn.log_softmax(self.logits)  # handles log(0) case
+        self.log_softmax = tf.nn.log_softmax(
+            self.logits)  # handles log(0) case
         self.prediction = tf.argmax(self.softmax, -1)
         self.cross_entropy = tf.reduce_sum(-tf.multiply(tf.cast(self.label, self.log_softmax.dtype),
                                                         self.log_softmax), axis=-1)
@@ -111,7 +112,7 @@ class R2N2:
             "{}/model.ckpt.meta".format(model_dir))
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
 
-    def save(self, arr_name, vals, save_dir):
+    def save(self, save_dir, arr_name, vals):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 

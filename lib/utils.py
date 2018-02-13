@@ -1,3 +1,5 @@
+import os
+import sys
 import math
 import numpy as np
 import tensorflow as tf
@@ -154,3 +156,9 @@ def get_batchs(data_all, label_all, batch_size):
     label_batchs = np.array_split(label_all, num_of_batches)
 
     return data_batchs, label_batchs
+
+def check_dir():
+    TRAIN_DIRS = ["out", "config", "data", "aws"]
+    for d in TRAIN_DIRS:
+        if not os.path.isdir(d):
+            os.makedirs(d)
