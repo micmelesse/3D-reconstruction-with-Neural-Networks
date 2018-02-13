@@ -30,8 +30,8 @@ class R2N2:
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
-            self.input = cur_tensor = tf.cast(self.X, tf.float32)
-            self.encoder_outputs = [cur_tensor]
+            cur_tensor = tf.cast(self.X, tf.float32)
+           # self.encoder_outputs = [cur_tensor]
             k_s = [3, 3]
             conv_filter_count = [96, 128, 256, 256, 256, 256]
             for i in range(6):
@@ -41,12 +41,12 @@ class R2N2:
                 cur_tensor = tf.map_fn(
                     lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
                 cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
-                self.encoder_outputs.append(cur_tensor)
+                # self.encoder_outputs.append(cur_tensor)
 
             cur_tensor = tf.map_fn(tf.contrib.layers.flatten,  cur_tensor)
             cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
                 a, 1024, activation_fn=None), cur_tensor)
-            self.encoder_outputs.append(cur_tensor)
+            # self.encoder_outputs.append(cur_tensor)
 
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
@@ -54,20 +54,20 @@ class R2N2:
             self.recurrent_module = recurrent_module.GRU_GRID(
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
-            self.hidden_state_list = []
+            # self.hidden_state_list = []
             hidden_state = tf.zeros([1, 4, 4, 4, 256])
-            self.hidden_state_list.append(hidden_state)
+            # self.hidden_state_list.append(hidden_state)
             for t in range(24):  # feed batches of seqeuences
                 hidden_state = self.recurrent_module.call(
                     cur_tensor[:, t, :], hidden_state)
-                self.hidden_state_list.append(hidden_state)
+                # self.hidden_state_list.append(hidden_state)
         cur_tensor = hidden_state
 
         print("decoder_network")
         with tf.name_scope("decoder_network"):
-            self.decoder_outputs = [cur_tensor]
+            # self.decoder_outputs = [cur_tensor]
             cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-            self.decoder_outputs.append(cur_tensor)
+            # self.decoder_outputs.append(cur_tensor)
 
             k_s = [3, 3, 3]
             deconv_filter_count = [128, 128, 128, 64, 32, 2]
@@ -76,22 +76,21 @@ class R2N2:
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                 cur_tensor = utils.r2n2_unpool3D(cur_tensor)
                 cur_tensor = tf.nn.relu(cur_tensor)
-                self.decoder_outputs.append(cur_tensor)
+                # self.decoder_outputs.append(cur_tensor)
 
             for i in range(4, 6):
                 cur_tensor = tf.layers.conv3d(
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                 cur_tensor = tf.nn.relu(cur_tensor)
-                self.decoder_outputs.append(cur_tensor)
+                # self.decoder_outputs.append(cur_tensor)
 
         print("loss_function")
         self.logits = cur_tensor
-        self.label = tf.one_hot(self.Y, 2)
         self.softmax = tf.nn.softmax(self.logits)
-        self.log_softmax = tf.nn.log_softmax(
-            self.logits)  # handles log(0) case
+        self.log_softmax = tf.nn.log_softmax(self.logits)  # avoids log(0)
         self.prediction = tf.argmax(self.softmax, -1)
-        self.cross_entropy = tf.reduce_sum(-tf.multiply(tf.cast(self.label, self.log_softmax.dtype),
+        self.label = tf.cast(tf.one_hot(self.Y, 2), self.log_softmax.dtype)
+        self.cross_entropy = tf.reduce_sum(-tf.multiply(self.label,
                                                         self.log_softmax), axis=-1)
 
         self.losses = tf.reduce_mean(self.cross_entropy, axis=[1, 2, 3])
