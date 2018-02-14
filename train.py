@@ -20,25 +20,22 @@ net = network.R2N2()
 
 model_dir = "out/model_{}_{}_{} {}".format(
     net.learn_rate, net.epoch, net.batch_size, net.create_time)
-
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
+
 # train network
 print("training start")
-loss_all = []
+all_loss = []
 for e in range(net.epoch):
-    start_time = time.time()
-    loss_epoch = []
-    batch_number = 0
+    epoch_loss = []
     data_batchs, label_batchs = utils.get_batchs(
         data_all, label_all, net.batch_size)
-    for data, label in zip(data_batchs, label_batchs):
-        loss_epoch.append(net.train_step(data, label))
-        print("epoch_{:03d}-batch_{:03d}: loss={}".format(e,
-                                                          batch_number, loss_epoch[-1]))
-        batch_number += 1
-    
-    loss_all.append(loss_epoch)
-    net.save("{}/epoch_{:03d}".format(model_dir, e), "loss", loss_all)
-    print("epoch %d took %d seconds" % (e, time.time()-start_time))
-    sys.exit()
+    t_start = time.time()
+    for b, (data, label) in enumerate(zip(data_batchs, label_batchs)):
+        loss = net.train_step(data, label)
+        print("epoch_{:04d}-batch_{:04d}:l={}".format(e, b, loss))
+        epoch_loss.append(loss)
+
+    all_loss.append(epoch_loss)
+    net.save("{}/epoch_{:04d}".format(model_dir, e), "all_loss", all_loss)
+    print("epoch %d took %d seconds" % (e, time.time()-t_start))
