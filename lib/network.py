@@ -26,12 +26,12 @@ class R2N2:
 
         # place holders
         print("creating network...")
-        self.X = tf.placeholder(tf.uint8, [None, 24, 137, 137, 4])
+        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
-            cur_tensor = tf.cast(self.X, tf.float32)
+            cur_tensor = self.X
            # self.encoder_outputs = [cur_tensor]
             k_s = [3, 3]
             conv_filter_count = [96, 128, 256, 256, 256, 256]
@@ -89,7 +89,7 @@ class R2N2:
         logits = cur_tensor
         softmax = tf.nn.softmax(logits)
         log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
-        label = tf.cast(tf.one_hot(self.Y, 2), log_softmax.dtype)
+        label = tf.one_hot(self.Y, 2)
         cross_entropy = tf.reduce_sum(-tf.multiply(label,
                                                    log_softmax), axis=-1)
         losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
@@ -101,9 +101,10 @@ class R2N2:
             self.learn_rate, step_count, 10.0, 0.5)
         optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=learning_rate)
-        verify = tf.verify_tensor_all_finite(logits, "logits has nans or infs")
+        verify = tf.verify_tensor_all_finite(
+            log_softmax, "logits has nans or infs")
 
-        self.print = tf.Print(batch_loss, [batch_loss, verify])
+        utils.tf_print(learning_rate)
         self.prediction = tf.argmax(softmax, -1)
         self.minimize_loss = optimizing_op.minimize(
             batch_loss, global_step=step_count)

@@ -10,6 +10,11 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # def plot_features(im):
 #     print im.shape
+
+def tf_print(to_print):
+    return tf.Print(to_print, [to_print])
+
+
 def read_param(param_line):
     regex = "^.*=(.*)$"
     return re.findall(regex, param_line)[0]
