@@ -89,41 +89,44 @@ class R2N2:
         logits = cur_tensor
         softmax = tf.nn.softmax(logits)
         log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
-
         label = tf.cast(tf.one_hot(self.Y, 2), log_softmax.dtype)
         cross_entropy = tf.reduce_sum(-tf.multiply(label,
                                                    log_softmax), axis=-1)
-
-        global_step = tf.Variable(0, trainable=False)
         losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
+        batch_loss = tf.reduce_mean(losses)
 
+        # misc
+        step_count = tf.Variable(0, trainable=False)
         learning_rate = tf.train.inverse_time_decay(
-            self.learn_rate, global_step, 10.0, 0.5)
+            self.learn_rate, step_count, 10.0, 0.5)
         optimizing_op = tf.train.GradientDescentOptimizer(
             learning_rate=learning_rate)
+        verify = tf.verify_tensor_all_finite(logits, "logits has nans or infs")
 
+        self.print = tf.Print(batch_loss, [batch_loss, verify])
         self.prediction = tf.argmax(softmax, -1)
-        self.batch_loss = tf.reduce_mean(losses)
         self.minimize_loss = optimizing_op.minimize(
-            self.batch_loss, global_step=global_step)
+            batch_loss, global_step=step_count)
 
         print("...network created")
         self.saver = tf.train.Saver()
         self.sess = tf.InteractiveSession()
         tf.global_variables_initializer().run()
 
+    def train_step(self, data, label):
+        x = utils.to_npy(data)
+        y = utils.to_npy(label)
+        return self.sess.run([self.minimize_loss, self.print], {self.X: x, self.Y: y})
+
     def restore(self, model_dir):
         self.saver = tf.train.import_meta_graph(
             "{}/model.ckpt.meta".format(model_dir))
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
 
-    def save(self, save_dir, arr_name, vals):
+    def save(self, save_dir):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
-
-        np.save("{}/{}".format(save_dir, arr_name), np.array(vals))
         self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        self.plot(save_dir, arr_name, vals)
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
@@ -136,11 +139,6 @@ class R2N2:
         plt.savefig("{}/{}.png".format(plot_dir, plot_name),
                     bbox_inches='tight')
         plt.close()
-
-    def train_step(self, data, label):
-        x = utils.to_npy(data)
-        y = utils.to_npy(label)
-        return self.sess.run([self.batch_loss, self.minimize_loss], {self.X: x, self.Y: y})[0]
 
     def vis(self, log_dir="./log"):
         writer = tf.summary.FileWriter(log_dir)
