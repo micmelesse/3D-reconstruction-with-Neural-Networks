@@ -6,7 +6,7 @@ import random
 import tarfile
 import numpy as np
 import pandas as pd
-from lib import path, params, render
+from lib import path, utils, render
 from third_party import binvox_rw
 
 
@@ -106,7 +106,7 @@ def save_data_to_npy(paths, N=None):
 
 def main():
     with open("config/dataset.params") as f:
-        example_count = int(params.read_param(f.readline()))
+        example_count = int(utils.read_param(f.readline()))
 
     if not os.path.isfile("out/paths.csv"):
         path.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")

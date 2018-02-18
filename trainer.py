@@ -8,7 +8,6 @@ import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import lib.dataset as dataset
-import lib.params as params
 import lib.network as network
 import lib.path as path
 import lib.utils as utils
@@ -18,15 +17,15 @@ data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
 label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
 net = network.R2N2()
 
-model_dir = "out/model_{}_{}_{} {}".format(
-    net.learn_rate, net.epoch, net.batch_size, net.create_time)
+model_dir = "out/model_{}_{}_{}_{}".format(
+    net.create_time, net.learn_rate, net.epoch_count, net.batch_size)
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
 
 # train network
 print("training start")
 all_loss = []
-for e in range(net.epoch):
+for e in range(net.epoch_count):
     epoch_loss = []
     data_batchs, label_batchs = utils.get_batchs(
         data_all, label_all, net.batch_size)

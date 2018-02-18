@@ -4,6 +4,7 @@ import math
 import numpy as np
 import tensorflow as tf
 import lib.utils as utils
+import lib.naive_grid as naive_grid
 
 
 class GRU_GRID:
@@ -48,13 +49,16 @@ class GRU_GRID:
 
 class GRU_GRID_2:
     def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
-        self.W_u = utils.weight_grid('u', n_cells, n_input, n_hidden_state)
-        self.W_r = utils.weight_grid('r', n_cells, n_input, n_hidden_state)
-        self.W_h = utils.weight_grid('h', n_cells, n_input, n_hidden_state)
+        self.W_u = naive_grid.weight_grid(
+            'u', n_cells, n_input, n_hidden_state)
+        self.W_r = naive_grid.weight_grid(
+            'r', n_cells, n_input, n_hidden_state)
+        self.W_h = naive_grid.weight_grid(
+            'h', n_cells, n_input, n_hidden_state)
 
-        self.b_u = utils.bias_grid('u', n_cells, n_hidden_state)
-        self.b_r = utils.bias_grid('r', n_cells, n_hidden_state)
-        self.b_h = utils.bias_grid('h', n_cells, n_hidden_state)
+        self.b_u = naive_grid.bias_grid('u', n_cells, n_hidden_state)
+        self.b_r = naive_grid.bias_grid('r', n_cells, n_hidden_state)
+        self.b_h = naive_grid.bias_grid('h', n_cells, n_hidden_state)
 
         self.U_u = tf.Variable(tf.random_normal(
             [3, 3, 3, n_hidden_state, n_hidden_state]), name="U_u")
@@ -65,7 +69,7 @@ class GRU_GRID_2:
 
     def call(self, fc_input, prev_state):
         def linear(x, W, U, h, b):
-            Wx = utils.weight_grid_multiply(x, W)
+            Wx = naive_grid.weight_grid_multiply(x, W)
             Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
             b = tf.convert_to_tensor(b)
             print(Wx.shape, Uh.shape, b.shape)

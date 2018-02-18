@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import math
 import numpy as np
@@ -9,6 +10,17 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # def plot_features(im):
 #     print im.shape
+def read_param(param_line):
+    regex = "^.*=(.*)$"
+    return re.findall(regex, param_line)[0]
+
+
+def get_params_from_disk():
+    with open("config/train.params") as f:
+        learn_rate = float(read_param(f.readline()))
+        batch_size = int(read_param(f.readline()))
+        epoch = int(read_param(f.readline()))
+    return learn_rate, batch_size, epoch
 
 
 def imshow_sequence(im):
@@ -156,6 +168,7 @@ def get_batchs(data_all, label_all, batch_size):
     label_batchs = np.array_split(label_all, num_of_batches)
 
     return data_batchs, label_batchs
+
 
 def check_dir():
     TRAIN_DIRS = ["out", "config", "data", "aws"]

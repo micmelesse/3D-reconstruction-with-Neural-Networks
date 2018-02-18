@@ -4,24 +4,25 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import lib.recurrent_module as recurrent_module
 import lib.utils as utils
-import lib.params as params
 from datetime import datetime
 
 # Recurrent Reconstruction Neural Network (R2N2)
 
 
 class R2N2:
-    def __init__(self):
+    def __init__(self, params=None):
         self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
         # read params
-        with open("config/train.params") as f:
-            self.learn_rate = float(params.read_param(f.readline()))
-            self.batch_size = int(params.read_param(f.readline()))
-            self.epoch = int(params.read_param(f.readline()))
+        if params is None:
+            self.learn_rate, self.batch_size, self.epoch_count = utils.get_params_from_disk()
+        else:
+            self.learn_rate = params['learn_rate']
+            self.batch_size = params['batch_size']
+            self.epoch_count = params['epoch_count']
 
-            print("learn_rate {}, epochs {}, batch_size {}".format(
-                self.learn_rate, self.epoch, self.batch_size))
+        print("learn_rate {}, epoch_count {}, batch_size {}".format(
+            self.learn_rate, self.epoch_count, self.batch_size))
 
         # place holders
         print("creating network...")
@@ -51,14 +52,14 @@ class R2N2:
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
             N, n_x, n_h = 4, 1024, 256
-            self.recurrent_module = recurrent_module.GRU_GRID(
+            rnn = recurrent_module.GRU_GRID(
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
             # self.hidden_state_list = []
             hidden_state = tf.zeros([1, 4, 4, 4, 256])
             # self.hidden_state_list.append(hidden_state)
             for t in range(24):  # feed batches of seqeuences
-                hidden_state = self.recurrent_module.call(
+                hidden_state = rnn.call(
                     cur_tensor[:, t, :], hidden_state)
                 # self.hidden_state_list.append(hidden_state)
         cur_tensor = hidden_state
@@ -85,21 +86,26 @@ class R2N2:
                 # self.decoder_outputs.append(cur_tensor)
 
         print("loss_function")
-        self.logits = cur_tensor
-        self.softmax = tf.nn.softmax(self.logits)
-        self.log_softmax = tf.nn.log_softmax(self.logits)  # avoids log(0)
-        self.prediction = tf.argmax(self.softmax, -1)
-        self.label = tf.cast(tf.one_hot(self.Y, 2), self.log_softmax.dtype)
-        self.cross_entropy = tf.reduce_sum(-tf.multiply(self.label,
-                                                        self.log_softmax), axis=-1)
+        logits = cur_tensor
+        softmax = tf.nn.softmax(logits)
+        log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
 
-        self.losses = tf.reduce_mean(self.cross_entropy, axis=[1, 2, 3])
-        self.batch_loss = tf.reduce_mean(self.losses)
-        self.global_step = tf.Variable(0, trainable=False)
-        self.learning_rate = tf.train.inverse_time_decay(
-            self.learn_rate, self.global_step, 10.0, 0.5)
-        self.optimizing_op = tf.train.GradientDescentOptimizer(
-            learning_rate=self.learning_rate).minimize(self.batch_loss, global_step=self.global_step)
+        label = tf.cast(tf.one_hot(self.Y, 2), log_softmax.dtype)
+        cross_entropy = tf.reduce_sum(-tf.multiply(label,
+                                                   log_softmax), axis=-1)
+
+        global_step = tf.Variable(0, trainable=False)
+        losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
+
+        learning_rate = tf.train.inverse_time_decay(
+            self.learn_rate, global_step, 10.0, 0.5)
+        optimizing_op = tf.train.GradientDescentOptimizer(
+            learning_rate=learning_rate)
+
+        self.prediction = tf.argmax(softmax, -1)
+        self.batch_loss = tf.reduce_mean(losses)
+        self.minimize_loss = optimizing_op.minimize(
+            self.batch_loss, global_step=global_step)
 
         print("...network created")
         self.saver = tf.train.Saver()
@@ -134,7 +140,7 @@ class R2N2:
     def train_step(self, data, label):
         x = utils.to_npy(data)
         y = utils.to_npy(label)
-        return self.sess.run([self.batch_loss, self.optimizing_op], {self.X: x, self.Y: y})[0]
+        return self.sess.run([self.batch_loss, self.minimize_loss], {self.X: x, self.Y: y})[0]
 
     def vis(self, log_dir="./log"):
         writer = tf.summary.FileWriter(log_dir)
