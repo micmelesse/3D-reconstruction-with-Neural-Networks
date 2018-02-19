@@ -101,8 +101,10 @@ class R2N2:
 
         # misc
         step_count = tf.Variable(0, trainable=False)
-        lr = tf.train.exponential_decay(self.learn_rate, step_count, 1, 0.96)
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr)
+        lr_exp = tf.train.exponential_decay(
+            self.learn_rate, step_count, 1, 0.96)
+        optimizer = tf.train.GradientDescentOptimizer(
+            learning_rate=self.learn_rate)
         grads_and_vars = optimizer.compute_gradients(batch_loss)
         map(lambda a: tf.verify_tensor_all_finite(
             a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
