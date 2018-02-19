@@ -138,7 +138,7 @@ def r2n2_matmul(a, b):
 
 def r2n2_linear(x, W, U, h, b):
     # print(x.shape, W.shape, U.shape, h.shape, b.shape)
-    Wx = tf.map_fn(lambda a: r2n2_matmul(a, W), x)
+    Wx = tf.map_fn(lambda a: r2n2_matmul(a, W), x, parallel_iterations=5)
     Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
     # print(Wx.shape, Uh.shape, b.shape)
     return Wx + Uh + b
