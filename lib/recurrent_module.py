@@ -8,41 +8,24 @@ import lib.naive_grid as naive_grid
 
 
 class GRU_GRID:
-    def __init__(self, n_cells=4, n_input=1024, n_hidden_state=256):
-        N = n_cells
-        h_n = n_hidden_state
-        self.W_u = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n]), name="W_u")
-        self.W_r = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n]), name="W_r")
-        self.W_h = tf.Variable(tf.random_normal(
-            [N, N, N, n_input, h_n]), name="W_h")
+    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=256):
 
-        self.b_u = tf.Variable(tf.random_normal(
-            [N, N, N, h_n]), name="b_u")
-        self.b_r = tf.Variable(tf.random_normal(
-            [N, N, N, h_n]), name="b_r")
-        self.b_h = tf.Variable(tf.random_normal(
-            [N, N, N, h_n]), name="b_h")
-
-        self.U_u = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n]), name="U_u")
-        self.U_r = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n]), name="U_r")
-        self.U_h = tf.Variable(tf.random_normal(
-            [3, 3, 3, h_n, h_n],), name="U_h")
+        self.W = tf.Variable(tf.random_uniform(
+            [N, n_cells, n_cells, n_cells, n_input, n_hidden_state]), name="W_r2n2")
+        self.b = tf.Variable(tf.random_uniform(
+            [N, n_cells, n_cells, n_cells, n_hidden_state]), name="b_r2n2")
+        self.U = tf.Variable(tf.random_uniform(
+            [N, 3, 3, 3, n_hidden_state, n_hidden_state]), name="U_r2n2")
 
     def call(self, fc_input, prev_state):
         fc_input = utils.r2n2_stack(fc_input)
-        fc_input = tf.cast(fc_input, self.W_h.dtype)
-        prev_state = tf.cast(prev_state, self.U_h.dtype)
-
         u_t = tf.sigmoid(
-            utils.r2n2_linear(fc_input, self.W_u, self.U_u, prev_state, self.b_u))
+            utils.r2n2_linear(fc_input, self.W[0], self.U[0], prev_state, self.b[0]))
         r_t = tf.sigmoid(
-            utils.r2n2_linear(fc_input, self.W_r, self.U_r, prev_state,  self.b_r))
+            utils.r2n2_linear(fc_input, self.W[1], self.U[1], prev_state,  self.b[1]))
         h_t = tf.multiply(1 - u_t, prev_state) + tf.multiply(u_t, tf.tanh(
-            utils.r2n2_linear(fc_input, self.W_h, self.U_h, tf.multiply(r_t, prev_state), self.b_h)))
+            utils.r2n2_linear(fc_input, self.W[2], self.U[2], tf.multiply(r_t, prev_state), self.b[2])))
+
         return h_t
 
 

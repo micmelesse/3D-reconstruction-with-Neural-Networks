@@ -11,6 +11,7 @@ from datetime import datetime
 
 class R2N2:
     def __init__(self, params=None):
+        self.session_loss = []
         self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
         # read params
@@ -48,6 +49,8 @@ class R2N2:
             cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
                 a, 1024, activation_fn=None), cur_tensor)
             # self.encoder_outputs.append(cur_tensor)
+        cur_tensor = tf.verify_tensor_all_finite(
+            cur_tensor, "fc vector(encoder output")
 
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
@@ -55,20 +58,15 @@ class R2N2:
             rnn = recurrent_module.GRU_GRID(
                 n_cells=N, n_input=n_x, n_hidden_state=n_h)
 
-            # self.hidden_state_list = []
             hidden_state = tf.zeros([1, 4, 4, 4, 256])
-            # self.hidden_state_list.append(hidden_state)
             for t in range(24):  # feed batches of seqeuences
-                hidden_state = rnn.call(
-                    cur_tensor[:, t, :], hidden_state)
-                # self.hidden_state_list.append(hidden_state)
-        cur_tensor = hidden_state
+                hidden_state = tf.verify_tensor_all_finite(rnn.call(
+                    cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
 
+        cur_tensor = hidden_state
         print("decoder_network")
         with tf.name_scope("decoder_network"):
-            # self.decoder_outputs = [cur_tensor]
             cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-            # self.decoder_outputs.append(cur_tensor)
 
             k_s = [3, 3, 3]
             deconv_filter_count = [128, 128, 128, 64, 32, 2]
@@ -77,16 +75,15 @@ class R2N2:
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                 cur_tensor = utils.r2n2_unpool3D(cur_tensor)
                 cur_tensor = tf.nn.relu(cur_tensor)
-                # self.decoder_outputs.append(cur_tensor)
 
             for i in range(4, 6):
                 cur_tensor = tf.layers.conv3d(
                     cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                 cur_tensor = tf.nn.relu(cur_tensor)
-                # self.decoder_outputs.append(cur_tensor)
 
         print("loss_function")
-        logits = cur_tensor
+        logits = tf.verify_tensor_all_finite(
+            cur_tensor, "logits (decoder output)")
         softmax = tf.nn.softmax(logits)
         log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
         label = tf.one_hot(self.Y, 2)
@@ -94,93 +91,53 @@ class R2N2:
                                                    log_softmax), axis=-1)
         losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
         batch_loss = tf.reduce_mean(losses)
+        self.loss = batch_loss
 
         # misc
         step_count = tf.Variable(0, trainable=False)
-        learning_rate = tf.train.inverse_time_decay(
-            self.learn_rate, step_count, 10.0, 0.5)
-        optimizing_op = tf.train.GradientDescentOptimizer(
-            learning_rate=learning_rate)
-        verify = tf.verify_tensor_all_finite(
-            log_softmax, "logits has nans or infs")
+        lr = tf.train.exponential_decay(self.learn_rate, step_count, 1, 0.96)
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr)
+        grads_and_vars = optimizer.compute_gradients(batch_loss)
+        map(lambda a: tf.verify_tensor_all_finite(
+            a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
 
-        utils.tf_print(learning_rate)
-        self.prediction = tf.argmax(softmax, -1)
-        self.minimize_loss = optimizing_op.minimize(
-            batch_loss, global_step=step_count)
+        self.final_op = optimizer.apply_gradients(
+            grads_and_vars, global_step=step_count)
+        self.print = tf.Print(batch_loss, [batch_loss, lr])
 
         print("...network created")
         self.saver = tf.train.Saver()
         self.sess = tf.InteractiveSession()
+        self.prediction = tf.argmax(softmax, -1)
         tf.global_variables_initializer().run()
 
     def train_step(self, data, label):
         x = utils.to_npy(data)
         y = utils.to_npy(label)
-        return self.sess.run([self.minimize_loss, self.print], {self.X: x, self.Y: y})
+        return self.sess.run([self.final_op, self.print, self.loss], {self.X: x, self.Y: y})[2]
+
+    def save(self, save_dir):
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
+        np.save("{}/loss.npy".format(save_dir), self.session_loss)
+        self.plot_loss(save_dir, self.session_loss)
 
     def restore(self, model_dir):
         self.saver = tf.train.import_meta_graph(
             "{}/model.ckpt.meta".format(model_dir))
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
 
-    def save(self, save_dir):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
 
-    def plot(self, plot_dir, plot_name, vals):
+    def plot_loss(self, plot_dir, loss_arr):
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
-
-        plt.plot((np.array(vals)).flatten())
-        plt.savefig("{}/{}.png".format(plot_dir, plot_name),
-                    bbox_inches='tight')
+        plt.plot(np.array(loss_arr).flatten())
+        plt.savefig("{}/loss.png".format(plot_dir), bbox_inches='tight')
         plt.close()
 
     def vis(self, log_dir="./log"):
         writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(self.sess.graph)
-
-    def get_encoder_state(self, x, y, state_dir="./out/state/"):
-        if not os.path.isdir(state_dir):
-            os.makedirs(state_dir)
-        fd = {self.X: x, self.Y: y}
-        states_all = []
-
-        n_encoder = len(self.encoder_outputs)
-        for l in range(n_encoder):
-            state = self.encoder_outputs[l].eval(fd)
-            states_all.append(state)
-
-        return states_all
-
-    def get_hidden_state(self, x, y, state_dir="./out/state/"):
-        if not os.path.isdir(state_dir):
-            os.makedirs(state_dir)
-        fd = {self.X: x, self.Y: y}
-        states_all = []
-
-        n_hidden = len(self.hidden_state_list)
-        for l in range(n_hidden):
-            state = self.hidden_state_list[l].eval(fd)
-            states_all.append(state)
-
-        return states_all
-
-    def get_decoder_state(self, x, y, state_dir="./out/state/"):
-        if not os.path.isdir(state_dir):
-            os.makedirs(state_dir)
-        fd = {self.X: x, self.Y: y}
-        states_all = []
-
-        n_decoder = len(self.decoder_outputs)
-        for l in range(n_decoder):
-            state = self.decoder_outputs[l].eval(fd)
-            states_all.append(state)
-
-        states_all.append(self.softmax.eval(fd))
-        return states_all

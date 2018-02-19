@@ -11,10 +11,6 @@ from mpl_toolkits.mplot3d import Axes3D
 # def plot_features(im):
 #     print im.shape
 
-def tf_print(to_print):
-    return tf.Print(to_print, [to_print])
-
-
 def read_param(param_line):
     regex = "^.*=(.*)$"
     return re.findall(regex, param_line)[0]
@@ -180,3 +176,43 @@ def check_dir():
     for d in TRAIN_DIRS:
         if not os.path.isdir(d):
             os.makedirs(d)
+
+    def get_encoder_state(self, x, y, state_dir="./out/state/"):
+        if not os.path.isdir(state_dir):
+            os.makedirs(state_dir)
+        fd = {self.X: x, self.Y: y}
+        states_all = []
+
+        n_encoder = len(self.encoder_outputs)
+        for l in range(n_encoder):
+            state = self.encoder_outputs[l].eval(fd)
+            states_all.append(state)
+
+        return states_all
+
+    def get_hidden_state(self, x, y, state_dir="./out/state/"):
+        if not os.path.isdir(state_dir):
+            os.makedirs(state_dir)
+        fd = {self.X: x, self.Y: y}
+        states_all = []
+
+        n_hidden = len(self.hidden_state_list)
+        for l in range(n_hidden):
+            state = self.hidden_state_list[l].eval(fd)
+            states_all.append(state)
+
+        return states_all
+
+    def get_decoder_state(self, x, y, state_dir="./out/state/"):
+        if not os.path.isdir(state_dir):
+            os.makedirs(state_dir)
+        fd = {self.X: x, self.Y: y}
+        states_all = []
+
+        n_decoder = len(self.decoder_outputs)
+        for l in range(n_decoder):
+            state = self.decoder_outputs[l].eval(fd)
+            states_all.append(state)
+
+        states_all.append(self.softmax.eval(fd))
+        return states_all

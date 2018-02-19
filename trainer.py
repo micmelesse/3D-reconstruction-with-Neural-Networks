@@ -24,17 +24,21 @@ if not os.path.isdir(model_dir):
 
 # train network
 print("training start")
-# all_loss = []
 for e in range(net.epoch_count):
-    # epoch_loss = []
+    epoch_loss = []
     data_batchs, label_batchs = utils.get_batchs(
         data_all, label_all, net.batch_size)
     t_start = time.time()
-    for b, (data, label) in enumerate(zip(data_batchs, label_batchs)):
-        net.train_step(data, label)
-        # print("epoch_{:04d}-batch_{:04d}:l={}".format(e, b, loss))
-        # epoch_loss.append(loss)
+    try:
+        for b, (data, label) in enumerate(zip(data_batchs, label_batchs)):
+            epoch_loss.append(net.train_step(data, label))
+    except KeyboardInterrupt:
+        print("training quit by user")
+        net.session_loss.append(epoch_loss)
+        net.save("{}/epoch_{:04d}".format(model_dir, e))
+        print("training quit after %d seconds" % (time.time()-t_start))
+        break
 
-    # all_loss.append(epoch_loss)
+    net.session_loss.append(epoch_loss)
     net.save("{}/epoch_{:04d}".format(model_dir, e))
     print("epoch %d took %d seconds" % (e, time.time()-t_start))
