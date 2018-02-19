@@ -173,12 +173,12 @@ class GRU_GRID:
         self.n_input = 1024
         self.n_hidden_state = 128
 
-        self.W = tf.Variable(tf.random_uniform(
-            [self.N,  self.n_cells,  self.n_cells,  self.n_cells,  self.n_input,  self.n_hidden_state]), name="W_GRU")
-        self.b = tf.Variable(tf.random_uniform(
-            [self.N,  self.n_cells,  self.n_cells,  self.n_cells,  self.n_hidden_state]), name="b_GRU")
-        self.U = tf.Variable(tf.random_uniform(
-            [self.N, 3, 3, 3,  self.n_hidden_state,  self.n_hidden_state]), name="U_GRU")
+        self.W = [tf.Variable(tf.random_uniform(
+            [self.n_cells,  self.n_cells,  self.n_cells,  self.n_input,  self.n_hidden_state]), name="W_GRU")]*self.N
+        self.b = [tf.Variable(tf.random_uniform(
+            [self.n_cells,  self.n_cells,  self.n_cells,  self.n_hidden_state]), name="b_GRU")]*self.N
+        self.U = [tf.Variable(tf.random_uniform(
+            [3, 3, 3,  self.n_hidden_state,  self.n_hidden_state]), name="U_GRU")]*self.N
 
     def call(self, fc_input, prev_state):
         if prev_state is None:
