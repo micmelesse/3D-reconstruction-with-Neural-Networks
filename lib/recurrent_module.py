@@ -8,16 +8,24 @@ import lib.naive_grid as naive_grid
 
 
 class GRU_GRID:
-    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=256):
+    def __init__(self):
+        self.N = 3
+        self.n_cells = 4
+        self.n_input = 1024
+        self.n_hidden_state = 128
 
         self.W = tf.Variable(tf.random_uniform(
-            [N, n_cells, n_cells, n_cells, n_input, n_hidden_state]), name="W_r2n2")
+            [self.N,  self.n_cells,  self.n_cells,  self.n_cells,  self.n_input,  self.n_hidden_state]), name="W_GRU")
         self.b = tf.Variable(tf.random_uniform(
-            [N, n_cells, n_cells, n_cells, n_hidden_state]), name="b_r2n2")
+            [self.N,  self.n_cells,  self.n_cells,  self.n_cells,  self.n_hidden_state]), name="b_GRU")
         self.U = tf.Variable(tf.random_uniform(
-            [N, 3, 3, 3, n_hidden_state, n_hidden_state]), name="U_r2n2")
+            [self.N, 3, 3, 3,  self.n_hidden_state,  self.n_hidden_state]), name="U_GRU")
 
     def call(self, fc_input, prev_state):
+        if prev_state is None:
+            prev_state = tf.zeros(
+                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
+
         fc_input = utils.r2n2_stack(fc_input)
         u_t = tf.sigmoid(
             utils.r2n2_linear(fc_input, self.W[0], self.U[0], prev_state, self.b[0]))

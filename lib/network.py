@@ -29,57 +29,63 @@ class R2N2:
         print("creating network...")
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
+        cur_tensor = self.X
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
-            cur_tensor = self.X
-           # self.encoder_outputs = [cur_tensor]
             k_s = [3, 3]
             conv_filter_count = [96, 128, 256, 256, 256, 256]
-            for i in range(6):
-                k_s = [7, 7] if i is 0 else k_s
-                cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                    a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
-                cur_tensor = tf.map_fn(
-                    lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
-                cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
-                # self.encoder_outputs.append(cur_tensor)
 
-            cur_tensor = tf.map_fn(tf.contrib.layers.flatten,  cur_tensor)
-            cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
-                a, 1024, activation_fn=None), cur_tensor)
-            # self.encoder_outputs.append(cur_tensor)
+            for i in range(7):
+                if i < 6:
+                    k_s = [7, 7] if i is 0 else k_s
+                    cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
+                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
+                    cur_tensor = tf.map_fn(
+                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
+                    cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
+                elif i == 6:
+                    cur_tensor = tf.map_fn(
+                        tf.contrib.layers.flatten,  cur_tensor)
+                    cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
+                        a, 1024, activation_fn=None), cur_tensor)
+                    cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
+                # print(cur_tensor.shape)
+
         cur_tensor = tf.verify_tensor_all_finite(
-            cur_tensor, "fc vector(encoder output")
+            cur_tensor, "fc vector (encoder output)")
 
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
-            N, n_x, n_h = 4, 1024, 256
-            rnn = recurrent_module.GRU_GRID(
-                n_cells=N, n_input=n_x, n_hidden_state=n_h)
-
-            hidden_state = tf.zeros([1, 4, 4, 4, 256])
+            rnn = recurrent_module.GRU_GRID()
+            hidden_state = None
             for t in range(24):  # feed batches of seqeuences
                 hidden_state = tf.verify_tensor_all_finite(rnn.call(
                     cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
-
         cur_tensor = hidden_state
+        # print(cur_tensor.shape)
+
         print("decoder_network")
         with tf.name_scope("decoder_network"):
-            cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-
             k_s = [3, 3, 3]
             deconv_filter_count = [128, 128, 128, 64, 32, 2]
-            for i in range(2, 4):
-                cur_tensor = tf.layers.conv3d(
-                    cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-                cur_tensor = tf.nn.relu(cur_tensor)
 
-            for i in range(4, 6):
-                cur_tensor = tf.layers.conv3d(
-                    cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                cur_tensor = tf.nn.relu(cur_tensor)
+            for i in range(6):
+                if i == 0:
+                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
+                elif i in range(1, 3):  # scale up hidden state to 32*32*32
+                    cur_tensor = tf.layers.conv3d(
+                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
+                    cur_tensor = tf.nn.relu(cur_tensor)
+                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
+                elif i in range(3, 5):  # reduce number of channels to 2
+                    cur_tensor = tf.layers.conv3d(
+                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
+                    cur_tensor = tf.nn.relu(cur_tensor)
+                elif i == 5:  # final conv before softmax
+                    cur_tensor = tf.layers.conv3d(
+                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
+                # print(cur_tensor.shape)
 
         print("loss_function")
         logits = tf.verify_tensor_all_finite(
