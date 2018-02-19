@@ -112,42 +112,6 @@ def hstack(a, b):
 def vstack(a, b):
     return np.vstack((a, b))
 
-
-def r2n2_unpool3D(value, name='unpool3D'):
-    with tf.name_scope(name) as scope:
-        sh = value.get_shape().as_list()
-        dim = len(sh[1: -1])
-        out = (tf.reshape(value, [-1] + sh[-dim:]))
-        for i in range(dim, 0, -1):
-            out = tf.concat([out, tf.zeros_like(out)], i)
-        out_size = [-1] + [s * 2 for s in sh[1:-1]] + [sh[-1]]
-        out = tf.reshape(out, out_size, name=scope)
-    return out
-
-
-def r2n2_matmul(a, b):
-    # print(a.shape, b.shape)
-    ret = tf.expand_dims(a, axis=-2)
-    # print(ret.shape, b.shape)
-    ret = tf.matmul(ret, b)
-    # print(ret.shape)
-    ret = tf.squeeze(ret, axis=-2)
-    # print(ret.shape)
-    return ret
-
-
-def r2n2_linear(x, W, U, h, b):
-    # print(x.shape, W.shape, U.shape, h.shape, b.shape)
-    Wx = tf.map_fn(lambda a: r2n2_matmul(a, W), x, parallel_iterations=5)
-    Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
-    # print(Wx.shape, Uh.shape, b.shape)
-    return Wx + Uh + b
-
-
-def r2n2_stack(x, N=4):
-    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4])
-
-
 def to_npy(rows):
     if isinstance(rows, str):
         return np.expand_dims(np.load(rows), 0)
