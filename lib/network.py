@@ -40,10 +40,11 @@ class R2N2:
                 if i < 6:
                     k_s = [7, 7] if i is 0 else k_s
                     cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
+                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor, parallel_iterations=5)
                     cur_tensor = tf.map_fn(
-                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
-                    cur_tensor = tf.map_fn(tf.nn.relu,  cur_tensor)
+                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor, parallel_iterations=5)
+                    cur_tensor = tf.map_fn(
+                        tf.nn.relu,  cur_tensor, parallel_iterations=5)
                 elif i == 6:
                     cur_tensor = tf.map_fn(
                         tf.contrib.layers.flatten,  cur_tensor)
