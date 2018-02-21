@@ -76,12 +76,12 @@ class R2N2:
 
             for i in range(6):
                 if i == 0:
-                    cur_tensor = recurrent_module.r2n2_unpool3D(cur_tensor)
+                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
                 elif i in range(1, 3):  # scale up hidden state to 32*32*32
                     cur_tensor = tf.layers.conv3d(
                         cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                     cur_tensor = tf.nn.relu(cur_tensor)
-                    cur_tensor = recurrent_module.r2n2_unpool3D(cur_tensor)
+                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
                 elif i in range(3, 5):  # reduce number of channels to 2
                     cur_tensor = tf.layers.conv3d(
                         cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
