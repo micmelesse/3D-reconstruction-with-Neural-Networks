@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -66,6 +67,8 @@ class R2N2:
             for t in range(24):  # feed batches of seqeuences
                 hidden_state = tf.verify_tensor_all_finite(self.gru.call(
                     cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
+                # sys.exit()
+
         cur_tensor = hidden_state
         # print(cur_tensor.shape)
 

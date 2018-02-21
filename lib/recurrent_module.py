@@ -6,38 +6,13 @@ import tensorflow as tf
 import lib.network as network
 
 
-class GRU_GRID:
-    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
-        self.N = 3
-        self.n_cells = 4
-        self.n_input = 1024
-        self.n_hidden_state = 128
-
-        self.W = [WEIGHT_MATRIX_GRID()]*N
-        self.U = [tf.Variable(tf.random_normal(
-            [3, 3, 3, n_hidden_state, n_hidden_state]))]*N
-
-    def call(self, fc_input, prev_state):
-        if prev_state is None:
-            prev_state = tf.zeros(
-                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
-
-        Wx_0 = self.W[0].multiply(fc_input)
-        Uh_0 = tf.nn.conv3d(prev_state, self.U[0], strides=[
-                            1, 1, 1, 1, 1], padding="SAME")
-
-        update_gate = tf.sigmoid(Wx_0+Uh_0)
-
-        return update_gate
-
-
 class WEIGHT_MATRIX_GRID:
-    def __init__(self,  n_x=1024, n_h=128, n_cells=4, grid_initalizer=tf.random_normal):
+    def __init__(self,  n_x=1024, n_h=128, n_cells=4, initalizer=tf.random_normal):
         # class variables
         self.n_x = n_x
         self.n_h = n_h
         self.n_cells = n_cells
-        self.grid_initalizer = grid_initalizer
+        self.initalizer = initalizer
 
         def create_weight_matrix_grid():
             x_list = []
@@ -47,8 +22,8 @@ class WEIGHT_MATRIX_GRID:
                     z_list = []
                     for k in range(self.n_cells):
                         grid_index = "{}{}{}".format(i, j, k)
-                        weight_matrix = tf.Variable(self.grid_initalizer(
-                            [self.n_x+1, self.n_h]), name=grid_index)  # added on more wieght vector as the bias
+                        weight_matrix = tf.Variable(self.initalizer(
+                            [self.n_x, self.n_h]), name=grid_index)  # added on more wieght vector as the bias
                         z_list.append(weight_matrix)
                     y_list.append(z_list)
                 x_list.append(y_list)
@@ -56,12 +31,8 @@ class WEIGHT_MATRIX_GRID:
 
         self.weight_matrix_grid = create_weight_matrix_grid()
 
+    # multiply each of weight matrix with x
     def multiply(self, x):
-        print(x.shape)
-        x = tf.concat([1, x], 0)
-        print(x.shape)
-
-        # multiply each weight matrix with x
         x_list = []
         for i in range(self.n_cells):
             y_list = []
@@ -75,6 +46,43 @@ class WEIGHT_MATRIX_GRID:
             x_list.append(y_list)
 
         return tf.transpose(tf.convert_to_tensor(x_list), [3, 0, 1, 2, 4])
+
+
+class GRU_GRID:
+    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
+        self.N = 3
+        self.n_cells = 4
+        self.n_input = 1024
+        self.n_hidden_state = 128
+
+        gru_initializer = tf.contrib.layers.xavier_initializer()
+        self.W = [WEIGHT_MATRIX_GRID(initalizer=gru_initializer)]*N
+        self.U = [tf.Variable(gru_initializer(
+            [3, 3, 3, n_hidden_state, n_hidden_state]))]*N
+        self.b = [tf.Variable(gru_initializer(
+            [n_cells, n_cells, n_cells, n_hidden_state]))]*N
+
+    def linear_sum(self, W, x, U, h, b):
+        return W.multiply(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
+
+    def call(self, fc_input, prev_state):
+        if prev_state is None:
+            prev_state = tf.zeros(
+                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
+
+        # update gate
+        u_t = tf.sigmoid(
+            self.linear_sum(fc_input, self.W[0], self.U[0], prev_state, self.b[0]))
+        # reset gate
+        r_t = tf.sigmoid(
+            self.linear_sum(fc_input, self.W[1], self.U[1], prev_state,  self.b[1]))
+
+        # final hidden state
+        h_t_1 = (1 - u_t) * prev_state
+        h_t_2 = u_t * tf.tanh(self.linear_sum(fc_input,
+                                              self.W[2], self.U[2], r_t * prev_state, self.b[2]))
+
+        return h_t_1 + h_t_2
 
 
 class GRU_TENSOR:  # use vars that donot fit into memory
