@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import lib.utils as utils
+import lib.recurrent_module as recurrent_module
 from datetime import datetime
 
 # Recurrent Reconstruction Neural Network (R2N2)
@@ -61,10 +62,10 @@ class R2N2:
 
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
-            rnn = GRU_GRID()
+            self.gru = recurrent_module.GRU_GRID()
             hidden_state = None
             for t in range(24):  # feed batches of seqeuences
-                hidden_state = tf.verify_tensor_all_finite(rnn.call(
+                hidden_state = tf.verify_tensor_all_finite(self.gru.call(
                     cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
         cur_tensor = hidden_state
         # print(cur_tensor.shape)
@@ -76,12 +77,12 @@ class R2N2:
 
             for i in range(6):
                 if i == 0:
-                    cur_tensor = r2n2_unpool3D(cur_tensor)
+                    cur_tensor = recurrent_module.r2n2_unpool3D(cur_tensor)
                 elif i in range(1, 3):  # scale up hidden state to 32*32*32
                     cur_tensor = tf.layers.conv3d(
                         cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
                     cur_tensor = tf.nn.relu(cur_tensor)
-                    cur_tensor = r2n2_unpool3D(cur_tensor)
+                    cur_tensor = recurrent_module.r2n2_unpool3D(cur_tensor)
                 elif i in range(3, 5):  # reduce number of channels to 2
                     cur_tensor = tf.layers.conv3d(
                         cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
@@ -133,6 +134,8 @@ class R2N2:
         self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
         np.save("{}/loss.npy".format(save_dir), self.session_loss)
         self.plot_loss(save_dir, self.session_loss)
+        writer = tf.summary.FileWriter(
+            "{}/writer".format(save_dir), self.sess.graph)
 
     def restore(self, model_dir):
         self.saver = tf.train.import_meta_graph(
@@ -148,73 +151,3 @@ class R2N2:
         plt.plot(np.array(loss_arr).flatten())
         plt.savefig("{}/loss.png".format(plot_dir), bbox_inches='tight')
         plt.close()
-
-    def vis(self, log_dir="./log"):
-        writer = tf.summary.FileWriter(log_dir)
-        writer.add_graph(self.sess.graph)
-
-
-def r2n2_unpool3D(value, name='unpool3D'):
-    with tf.name_scope(name) as scope:
-        sh = value.get_shape().as_list()
-        dim = len(sh[1: -1])
-        out = (tf.reshape(value, [-1] + sh[-dim:]))
-        for i in range(dim, 0, -1):
-            out = tf.concat([out, tf.zeros_like(out)], i)
-        out_size = [-1] + [s * 2 for s in sh[1:-1]] + [sh[-1]]
-        out = tf.reshape(out, out_size, name=scope)
-    return out
-
-
-class GRU_GRID:
-    def __init__(self):
-        self.N = 3
-        self.n_cells = 4
-        self.n_input = 1024
-        self.n_hidden_state = 128
-
-        self.W = [tf.Variable(tf.random_uniform(
-            [self.n_cells,  self.n_cells,  self.n_cells,  self.n_input,  self.n_hidden_state]), name="W_GRU")]*self.N
-        self.b = [tf.Variable(tf.random_uniform(
-            [self.n_cells,  self.n_cells,  self.n_cells,  self.n_hidden_state]), name="b_GRU")]*self.N
-        self.U = [tf.Variable(tf.random_uniform(
-            [3, 3, 3,  self.n_hidden_state,  self.n_hidden_state]), name="U_GRU")]*self.N
-
-    def call(self, fc_input, prev_state):
-        if prev_state is None:
-            prev_state = tf.zeros(
-                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
-
-        fc_input = r2n2_stack(fc_input)
-        u_t = tf.sigmoid(
-            r2n2_linear(fc_input, self.W[0], self.U[0], prev_state, self.b[0]))
-        r_t = tf.sigmoid(
-            r2n2_linear(fc_input, self.W[1], self.U[1], prev_state,  self.b[1]))
-        h_t = tf.multiply(1 - u_t, prev_state) + tf.multiply(u_t, tf.tanh(
-            r2n2_linear(fc_input, self.W[2], self.U[2], tf.multiply(r_t, prev_state), self.b[2])))
-
-        return h_t
-
-
-def r2n2_matmul(a, b):
-    # print(a.shape, b.shape)
-    ret = tf.expand_dims(a, axis=-2)
-    # print(ret.shape, b.shape)
-    ret = tf.matmul(ret, b)
-    # print(ret.shape)
-    ret = tf.squeeze(ret, axis=-2)
-    # print(ret.shape)
-    return ret
-
-
-def r2n2_linear(x, W, U, h, b):
-    # print(x.shape, W.shape, U.shape, h.shape, b.shape)
-    Wx = tf.map_fn(lambda a: r2n2_matmul(a, W), x,
-                   parallel_iterations=N_PARALLEL)
-    Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
-    # print(Wx.shape, Uh.shape, b.shape)
-    return Wx + Uh + b
-
-
-def r2n2_stack(x, N=4):
-    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4])

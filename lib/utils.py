@@ -11,6 +11,41 @@ from mpl_toolkits.mplot3d import Axes3D
 # def plot_features(im):
 #     print im.shape
 
+def r2n2_matmul(a, b):
+    # print(a.shape, b.shape)
+    ret = tf.expand_dims(a, axis=-2)
+    # print(ret.shape, b.shape)
+    ret = tf.matmul(ret, b)
+    # print(ret.shape)
+    ret = tf.squeeze(ret, axis=-2)
+    # print(ret.shape)
+    return ret
+
+
+def r2n2_linear(x, W, U, h, b=None):
+    Wx = tf.map_fn(lambda a: r2n2_matmul(a, W), x)
+    Uh = tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME")
+    if b:
+        return Wx + Uh + b
+
+    return Wx+Uh
+
+
+def r2n2_stack(x, N=4):
+    return tf.transpose(tf.stack([tf.stack([tf.stack([x] * N)] * N)] * N), [3, 0, 1, 2, 4])
+
+
+def r2n2_unpool3D(value, name='unpool3D'):
+    with tf.name_scope(name) as scope:
+        sh = value.get_shape().as_list()
+        dim = len(sh[1: -1])
+        out = (tf.reshape(value, [-1] + sh[-dim:]))
+        for i in range(dim, 0, -1):
+            out = tf.concat([out, tf.zeros_like(out)], i)
+        out_size = [-1] + [s * 2 for s in sh[1:-1]] + [sh[-1]]
+        out = tf.reshape(out, out_size, name=scope)
+    return out
+
 def read_param(param_line):
     regex = "^.*=(.*)$"
     return re.findall(regex, param_line)[0]
@@ -111,6 +146,7 @@ def hstack(a, b):
 
 def vstack(a, b):
     return np.vstack((a, b))
+
 
 def to_npy(rows):
     if isinstance(rows, str):
