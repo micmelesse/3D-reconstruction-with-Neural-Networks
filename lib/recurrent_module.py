@@ -3,7 +3,6 @@ import sys
 import math
 import numpy as np
 import tensorflow as tf
-import lib.network as network
 
 
 class WEIGHT_MATRIX_GRID:
@@ -72,15 +71,15 @@ class GRU_GRID:
 
         # update gate
         u_t = tf.sigmoid(
-            self.linear_sum(fc_input, self.W[0], self.U[0], prev_state, self.b[0]))
+            self.linear_sum(self.W[0], fc_input, self.U[0], prev_state, self.b[0]))
         # reset gate
         r_t = tf.sigmoid(
-            self.linear_sum(fc_input, self.W[1], self.U[1], prev_state,  self.b[1]))
+            self.linear_sum(self.W[1], fc_input, self.U[1], prev_state,  self.b[1]))
 
-        # final hidden state
+        # hidden state
         h_t_1 = (1 - u_t) * prev_state
-        h_t_2 = u_t * tf.tanh(self.linear_sum(fc_input,
-                                              self.W[2], self.U[2], r_t * prev_state, self.b[2]))
+        h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], fc_input,
+                                              self.U[2], r_t * prev_state, self.b[2]))
 
         return h_t_1 + h_t_2
 
