@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 import lib.network as network
 
-
 class GRU_GRID:
     def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
         self.N = 3
@@ -146,4 +145,3 @@ class LSTM_GRID:
         h_t = tf.multiply(o_t, tf.tanh(c_t))
 
         return h_t, tf.contrib.rnn.LSTMStateTuple(c_t, h_t)
-
