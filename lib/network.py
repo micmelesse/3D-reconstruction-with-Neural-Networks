@@ -5,10 +5,9 @@ import matplotlib.pyplot as plt
 import lib.utils as utils
 import lib.recurrent_module as recurrent_module
 from datetime import datetime
+N_PARALLEL = 1
 
 # Recurrent Reconstruction Neural Network (R2N2)
-
-N_PARALLEL = 1
 
 
 class R2N2:
