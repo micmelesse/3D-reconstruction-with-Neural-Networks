@@ -13,7 +13,7 @@ class WEIGHT_MATRIX_GRID:
         self.n_cells = n_cells
         self.initalizer = initalizer
 
-        def create_weight_matrix_grid():
+        with tf.name_scope("WEIGHT_MATRIX_GRID"):
             x_list = []
             for i in range(self.n_cells):
                 y_list = []
@@ -26,9 +26,8 @@ class WEIGHT_MATRIX_GRID:
                         z_list.append(weight_matrix)
                     y_list.append(z_list)
                 x_list.append(y_list)
-            return x_list
 
-        self.weight_matrix_grid = create_weight_matrix_grid()
+        self.weight_matrix_grid = x_list
 
     # multiply each of weight matrix with x
     def multiply(self, x):

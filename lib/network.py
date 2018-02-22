@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import lib.utils as utils
 import lib.recurrent_module as recurrent_module
 from datetime import datetime
-N_PARALLEL = 1
 
 # Recurrent Reconstruction Neural Network (R2N2)
 
@@ -30,8 +29,9 @@ class R2N2:
 
         # place holders
         print("creating network...")
-        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
-        self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
+        with tf.name_scope('input'):
+            self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
+            self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
         cur_tensor = self.X
 
         print("encoder_network")
@@ -43,18 +43,18 @@ class R2N2:
                 if i < 6:
                     k_s = [7, 7] if i is 0 else k_s
                     cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor, parallel_iterations=N_PARALLEL)
+                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
                     cur_tensor = tf.map_fn(
-                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor, parallel_iterations=N_PARALLEL)
+                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
                     cur_tensor = tf.map_fn(
-                        tf.nn.relu,  cur_tensor, parallel_iterations=N_PARALLEL)
+                        tf.nn.relu,  cur_tensor)
                 elif i == 6:
                     cur_tensor = tf.map_fn(
-                        tf.contrib.layers.flatten,  cur_tensor, parallel_iterations=N_PARALLEL)
+                        tf.contrib.layers.flatten,  cur_tensor)
                     cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
-                        a, 1024, activation_fn=None), cur_tensor, parallel_iterations=N_PARALLEL)
+                        a, 1024, activation_fn=None), cur_tensor)
                     cur_tensor = tf.map_fn(
-                        tf.nn.relu,  cur_tensor, parallel_iterations=N_PARALLEL)
+                        tf.nn.relu,  cur_tensor)
                 # print(cur_tensor.shape)
 
         cur_tensor = tf.verify_tensor_all_finite(
@@ -104,6 +104,7 @@ class R2N2:
                                                    log_softmax), axis=-1)
         losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
         batch_loss = tf.reduce_mean(losses)
+        tf.summary.scalar("loss", batch_loss)
         self.loss = batch_loss
 
         # misc
@@ -115,9 +116,12 @@ class R2N2:
         map(lambda a: tf.verify_tensor_all_finite(
             a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
 
-        self.final_op = optimizer.apply_gradients(
+        self.apply_grad = optimizer.apply_gradients(
             grads_and_vars, global_step=step_count)
+        self.summary_op = tf.summary.merge_all()
         self.print = tf.Print(batch_loss, [batch_loss, lr])
+        self.final_op = tf.group(
+            [self.apply_grad, self.summary_op, self.print])
 
         print("...network created")
         self.saver = tf.train.Saver()
