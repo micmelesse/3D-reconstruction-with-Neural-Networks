@@ -21,14 +21,12 @@ class WEIGHT_MATRIX_GRID:
                 for j in range(self.n_cells):
                     z_list = []
                     for k in range(self.n_cells):
-                        grid_index = "{}{}{}".format(i, j, k)
                         weight_matrix = tf.Variable(self.initalizer(
-                            [self.n_x, self.n_h]), name=grid_index)  # added on more wieght vector as the bias
+                            [self.n_x, self.n_h]), name="W_{}{}{}".format(i, j, k))  # added on more wieght vector as the bias
                         z_list.append(weight_matrix)
                     y_list.append(z_list)
                 x_list.append(y_list)
-
-        self.weight_matrix_grid = x_list
+            self.weight_matrix_grid = x_list
 
     # multiply each of weight matrix with x
     def multiply(self, x):
@@ -57,9 +55,9 @@ class GRU_GRID:  # GOOD
         gru_initializer = tf.contrib.layers.xavier_initializer()
         self.W = [WEIGHT_MATRIX_GRID(initalizer=gru_initializer)]*N
         self.U = [tf.Variable(gru_initializer(
-            [3, 3, 3, n_hidden_state, n_hidden_state]))]*N
+            [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
         self.b = [tf.Variable(gru_initializer(
-            [n_cells, n_cells, n_cells, n_hidden_state]))]*N
+            [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
     def linear_sum(self, W, x, U, h, b):
         return W.multiply(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b

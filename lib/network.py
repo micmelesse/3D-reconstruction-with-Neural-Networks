@@ -13,7 +13,6 @@ from datetime import datetime
 class R2N2:
     def __init__(self, params=None):
         self.session_loss = []
-
         self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
         # read params
@@ -32,7 +31,7 @@ class R2N2:
         with tf.name_scope('input'):
             self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
             self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
-        cur_tensor = self.X
+            cur_tensor = self.X
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
@@ -57,8 +56,8 @@ class R2N2:
                         tf.nn.relu,  cur_tensor)
                 # print(cur_tensor.shape)
 
-        cur_tensor = tf.verify_tensor_all_finite(
-            cur_tensor, "fc vector (encoder output)")
+            cur_tensor = tf.verify_tensor_all_finite(
+                cur_tensor, "fc vector (encoder output)")
 
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
@@ -67,10 +66,9 @@ class R2N2:
             for t in range(24):  # feed batches of seqeuences
                 hidden_state = tf.verify_tensor_all_finite(self.gru.call(
                     cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
-                # sys.exit()
 
-        cur_tensor = hidden_state
-        # print(cur_tensor.shape)
+            cur_tensor = hidden_state
+            # print(cur_tensor.shape)
 
         print("decoder_network")
         with tf.name_scope("decoder_network"):
@@ -92,42 +90,43 @@ class R2N2:
                 elif i == 5:  # final conv before softmax
                     cur_tensor = tf.layers.conv3d(
                         cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                # print(cur_tensor.shape)
 
         print("loss_function")
-        logits = tf.verify_tensor_all_finite(
-            cur_tensor, "logits (decoder output)")
-        softmax = tf.nn.softmax(logits)
-        log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
-        label = tf.one_hot(self.Y, 2)
-        cross_entropy = tf.reduce_sum(-tf.multiply(label,
-                                                   log_softmax), axis=-1)
-        losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
-        batch_loss = tf.reduce_mean(losses)
-        tf.summary.scalar("loss", batch_loss)
-        self.loss = batch_loss
+        with tf.name_scope("loss"):
+            logits = tf.verify_tensor_all_finite(
+                cur_tensor, "logits (decoder output)")
+            softmax = tf.nn.softmax(logits)
+            log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
+            label = tf.one_hot(self.Y, 2)
+            cross_entropy = tf.reduce_sum(-tf.multiply(label,
+                                                       log_softmax), axis=-1)
+            losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
+            batch_loss = tf.reduce_mean(losses)
+            tf.summary.scalar("loss", batch_loss)
+            self.loss = batch_loss
 
-        # misc
-        step_count = tf.Variable(0, trainable=False)
-        lr = self.learn_rate
-        optimizer = tf.train.GradientDescentOptimizer(
-            learning_rate=lr)
-        grads_and_vars = optimizer.compute_gradients(batch_loss)
-        map(lambda a: tf.verify_tensor_all_finite(
-            a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
+        with tf.name_scope("update"):
+            step_count = tf.Variable(0, trainable=False)
+            lr = self.learn_rate
+            optimizer = tf.train.GradientDescentOptimizer(
+                learning_rate=lr)
+            grads_and_vars = optimizer.compute_gradients(batch_loss)
+            map(lambda a: tf.verify_tensor_all_finite(
+                a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
 
-        self.apply_grad = optimizer.apply_gradients(
-            grads_and_vars, global_step=step_count)
-        self.summary_op = tf.summary.merge_all()
-        self.print = tf.Print(batch_loss, [batch_loss, lr])
-        self.final_op = tf.group(
-            [self.apply_grad, self.summary_op, self.print])
+            self.apply_grad = optimizer.apply_gradients(
+                grads_and_vars, global_step=step_count)
+            self.summary_op = tf.summary.merge_all()
+            self.print = tf.Print(batch_loss, [batch_loss, lr])
+            self.final_op = tf.group(
+                [self.apply_grad, self.summary_op, self.print])
 
         print("...network created")
-        self.saver = tf.train.Saver()
-        self.sess = tf.InteractiveSession()
-        self.prediction = tf.argmax(softmax, -1)
-        tf.global_variables_initializer().run()
+        with tf.name_scope("misc"):
+            self.saver = tf.train.Saver()
+            self.sess = tf.InteractiveSession()
+            self.prediction = tf.argmax(softmax, -1)
+            tf.global_variables_initializer().run()
 
     def train_step(self, data, label):
         x = utils.to_npy(data)
