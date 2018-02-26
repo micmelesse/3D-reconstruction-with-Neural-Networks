@@ -105,7 +105,7 @@ def save_data_to_npy(paths, N=None):
 
 
 def main():
-
+    f = None
     try:
         f = open("params/dataset.params")
     except:

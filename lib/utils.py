@@ -26,6 +26,7 @@ def read_param(param_line):
 
 
 def get_params_from_disk():
+    f = None
 
     try:
         f = open("params/train.params")
