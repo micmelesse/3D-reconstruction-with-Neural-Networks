@@ -14,6 +14,7 @@
 *.txt
 *.csv
 *.pdf
+*.pem
 *.params
 *.ckpt.*
 *checkpoint*
@@ -23,4 +24,9 @@ ShapeNe*
 *tfevents*
 .ipynb_checkpoint*
 __pycache*
+.vscod*
+confi*
+docs*
+out*
+data*
 
