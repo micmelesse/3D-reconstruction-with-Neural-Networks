@@ -26,21 +26,29 @@ def read_param(param_line):
 
 
 def get_params_from_disk():
-    with open("params/train.params") as f:
-        try:
-            learn_rate = float(read_param(f.readline()))
-        except:
-            learn_rate = None
 
-        try:
-            batch_size = int(read_param(f.readline()))
-        except:
-            batch_size = None
+    try:
+        f = open("params/train.params")
+    except:
+        pass
 
-        try:
-            epoch = int(read_param(f.readline()))
-        except:
-            epoch = None
+    try:
+        learn_rate = float(read_param(f.readline()))
+    except:
+        learn_rate = None
+
+    try:
+        batch_size = int(read_param(f.readline()))
+    except:
+        batch_size = None
+
+    try:
+        epoch = int(read_param(f.readline()))
+    except:
+        epoch = None
+
+    if f:
+        f.close()
 
     return learn_rate, batch_size, epoch
 
