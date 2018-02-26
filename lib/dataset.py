@@ -105,11 +105,11 @@ def save_data_to_npy(paths, N=None):
 
 
 def main():
-    with open("params/dataset.params") as f:
-        try:
+    try:
+        with open("params/dataset.params") as f:
             example_count = int(utils.read_param(f.readline()))
-        except:
-            example_count = None
+    except:
+        example_count = None
 
     if not os.path.isfile("out/paths.csv"):
         path.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
