@@ -18,6 +18,10 @@ class R2N2:
         # read params
         if params is None:
             self.learn_rate, self.batch_size, self.epoch_count = utils.get_params_from_disk()
+            if self.learn_rate is None:
+                self.learn_rate = 0.1
+            self.batch_size
+
         else:
             self.learn_rate = params['learn_rate']
             self.batch_size = params['batch_size']

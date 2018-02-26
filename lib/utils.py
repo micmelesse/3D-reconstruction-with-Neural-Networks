@@ -7,6 +7,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
 def r2n2_unpool3D(value, name='unpool3D'):
     with tf.name_scope(name) as scope:
         sh = value.get_shape().as_list()
@@ -18,16 +19,23 @@ def r2n2_unpool3D(value, name='unpool3D'):
         out = tf.reshape(out, out_size, name=scope)
     return out
 
+
 def read_param(param_line):
     regex = "^.*=(.*)$"
     return re.findall(regex, param_line)[0]
 
 
 def get_params_from_disk():
-    with open("config/train.params") as f:
-        learn_rate = float(read_param(f.readline()))
-        batch_size = int(read_param(f.readline()))
-        epoch = int(read_param(f.readline()))
+    with open("params/train.params") as f:
+        try:
+            learn_rate = float(read_param(f.readline()))
+            batch_size = int(read_param(f.readline()))
+            epoch = int(read_param(f.readline()))
+        except:
+            learn_rate = None
+            batch_size = None
+            epoch = None
+
     return learn_rate, batch_size, epoch
 
 
@@ -144,7 +152,7 @@ def get_batchs(data_all, label_all, batch_size):
 
 
 def check_dir():
-    TRAIN_DIRS = ["out", "config", "data", "aws"]
+    TRAIN_DIRS = ["out", "params", "data", "aws"]
     for d in TRAIN_DIRS:
         if not os.path.isdir(d):
             os.makedirs(d)
