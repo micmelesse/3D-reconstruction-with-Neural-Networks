@@ -125,8 +125,6 @@ class R2N2:
                 grads_and_vars, global_step=step_count)
             self.summary_op = tf.summary.merge_all()
             self.print = tf.Print(batch_loss, [batch_loss, lr])
-            self.final_op = tf.group(
-                [self.apply_grad, self.summary_op, self.print])
 
         print("...network created")
         with tf.name_scope("misc"):
@@ -138,7 +136,7 @@ class R2N2:
     def train_step(self, data, label):
         x = utils.to_npy(data)
         y = utils.to_npy(label)
-        return self.sess.run([self.final_op, self.print, self.loss], {self.X: x, self.Y: y})[2]
+        return self.sess.run([self.apply_grad, self.summary_op, self.print, self.loss], {self.X: x, self.Y: y})[-1]
 
     def save(self, save_dir):
         if not os.path.isdir(save_dir):
