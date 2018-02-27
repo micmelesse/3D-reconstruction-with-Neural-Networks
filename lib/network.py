@@ -4,7 +4,9 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import lib.utils as utils
+import lib.encoder_module as encoder_module
 import lib.recurrent_module as recurrent_module
+import lib.decoder_module as decoder_module
 from datetime import datetime
 
 # Recurrent Reconstruction Neural Network (R2N2)
@@ -35,75 +37,29 @@ class R2N2:
 
         # place holders
         print("creating network...")
-        with tf.name_scope('input'):
-            self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
-            self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
-            cur_tensor = self.X
+        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
 
         print("encoder_network")
         with tf.name_scope("encoder_network"):
-            k_s = [3, 3]
-            conv_filter_count = [96, 128, 256, 256, 256, 256]
-
-            for i in range(7):
-                if i < 6:
-                    with tf.name_scope("conv_block"):
-                        k_s = [7, 7] if i is 0 else k_s
-                        cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                            a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
-                        cur_tensor = tf.map_fn(
-                            lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
-                        cur_tensor = tf.map_fn(
-                            tf.nn.relu,  cur_tensor)
-                elif i == 6:
-                    cur_tensor = tf.map_fn(
-                        tf.contrib.layers.flatten,  cur_tensor)
-                    cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
-                        a, 1024, activation_fn=None), cur_tensor)
-                    cur_tensor = tf.map_fn(
-                        tf.nn.relu,  cur_tensor)
-                # print(cur_tensor.shape)
-
-            cur_tensor = tf.verify_tensor_all_finite(
-                cur_tensor, "fc vector (encoder output)")
+            encoder = encoder_module.Conv_Encoder(self.X)
+            encoded_input = encoder.out_tensor
 
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
-            self.gru = recurrent_module.GRU_GRID()
+            GRU_Grid = recurrent_module.GRU_Grid()
             hidden_state = None
             for t in range(24):  # feed batches of seqeuences
-                hidden_state = tf.verify_tensor_all_finite(self.gru.call(
-                    cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
-
-            cur_tensor = hidden_state
-            # print(cur_tensor.shape)
+                hidden_state = tf.verify_tensor_all_finite(GRU_Grid.call(
+                    encoded_input[:, t, :], hidden_state), "hidden_state {}".format(t))
 
         print("decoder_network")
         with tf.name_scope("decoder_network"):
-            k_s = [3, 3, 3]
-            deconv_filter_count = [128, 128, 128, 64, 32, 2]
+            decoder = decoder_module.Conv_Decoder(hidden_state)
+            logits = decoder.out_tensor
 
-            for i in range(6):
-                with tf.name_scope("deconv_block"):
-                    if i == 0:
-                        cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-                    elif i in range(1, 3):  # scale up hidden state to 32*32*32
-                        cur_tensor = tf.layers.conv3d(
-                            cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                        cur_tensor = tf.nn.relu(cur_tensor)
-                        cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-                    elif i in range(3, 5):  # reduce number of channels to 2
-                        cur_tensor = tf.layers.conv3d(
-                            cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                        cur_tensor = tf.nn.relu(cur_tensor)
-                    elif i == 5:  # final conv before softmax
-                        cur_tensor = tf.layers.conv3d(
-                            cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-
+        self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
         print("loss_function")
         with tf.name_scope("loss"):
-            logits = tf.verify_tensor_all_finite(
-                cur_tensor, "logits (decoder output)")
             softmax = tf.nn.softmax(logits)
             log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
             label = tf.one_hot(self.Y, 2)
@@ -114,6 +70,7 @@ class R2N2:
             tf.summary.scalar("loss", batch_loss)
             self.loss = batch_loss
 
+        print("update functions")
         with tf.name_scope("update"):
             step_count = tf.Variable(0, trainable=False)
             lr = self.learn_rate
