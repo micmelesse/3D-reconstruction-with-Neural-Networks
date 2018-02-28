@@ -83,7 +83,7 @@ class R2N2:
             self.apply_grad = optimizer.apply_gradients(
                 grads_and_vars, global_step=step_count)
             self.summary_op = tf.summary.merge_all()
-            self.print = tf.Print(batch_loss, [batch_loss, lr])
+            self.print = tf.Print(batch_loss, [step_count, batch_loss, lr])
 
         print("...network created")
         with tf.name_scope("misc"):
