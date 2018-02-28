@@ -14,8 +14,8 @@ from datetime import datetime
 
 class R2N2:
     def __init__(self, params=None):
-        self.session_loss = []
         self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        self.session_loss = []
 
         # read params
         if params is None:
@@ -26,7 +26,6 @@ class R2N2:
                 self.batch_size = 16
             if self.epoch_count is None:
                 self.epoch_count = 5
-
         else:
             self.learn_rate = params['learn_rate']
             self.batch_size = params['batch_size']
@@ -39,8 +38,8 @@ class R2N2:
         print("creating network...")
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
 
-        print("encoder_network")
-        with tf.name_scope("encoder_network"):
+        print("encoder_module")
+        with tf.name_scope("encoder_module"):
             encoder = encoder_module.Conv_Encoder(self.X)
             encoded_input = encoder.out_tensor
 
@@ -48,12 +47,14 @@ class R2N2:
         with tf.name_scope("recurrent_module"):
             GRU_Grid = recurrent_module.GRU_Grid()
             hidden_state = None
-            for t in range(24):  # feed batches of seqeuences
-                hidden_state = tf.verify_tensor_all_finite(GRU_Grid.call(
-                    encoded_input[:, t, :], hidden_state), "hidden_state {}".format(t))
 
-        print("decoder_network")
-        with tf.name_scope("decoder_network"):
+            # feed batches of seqeuences
+            for t in range(24):
+                hidden_state = GRU_Grid.call(
+                    encoded_input[:, t, :], hidden_state)
+
+        print("decoder_module")
+        with tf.name_scope("decoder_module"):
             decoder = decoder_module.Conv_Decoder(hidden_state)
             logits = decoder.out_tensor
 
@@ -70,20 +71,22 @@ class R2N2:
             tf.summary.scalar("loss", batch_loss)
             self.loss = batch_loss
 
-        print("update functions")
+        print("optimizer")
         with tf.name_scope("update"):
             step_count = tf.Variable(0, trainable=False)
-            lr = self.learn_rate
             optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=lr)
+                learning_rate=self.learn_rate)
             grads_and_vars = optimizer.compute_gradients(batch_loss)
+
+            # assert no Nan or Infs in grad
             map(lambda a: tf.verify_tensor_all_finite(
-                a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
+                a[0], "grads_and_vars"), grads_and_vars)
 
             self.apply_grad = optimizer.apply_gradients(
                 grads_and_vars, global_step=step_count)
             self.summary_op = tf.summary.merge_all()
-            self.print = tf.Print(batch_loss, [step_count, batch_loss, lr])
+            self.print = tf.Print(
+                batch_loss, [step_count, batch_loss, self.learn_rate])
 
         print("...network created")
         with tf.name_scope("misc"):
@@ -95,7 +98,7 @@ class R2N2:
     def train_step(self, data, label):
         x = utils.to_npy(data)
         y = utils.to_npy(label)
-        return self.sess.run([self.apply_grad, self.summary_op, self.print, self.loss], {self.X: x, self.Y: y})[-1]
+        return self.sess.run([self.loss, self.apply_grad, self.summary_op, self.print], {self.X: x, self.Y: y})[0]
 
     def save(self, save_dir):
         if not os.path.isdir(save_dir):
@@ -103,7 +106,7 @@ class R2N2:
         self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
         np.save("{}/loss.npy".format(save_dir), self.session_loss)
         self.plot_loss(save_dir, self.session_loss)
-        writer = tf.summary.FileWriter(
+        self.writer = tf.summary.FileWriter(
             "{}/writer".format(save_dir), self.sess.graph)
 
     def restore(self, model_dir):

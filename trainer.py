@@ -17,7 +17,7 @@ data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
 label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
 net = network.R2N2()
 
-model_dir = "out/model_T:{}_L:{}_E:{}_B:{}".format(
+model_dir = "out/model_{}_L:{}_E:{}_B:{}".format(
     net.create_time, net.learn_rate, net.epoch_count, net.batch_size)
 if not os.path.isdir(model_dir):
     os.makedirs(model_dir)
