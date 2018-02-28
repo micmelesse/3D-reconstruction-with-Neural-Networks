@@ -39,24 +39,24 @@ class R2N2:
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
 
         print("encoder_module")
-        with tf.name_scope("encoder_module"):
-            encoder = encoder_module.Conv_Encoder(self.X)
-            encoded_input = encoder.out_tensor
+        # with tf.name_scope("encoder_module"):
+        encoder = encoder_module.Conv_Encoder(self.X)
+        encoded_input = encoder.out_tensor
 
         print("recurrent_module")
-        with tf.name_scope("recurrent_module"):
-            GRU_Grid = recurrent_module.GRU_Grid()
-            hidden_state = None
+        # with tf.name_scope("recurrent_module"):
+        GRU_Grid = recurrent_module.GRU_Grid()
+        hidden_state = None
 
-            # feed batches of seqeuences
-            for t in range(24):
-                hidden_state = GRU_Grid.call(
-                    encoded_input[:, t, :], hidden_state)
+        # feed batches of seqeuences
+        for t in range(24):
+            hidden_state = GRU_Grid.call(
+                encoded_input[:, t, :], hidden_state)
 
         print("decoder_module")
-        with tf.name_scope("decoder_module"):
-            decoder = decoder_module.Conv_Decoder(hidden_state)
-            logits = decoder.out_tensor
+        # with tf.name_scope("decoder_module"):
+        decoder = decoder_module.Conv_Decoder(hidden_state)
+        logits = decoder.out_tensor
 
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
         print("loss_function")
@@ -86,7 +86,7 @@ class R2N2:
                 grads_and_vars, global_step=step_count)
             self.summary_op = tf.summary.merge_all()
             self.print = tf.Print(
-                batch_loss, [step_count, batch_loss, self.learn_rate])
+                batch_loss, [step_count, self.learn_rate, batch_loss])
 
         print("...network created")
         with tf.name_scope("misc"):
