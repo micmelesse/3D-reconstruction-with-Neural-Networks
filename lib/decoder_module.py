@@ -38,5 +38,6 @@ class Conv_Decoder:
                     self.out_tensor = tf.layers.conv3d(
                         self.out_tensor, padding='SAME', filters=filter_sizes[i], kernel_size=kernel_shape, activation=None)
 
-        self.out_tensor = tf.verify_tensor_all_finite(
-            self.out_tensor, "decoder output has Nans or Infs")
+        with tf.name_scope("verify"):
+            self.out_tensor = tf.verify_tensor_all_finite(
+                self.out_tensor, "decoder output has Nans or Infs")

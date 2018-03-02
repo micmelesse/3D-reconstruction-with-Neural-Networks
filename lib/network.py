@@ -1,99 +1,76 @@
 import os
 import sys
+
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from datetime import datetime
 import lib.utils as utils
 import lib.encoder_module as encoder_module
 import lib.recurrent_module as recurrent_module
 import lib.decoder_module as decoder_module
-from datetime import datetime
+import lib.loss_module as loss_module
+import lib.optimizer_module as optimizer_module
+
 
 # Recurrent Reconstruction Neural Network (R2N2)
-
-
-class R2N2:
+class reconstruction_network:
     def __init__(self, params=None):
-        self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self.session_loss = []
+        self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
         # read params
         if params is None:
-            self.learn_rate, self.batch_size, self.epoch_count = utils.get_params_from_disk()
-            if self.learn_rate is None:
-                self.learn_rate = 0.01
-            if self.batch_size is None:
-                self.batch_size = 16
-            if self.epoch_count is None:
-                self.epoch_count = 5
+            learn_rate, batch_size, epoch_count = utils.get_params_from_disk()
+            if learn_rate is None:
+                learn_rate = 0.01
+            if batch_size is None:
+                batch_size = 16
+            if epoch_count is None:
+                epoch_count = 5
         else:
-            self.learn_rate = params['learn_rate']
-            self.batch_size = params['batch_size']
-            self.epoch_count = params['epoch_count']
+            learn_rate = params['learn_rate']
+            batch_size = params['batch_size']
+            epoch_count = params['epoch_count']
 
         print("learn_rate {}, epoch_count {}, batch_size {}".format(
-            self.learn_rate, self.epoch_count, self.batch_size))
+            learn_rate, epoch_count, batch_size))
 
         # place holders
-        print("creating network...")
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
 
-        print("encoder_module")
-        # with tf.name_scope("encoder_module"):
+        # encoder
         encoder = encoder_module.Conv_Encoder(self.X)
         encoded_input = encoder.out_tensor
 
-        print("recurrent_module")
-        # with tf.name_scope("recurrent_module"):
+        # recurrent_module
         GRU_Grid = recurrent_module.GRU_Grid()
         hidden_state = None
-
-        # feed batches of seqeuences
         for t in range(24):
             hidden_state = GRU_Grid.call(
                 encoded_input[:, t, :], hidden_state)
 
-        print("decoder_module")
-        # with tf.name_scope("decoder_module"):
+        # decoder
         decoder = decoder_module.Conv_Decoder(hidden_state)
         logits = decoder.out_tensor
 
+        # loss
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
-        print("loss_function")
-        with tf.name_scope("loss"):
-            softmax = tf.nn.softmax(logits)
-            log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
-            label = tf.one_hot(self.Y, 2)
-            cross_entropy = tf.reduce_sum(-tf.multiply(label,
-                                                       log_softmax), axis=-1)
-            losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
-            batch_loss = tf.reduce_mean(losses)
-            tf.summary.scalar("loss", batch_loss)
-            self.loss = batch_loss
+        voxel_softmax = loss_module.Voxel_Softmax(self.Y, logits)
+        self.prediction = voxel_softmax.prediction
+        self.loss = voxel_softmax.batch_loss
 
-        print("optimizer")
-        with tf.name_scope("update"):
-            step_count = tf.Variable(0, trainable=False)
-            optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=self.learn_rate)
-            grads_and_vars = optimizer.compute_gradients(batch_loss)
+        # optimizer
+        sgd_optimizer = optimizer_module.SGD_optimizer(
+            self.loss, learn_rate)
+        self.apply_grad = sgd_optimizer.apply_grad
 
-            # assert no Nan or Infs in grad
-            map(lambda a: tf.verify_tensor_all_finite(
-                a[0], "grads_and_vars"), grads_and_vars)
+        self.print = tf.Print(
+            self.loss, [sgd_optimizer.step_count, learn_rate, self.loss])
+        self.summary_op = tf.summary.merge_all()
 
-            self.apply_grad = optimizer.apply_gradients(
-                grads_and_vars, global_step=step_count)
-            self.summary_op = tf.summary.merge_all()
-            self.print = tf.Print(
-                batch_loss, [step_count, self.learn_rate, batch_loss])
-
-        print("...network created")
-        with tf.name_scope("misc"):
-            self.saver = tf.train.Saver()
-            self.sess = tf.InteractiveSession()
-            self.prediction = tf.argmax(softmax, -1)
-            tf.global_variables_initializer().run()
+        self.sess = tf.InteractiveSession()
+        tf.global_variables_initializer().run()
 
     def train_step(self, data, label):
         x = utils.to_npy(data)
@@ -103,16 +80,17 @@ class R2N2:
     def save(self, save_dir):
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
-        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        np.save("{}/loss.npy".format(save_dir), self.session_loss)
+
         self.plot_loss(save_dir, self.session_loss)
-        self.writer = tf.summary.FileWriter(
+        np.save("{}/loss.npy".format(save_dir), self.session_loss)
+        writer = tf.summary.FileWriter(
             "{}/writer".format(save_dir), self.sess.graph)
+        tf.train.Saver().save(self.sess, "{}/model.ckpt".format(save_dir))
 
     def restore(self, model_dir):
-        self.saver = tf.train.import_meta_graph(
+        saver = tf.train.import_meta_graph(
             "{}/model.ckpt.meta".format(model_dir))
-        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
+        saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]

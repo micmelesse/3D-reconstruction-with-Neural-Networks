@@ -40,10 +40,13 @@ class GRU_Grid:  # GOOD
         h_t_1 = (1 - u_t) * prev_state
         h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], fc_input,
                                               self.U[2], r_t * prev_state, self.b[2]))
-
         h_t = h_t_1 + h_t_2
 
-        return tf.verify_tensor_all_finite(h_t, "hidden_state {} has Nans or Infs")
+        with tf.name_scope("verify"):
+            h_t = tf.verify_tensor_all_finite(
+                h_t, "hidden_state {} has Nans or Infs")
+
+        return h_t
 
 
 class Weight_Matrix_Grid:
