@@ -16,9 +16,6 @@ import lib.optimizer_module as optimizer_module
 # Recurrent Reconstruction Neural Network (R2N2)
 class reconstruction_network:
     def __init__(self, params=None):
-        self.session_loss = []
-        self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-
         # read params
         if params is None:
             learn_rate, batch_size, epoch_count = utils.get_params_from_disk()
@@ -36,13 +33,28 @@ class reconstruction_network:
         print("learn_rate {}, epoch_count {}, batch_size {}".format(
             learn_rate, epoch_count, batch_size))
 
+        # create model_dir
+        create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        model_dir = "out/model_{}_L:{}_E:{}_B:{}".format(
+            create_time, learn_rate, epoch_count, batch_size)
+        if not os.path.isdir(model_dir):
+            os.makedirs(model_dir)
+
+        # net variables
+        self.model_dir = model_dir
+        self.learn_rate = learn_rate
+        self.batch_size = batch_size
+        self.epoch_count = epoch_count
+
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
 
+        print("encoder")
         # encoder
         encoder = encoder_module.Conv_Encoder(self.X)
         encoded_input = encoder.out_tensor
 
+        print("recurrent_module")
         # recurrent_module
         GRU_Grid = recurrent_module.GRU_Grid()
         hidden_state = None
@@ -50,54 +62,55 @@ class reconstruction_network:
             hidden_state = GRU_Grid.call(
                 encoded_input[:, t, :], hidden_state)
 
+        print("decoder")
         # decoder
         decoder = decoder_module.Conv_Decoder(hidden_state)
         logits = decoder.out_tensor
 
+        print("loss")
         # loss
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
         voxel_softmax = loss_module.Voxel_Softmax(self.Y, logits)
         self.prediction = voxel_softmax.prediction
         self.loss = voxel_softmax.batch_loss
+        tf.summary.scalar('loss', self.loss)
 
+        print("optimizer")
         # optimizer
         sgd_optimizer = optimizer_module.SGD_optimizer(
             self.loss, learn_rate)
         self.apply_grad = sgd_optimizer.apply_grad
 
+        print("init session")
+        # init network
         self.print = tf.Print(
             self.loss, [sgd_optimizer.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
-
         self.sess = tf.InteractiveSession()
         tf.global_variables_initializer().run()
 
     def train_step(self, data, label):
         x = utils.to_npy(data)
         y = utils.to_npy(label)
-        return self.sess.run([self.loss, self.apply_grad, self.summary_op, self.print], {self.X: x, self.Y: y})[0]
-
-    def save(self, save_dir):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-
-        self.plot_loss(save_dir, self.session_loss)
-        np.save("{}/loss.npy".format(save_dir), self.session_loss)
+        out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
+            self.X: x, self.Y: y})
         writer = tf.summary.FileWriter(
-            "{}/writer".format(save_dir), self.sess.graph)
-        tf.train.Saver().save(self.sess, "{}/model.ckpt".format(save_dir))
+            "{}/writer".format(self.model_dir), self.sess.graph)
+        writer.add_summary(out[1])
+        return out[0]
 
-    def restore(self, model_dir):
+    def get_save_dir(self):
+        i = 0
+        while os.path.exists(os.path.join(self.model_dir, "epoch_{}".format(i))):
+            i += 1
+        save_dir = os.path.join(self.model_dir, "epoch_{}".format(i))
+        os.makedirs(save_dir)
+        return save_dir
+
+    def restore(self):
         saver = tf.train.import_meta_graph(
-            "{}/model.ckpt.meta".format(model_dir))
-        saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
+            "{}/model.ckpt.meta".format(self.model_dir))
+        saver.restore(self.sess, tf.train.latest_checkpoint(self.model_dir))
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
-
-    def plot_loss(self, plot_dir, loss_arr):
-        if not os.path.isdir(plot_dir):
-            os.makedirs(plot_dir)
-        plt.plot(np.array(loss_arr).flatten())
-        plt.savefig("{}/loss.png".format(plot_dir), bbox_inches='tight')
-        plt.close()

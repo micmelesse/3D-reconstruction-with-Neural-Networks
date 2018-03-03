@@ -13,32 +13,41 @@ import lib.path as path
 import lib.utils as utils
 from datetime import datetime
 
-data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
-label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
-net = network.R2N2()
 
-model_dir = "out/model_{}_L:{}_E:{}_B:{}".format(
-    net.create_time, net.learn_rate, net.epoch_count, net.batch_size)
-if not os.path.isdir(model_dir):
-    os.makedirs(model_dir)
+if __name__ == '__main__':
+    def save_training():
+        save_dir = net.get_save_dir()
+        np.save("{}/trainloss.npy".format(save_dir), all_loss)
+        tf.train.Saver().save(net.sess, "{}/model.ckpt".format(save_dir))
+        plt.plot(np.array(all_loss).flatten())
+        plt.savefig("{}/plot_trainloss.png".format(save_dir),
+                    bbox_inches='tight')
+        plt.close()
 
-# train network
-print("training start")
-for e in range(net.epoch_count):
-    epoch_loss = []
-    data_batchs, label_batchs = utils.get_batchs(
-        data_all, label_all, net.batch_size)
-    t_start = time.time()
-    try:
-        for b, (data, label) in enumerate(zip(data_batchs, label_batchs)):
-            epoch_loss.append(net.train_step(data, label))
-    except KeyboardInterrupt:
-        print("training quit by user")
-        net.session_loss.append(epoch_loss)
-        net.save("{}/epoch_{:04d}".format(model_dir, e))
-        print("training quit after %d seconds" % (time.time()-t_start))
-        break
+    # get data
+    data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
+    label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
 
-    net.session_loss.append(epoch_loss)
-    net.save("{}/epoch_{:04d}".format(model_dir, e))
-    print("epoch %d took %d seconds" % (e, time.time()-t_start))
+    # init network
+    net = network.reconstruction_network()
+
+    # train network
+    all_loss = []
+    for e in range(net.epoch_count):
+        t_start = time.time()  # start timer
+
+        epoch_loss = []
+        data_batchs, label_batchs = utils.get_batchs(
+            data_all, label_all, net.batch_size)
+        try:
+            for data, label in zip(data_batchs, label_batchs):
+                epoch_loss.append(net.train_step(data, label))
+            all_loss.append(epoch_loss)
+        except KeyboardInterrupt:
+            print("training quit by user after %d seconds" %
+                  (time.time()-t_start))
+            save_training()
+            break
+
+        print("epoch %d took %d seconds" % (e, time.time()-t_start))
+        save_training()
