@@ -1,3 +1,3 @@
 #!/bin/bash
-xterm -e jupyter notebook &
+jupyter notebook
 
