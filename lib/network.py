@@ -41,31 +41,31 @@ class R2N2:
             cur_tensor = self.X
 
         print("encoder_network")
-        with tf.name_scope("encoder_network"):
-            k_s = [3, 3]
-            conv_filter_count = [96, 128, 256, 256, 256, 256]
+        # with tf.name_scope("encoder_network"):
+        k_s = [3, 3]
+        conv_filter_count = [96, 128, 256, 256, 256, 256]
 
-            for i in range(7):
-                if i < 6:
-                    with tf.name_scope("conv_block"):
-                        k_s = [7, 7] if i is 0 else k_s
-                        cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                            a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
-                        cur_tensor = tf.map_fn(
-                            lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
-                        cur_tensor = tf.map_fn(
-                            tf.nn.relu,  cur_tensor)
-                elif i == 6:
+        for i in range(7):
+            if i < 6:
+                with tf.name_scope("conv_block"):
+                    k_s = [7, 7] if i is 0 else k_s
+                    cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
+                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
                     cur_tensor = tf.map_fn(
-                        tf.contrib.layers.flatten,  cur_tensor)
-                    cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
-                        a, 1024, activation_fn=None), cur_tensor)
+                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
                     cur_tensor = tf.map_fn(
                         tf.nn.relu,  cur_tensor)
-                # print(cur_tensor.shape)
+            elif i == 6:
+                cur_tensor = tf.map_fn(
+                    tf.contrib.layers.flatten,  cur_tensor)
+                cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
+                    a, 1024, activation_fn=None), cur_tensor)
+                cur_tensor = tf.map_fn(
+                    tf.nn.relu,  cur_tensor)
+            # print(cur_tensor.shape)
 
-            cur_tensor = tf.verify_tensor_all_finite(
-                cur_tensor, "fc vector (encoder output)")
+        cur_tensor = tf.verify_tensor_all_finite(
+            cur_tensor, "fc vector (encoder output)")
 
         print("recurrent_module")
         with tf.name_scope("recurrent_module"):
@@ -75,30 +75,30 @@ class R2N2:
                 hidden_state = tf.verify_tensor_all_finite(self.gru.call(
                     cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
 
-            cur_tensor = hidden_state
-            # print(cur_tensor.shape)
+        cur_tensor = hidden_state
+        # print(cur_tensor.shape)
 
         print("decoder_network")
-        with tf.name_scope("decoder_network"):
-            k_s = [3, 3, 3]
-            deconv_filter_count = [128, 128, 128, 64, 32, 2]
+        # with tf.name_scope("decoder_network"):
+        k_s = [3, 3, 3]
+        deconv_filter_count = [128, 128, 128, 64, 32, 2]
 
-            for i in range(6):
-                with tf.name_scope("deconv_block"):
-                    if i == 0:
-                        cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-                    elif i in range(1, 3):  # scale up hidden state to 32*32*32
-                        cur_tensor = tf.layers.conv3d(
-                            cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                        cur_tensor = tf.nn.relu(cur_tensor)
-                        cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-                    elif i in range(3, 5):  # reduce number of channels to 2
-                        cur_tensor = tf.layers.conv3d(
-                            cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                        cur_tensor = tf.nn.relu(cur_tensor)
-                    elif i == 5:  # final conv before softmax
-                        cur_tensor = tf.layers.conv3d(
-                            cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
+        for i in range(6):
+            with tf.name_scope("deconv_block"):
+                if i == 0:
+                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
+                elif i in range(1, 3):  # scale up hidden state to 32*32*32
+                    cur_tensor = tf.layers.conv3d(
+                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
+                    cur_tensor = tf.nn.relu(cur_tensor)
+                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
+                elif i in range(3, 5):  # reduce number of channels to 2
+                    cur_tensor = tf.layers.conv3d(
+                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
+                    cur_tensor = tf.nn.relu(cur_tensor)
+                elif i == 5:  # final conv before softmax
+                    cur_tensor = tf.layers.conv3d(
+                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
 
         print("loss_function")
         with tf.name_scope("loss"):
@@ -123,10 +123,10 @@ class R2N2:
             map(lambda a: tf.verify_tensor_all_finite(
                 a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
 
-            self.apply_grad = optimizer.apply_gradients(
-                grads_and_vars, global_step=step_count)
-            self.summary_op = tf.summary.merge_all()
-            self.print = tf.Print(batch_loss, [batch_loss, lr])
+        self.apply_grad = optimizer.apply_gradients(
+            grads_and_vars, global_step=step_count)
+        self.summary_op = tf.summary.merge_all()
+        self.print = tf.Print(batch_loss, [batch_loss, lr])
 
         print("...network created")
         with tf.name_scope("misc"):
@@ -150,8 +150,6 @@ class R2N2:
             "{}/writer".format(save_dir), self.sess.graph)
 
     def restore(self, model_dir):
-        self.saver = tf.train.import_meta_graph(
-            "{}/model.ckpt.meta".format(model_dir))
         self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
 
     def predict(self, x):

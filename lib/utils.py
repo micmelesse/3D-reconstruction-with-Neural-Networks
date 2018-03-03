@@ -58,7 +58,7 @@ def imshow_sequence(im):
     return plt.imshow(flatten_sequence(im))
 
 
-def imsave_sequence(im, f_name="test.png"):
+def imsave_sequence(im, f_name="test_sequence.png"):
     plt.imsave(f_name, (flatten_sequence(im)))
     plt.clf()
     plt.close()
@@ -69,7 +69,7 @@ def imshow_multichannel(im):
     return plt.imshow(flatten_multichannel_image(im))
 
 
-def imsave_multichannel(im, f_name="test.png"):
+def imsave_multichannel(im, f_name="test_multichannel.png"):
     plt.imsave(f_name, (flatten_multichannel_image(im)))
     plt.clf()
     plt.close()
@@ -86,7 +86,7 @@ def imshow_voxel(vox):
     return plt.show()
 
 
-def imsave_voxel(vox, f_name="test.png"):
+def imsave_voxel(vox, f_name="test_voxel.png"):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.voxels(vox, edgecolor='k')
@@ -172,42 +172,45 @@ def check_dir():
         if not os.path.isdir(d):
             os.makedirs(d)
 
-    def get_encoder_state(self, x, y, state_dir="./out/state/"):
-        if not os.path.isdir(state_dir):
-            os.makedirs(state_dir)
-        fd = {self.X: x, self.Y: y}
-        states_all = []
 
-        n_encoder = len(self.encoder_outputs)
-        for l in range(n_encoder):
-            state = self.encoder_outputs[l].eval(fd)
-            states_all.append(state)
+def get_encoder_state(self, x, y, state_dir="./out/state/"):
+    if not os.path.isdir(state_dir):
+        os.makedirs(state_dir)
+    fd = {self.X: x, self.Y: y}
+    states_all = []
 
-        return states_all
+    n_encoder = len(self.encoder_outputs)
+    for l in range(n_encoder):
+        state = self.encoder_outputs[l].eval(fd)
+        states_all.append(state)
 
-    def get_hidden_state(self, x, y, state_dir="./out/state/"):
-        if not os.path.isdir(state_dir):
-            os.makedirs(state_dir)
-        fd = {self.X: x, self.Y: y}
-        states_all = []
+    return states_all
 
-        n_hidden = len(self.hidden_state_list)
-        for l in range(n_hidden):
-            state = self.hidden_state_list[l].eval(fd)
-            states_all.append(state)
 
-        return states_all
+def get_hidden_state(self, x, y, state_dir="./out/state/"):
+    if not os.path.isdir(state_dir):
+        os.makedirs(state_dir)
+    fd = {self.X: x, self.Y: y}
+    states_all = []
 
-    def get_decoder_state(self, x, y, state_dir="./out/state/"):
-        if not os.path.isdir(state_dir):
-            os.makedirs(state_dir)
-        fd = {self.X: x, self.Y: y}
-        states_all = []
+    n_hidden = len(self.hidden_state_list)
+    for l in range(n_hidden):
+        state = self.hidden_state_list[l].eval(fd)
+        states_all.append(state)
 
-        n_decoder = len(self.decoder_outputs)
-        for l in range(n_decoder):
-            state = self.decoder_outputs[l].eval(fd)
-            states_all.append(state)
+    return states_all
 
-        states_all.append(self.softmax.eval(fd))
-        return states_all
+
+def get_decoder_state(self, x, y, state_dir="./out/state/"):
+    if not os.path.isdir(state_dir):
+        os.makedirs(state_dir)
+    fd = {self.X: x, self.Y: y}
+    states_all = []
+
+    n_decoder = len(self.decoder_outputs)
+    for l in range(n_decoder):
+        state = self.decoder_outputs[l].eval(fd)
+        states_all.append(state)
+
+    states_all.append(self.softmax.eval(fd))
+    return states_all
