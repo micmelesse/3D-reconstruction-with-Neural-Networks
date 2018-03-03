@@ -8,119 +8,85 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def read_param(param_line):
-    regex = "^.*=(.*)$"
-    return re.findall(regex, param_line)[0]
+def vis_im(im, f_name=None):
+    fig = plt.figure()
+    if f_name is None:
+        return plt.imshow(im)
+
+    plt.imsave(f_name, im)
+    plt.clf()
+    plt.close()
 
 
-def get_params_from_disk():
-    f = None
+def vis_multichannel(im, f_name=None):
+    fig = plt.figure()
+    flat_im = montage_multichannel(im)
+    if f_name is None:
+        return plt.imshow(flat_im)
 
-    try:
-        f = open("params/train.params")
-    except:
-        pass
-
-    try:
-        learn_rate = float(read_param(f.readline()))
-    except:
-        learn_rate = None
-
-    try:
-        batch_size = int(read_param(f.readline()))
-    except:
-        batch_size = None
-
-    try:
-        epoch = int(read_param(f.readline()))
-    except:
-        epoch = None
-
-    if f:
-        f.close()
-
-    return learn_rate, batch_size, epoch
-
-
-def imshow_sequence(im):
-    return plt.imshow(flatten_sequence(im))
-
-
-def imsave_sequence(im, f_name="imsave_sequence.png"):
-    plt.imsave(f_name, (flatten_sequence(im)))
+    plt.imsave(f_name, flat_im)
     plt.clf()
     plt.close()
     return
 
 
-def imshow_multichannel(im):
-    return plt.imshow(flatten_multichannel_image(im))
+def vis_sequence(im, f_name=None):
+    fig = plt.figure()
+    flat_sequence = montage_sequence(im)
+    if f_name is None:
+        return plt.imshow(flat_sequence)
 
-
-def imsave_multichannel(im, f_name="imsave_multichannel.png"):
-    plt.imsave(f_name, (flatten_multichannel_image(im)))
+    plt.imsave(f_name, flat_sequence)
     plt.clf()
     plt.close()
     return
 
-# vis voxels
 
-
-def imshow_voxel(vox):
+def vis_voxel(vox, f_name=None):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.voxels(vox, edgecolor='k')
     ax.view_init(30, 30)
-    return plt.show()
+    if f_name is None:
+        return plt.show()
 
-
-def imsave_voxel(vox, f_name="imsave_voxel.png"):
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    ax.voxels(vox, edgecolor='k')
-    ax.view_init(30, 30)
     plt.savefig(f_name, bbox_inches='tight')
     plt.clf()
     plt.close()
 
 
-def flatten_multichannel_image(im):
-    # print(im.shape)
+def montage_sequence(im_seqeunce):
+    return montage(im_seqeunce, 0)
 
-    if im.ndim == 2:
-        return im
 
-    n_channels = im.shape[-1]
-    n_tile = math.ceil(math.sqrt(n_channels))
+def montage_multichannel(im_multichannel):
+    return montage(im_multichannel, -1)
+
+
+def montage(packed_ims, axis):
+    if packed_ims.ndim == 2:
+        return packed_ims
+
+    # bring axis to the front
+    packed_ims = np.rollaxis(packed_ims, axis)
+
+    N = len(packed_ims)
+    n_tile = math.ceil(math.sqrt(N))
     rows = []
     for i in range(n_tile):
-        c_first = i * n_tile
-        if c_first < n_channels:
-            a = im[:, :, c_first]
-            for j in range(1, n_tile):
-                c_last = c_first + j
-                if c_last < n_channels:
-                    b = im[:, :, c_last]
-                    a = hstack(a, b)
-                else:
-                    b = np.zeros([im.shape[0], im.shape[1]],)
-                    a = hstack(a, b)
-            rows.append(a)
+        im = packed_ims[i * n_tile]
+        for j in range(1, n_tile):
+            ind = i * n_tile + j
+            if ind < N:
+                im = hstack(im, packed_ims[ind])
+            else:
+                im = hstack(im, np.zeros_like(packed_ims[0]))
+        rows.append(im)
 
-    n = len(rows)
-    a = rows[0]
-    for i in range(1, n):
-        b = rows[i]
-        a = np.vstack((a, b))
-    return a
-
-
-def flatten_sequence(im_sequence):
-
-    a = flatten_multichannel_image(im_sequence[0])
-    for b in im_sequence[1:]:
-        a = hstack(a, flatten_multichannel_image(b))
-    return a
+    matrix = rows[0]
+    for i in range(1, len(rows)):
+        matrix = vstack(matrix, rows[i])
+    return matrix
 
 
 def hstack(a, b):
@@ -161,44 +127,47 @@ def check_dir():
             os.makedirs(d)
 
 
-# def get_encoder_state(self, x, y, state_dir="./out/state/"):
-#     if not os.path.isdir(state_dir):
-#         os.makedirs(state_dir)
-#     fd = {self.X: x, self.Y: y}
-#     states_all = []
-
-#     n_encoder = len(self.encoder_outputs)
-#     for l in range(n_encoder):
-#         state = self.encoder_outputs[l].eval(fd)
-#         states_all.append(state)
-
-#     return states_all
+def read_param(param_line):
+    regex = "^.*=(.*)$"
+    return re.findall(regex, param_line)[0]
 
 
-# def get_hidden_state(self, x, y, state_dir="./out/state/"):
-#     if not os.path.isdir(state_dir):
-#         os.makedirs(state_dir)
-#     fd = {self.X: x, self.Y: y}
-#     states_all = []
+def get_params_from_disk():
+    f = None
 
-#     n_hidden = len(self.hidden_state_list)
-#     for l in range(n_hidden):
-#         state = self.hidden_state_list[l].eval(fd)
-#         states_all.append(state)
+    try:
+        f = open("params/train.params")
+    except:
+        pass
 
-#     return states_all
+    try:
+        learn_rate = float(read_param(f.readline()))
+    except:
+        learn_rate = None
+
+    try:
+        batch_size = int(read_param(f.readline()))
+    except:
+        batch_size = None
+
+    try:
+        epoch = int(read_param(f.readline()))
+    except:
+        epoch = None
+
+    if f:
+        f.close()
+
+    return learn_rate, batch_size, epoch
 
 
-# def get_decoder_state(self, x, y, state_dir="./out/state/"):
-#     if not os.path.isdir(state_dir):
-#         os.makedirs(state_dir)
-#     fd = {self.X: x, self.Y: y}
-#     states_all = []
-
-#     n_decoder = len(self.decoder_outputs)
-#     for l in range(n_decoder):
-#         state = self.decoder_outputs[l].eval(fd)
-#         states_all.append(state)
-
-#     states_all.append(self.softmax.eval(fd))
-#     return states_all
+def r2n2_unpool3D(value, name='unpool3D'):
+    with tf.name_scope(name) as scope:
+        sh = value.get_shape().as_list()
+        dim = len(sh[1: -1])
+        out = (tf.reshape(value, [-1] + sh[-dim:]))
+        for i in range(dim, 0, -1):
+            out = tf.concat([out, tf.zeros_like(out)], i)
+        out_size = [-1] + [s * 2 for s in sh[1:-1]] + [sh[-1]]
+        out = tf.reshape(out, out_size, name=scope)
+    return out
