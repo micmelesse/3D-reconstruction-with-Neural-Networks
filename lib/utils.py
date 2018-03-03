@@ -20,11 +20,11 @@ def vis_im(im, f_name=None):
 
 def vis_multichannel(im, f_name=None):
     fig = plt.figure()
-    flat_im = montage_multichannel(im)
+    mulitchannel_montage = montage_multichannel(im)
     if f_name is None:
-        return plt.imshow(flat_im)
+        return plt.imshow(mulitchannel_montage)
 
-    plt.imsave(f_name, flat_im)
+    plt.imsave(f_name, mulitchannel_montage)
     plt.clf()
     plt.close()
     return
@@ -32,11 +32,11 @@ def vis_multichannel(im, f_name=None):
 
 def vis_sequence(im, f_name=None):
     fig = plt.figure()
-    flat_sequence = montage_sequence(im)
+    sequence_montage = montage_sequence(im)
     if f_name is None:
-        return plt.imshow(flat_sequence)
+        return plt.imshow(sequence_montage)
 
-    plt.imsave(f_name, flat_sequence)
+    plt.imsave(f_name, sequence_montage)
     plt.clf()
     plt.close()
     return
