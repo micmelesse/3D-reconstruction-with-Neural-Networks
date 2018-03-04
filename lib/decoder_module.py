@@ -37,7 +37,3 @@ class Conv_Decoder:
                 elif i == 5:  # final conv before softmax
                     self.out_tensor = tf.layers.conv3d(
                         self.out_tensor, padding='SAME', filters=filter_sizes[i], kernel_size=kernel_shape, activation=None)
-
-        with tf.name_scope("verify"):
-            self.out_tensor = tf.verify_tensor_all_finite(
-                self.out_tensor, "decoder output has Nans or Infs")

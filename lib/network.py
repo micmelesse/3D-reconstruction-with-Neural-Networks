@@ -49,40 +49,41 @@ class reconstruction_network:
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
 
-        print("encoder")
         # encoder
+        print("encoder")
         encoder = encoder_module.Conv_Encoder(self.X)
         encoded_input = encoder.out_tensor
 
         print("recurrent_module")
         # recurrent_module
-        GRU_Grid = recurrent_module.GRU_Grid()
-        hidden_state = None
-        for t in range(24):
-            hidden_state = GRU_Grid.call(
-                encoded_input[:, t, :], hidden_state)
+        with tf.name_scope("recurrent_module"):
+            GRU_Grid = recurrent_module.GRU_Grid()
+            hidden_state = None
+            for t in range(24):
+                hidden_state = GRU_Grid.call(
+                    encoded_input[:, t, :], hidden_state)
 
-        print("decoder")
         # decoder
+        print("decoder")
         decoder = decoder_module.Conv_Decoder(hidden_state)
         logits = decoder.out_tensor
 
-        print("loss")
         # loss
+        print("loss")
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
         voxel_softmax = loss_module.Voxel_Softmax(self.Y, logits)
         self.prediction = voxel_softmax.prediction
         self.loss = voxel_softmax.batch_loss
         tf.summary.scalar('loss', self.loss)
 
-        print("optimizer")
         # optimizer
+        print("optimizer")
         sgd_optimizer = optimizer_module.SGD_optimizer(
             self.loss, learn_rate)
         self.apply_grad = sgd_optimizer.apply_grad
 
-        print("init session")
         # init network
+        print("init session")
         self.print = tf.Print(
             self.loss, [sgd_optimizer.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()

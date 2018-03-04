@@ -42,10 +42,6 @@ class GRU_Grid:  # GOOD
                                               self.U[2], r_t * prev_state, self.b[2]))
         h_t = h_t_1 + h_t_2
 
-        with tf.name_scope("verify"):
-            h_t = tf.verify_tensor_all_finite(
-                h_t, "hidden_state {} has Nans or Infs")
-
         return h_t
 
 

@@ -13,4 +13,3 @@ class Voxel_Softmax:
             losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
             self.prediction = tf.argmax(tf.nn.softmax(logits), -1)
             self.batch_loss = tf.reduce_mean(losses)
-            # tf.summary.scalar("loss", batch_loss)

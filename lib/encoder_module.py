@@ -25,7 +25,3 @@ class Conv_Encoder:
                     a, 1024, activation_fn=None), self.out_tensor)
                 self.out_tensor = tf.map_fn(
                     tf.nn.relu,  self.out_tensor)
-
-        with tf.name_scope("verify"):
-            self.out_tensor = tf.verify_tensor_all_finite(
-                self.out_tensor, "encoder output has Nans or Infs")
