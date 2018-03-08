@@ -14,7 +14,7 @@ import lib.optimizer_module as optimizer_module
 
 
 # Recurrent Reconstruction Neural Network (R2N2)
-class reconstruction_network:
+class Network:
     def __init__(self, params=None):
         # read params
         if params is None:

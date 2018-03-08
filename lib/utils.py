@@ -64,6 +64,7 @@ def montage_multichannel(im_multichannel):
 
 
 def montage(packed_ims, axis):
+    """display as an Image the contents of packed_ims in a square gird along an aribitray axis"""
     if packed_ims.ndim == 2:
         return packed_ims
 
@@ -95,29 +96,6 @@ def hstack(a, b):
 
 def vstack(a, b):
     return np.vstack((a, b))
-
-
-def to_npy(rows):
-    if isinstance(rows, str):
-        return np.expand_dims(np.load(rows), 0)
-    ret = []
-    for r in rows:
-        ret.append(np.load(r))
-    return np.stack(ret)
-
-
-def get_batchs(data_all, label_all, batch_size):
-
-    N = len(data_all)
-    num_of_batches = math.ceil(N/batch_size)
-    assert(N == len(label_all))
-    perm = np.random.permutation(N)
-    data_all = data_all[perm]
-    label_all = label_all[perm]
-    data_batchs = np.array_split(data_all, num_of_batches)
-    label_batchs = np.array_split(label_all, num_of_batches)
-
-    return data_batchs, label_batchs
 
 
 def check_dir():
@@ -159,15 +137,3 @@ def get_params_from_disk():
         f.close()
 
     return learn_rate, batch_size, epoch
-
-
-def r2n2_unpool3D(value, name='unpool3D'):
-    with tf.name_scope(name) as scope:
-        sh = value.get_shape().as_list()
-        dim = len(sh[1: -1])
-        out = (tf.reshape(value, [-1] + sh[-dim:]))
-        for i in range(dim, 0, -1):
-            out = tf.concat([out, tf.zeros_like(out)], i)
-        out_size = [-1] + [s * 2 for s in sh[1:-1]] + [sh[-1]]
-        out = tf.reshape(out, out_size, name=scope)
-    return out
