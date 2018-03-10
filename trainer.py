@@ -29,7 +29,7 @@ if __name__ == '__main__':
     label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
 
     # init network
-    net = network.reconstruction_network()
+    net = network.Network()
 
     # train network
     all_loss = []
@@ -37,7 +37,7 @@ if __name__ == '__main__':
         t_start = time.time()  # start timer
 
         epoch_loss = []
-        data_batchs, label_batchs = utils.get_batchs(
+        data_batchs, label_batchs = dataset.get_batchs(
             data_all, label_all, net.batch_size)
         try:
             for data, label in zip(data_batchs, label_batchs):

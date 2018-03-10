@@ -6,6 +6,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from datetime import datetime
 import lib.utils as utils
+import lib.dataset as dataset
 import lib.encoder_module as encoder_module
 import lib.recurrent_module as recurrent_module
 import lib.decoder_module as decoder_module
@@ -91,8 +92,8 @@ class Network:
         tf.global_variables_initializer().run()
 
     def train_step(self, data, label):
-        x = utils.to_npy(data)
-        y = utils.to_npy(label)
+        x = dataset.from_npy(data)
+        y = dataset.from_npy(label)
         out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
             self.X: x, self.Y: y})
         writer = tf.summary.FileWriter(
