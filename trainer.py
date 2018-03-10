@@ -13,6 +13,8 @@ import lib.path as path
 import lib.utils as utils
 from datetime import datetime
 
+from sklearn.model_selection import train_test_split
+
 
 if __name__ == '__main__':
     def save_training():
@@ -28,20 +30,29 @@ if __name__ == '__main__':
     data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
     label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
 
+    # split into training and test set
+    X_train, X_test, y_train, y_test = train_test_split(
+        data_all, label_all, test_size=0.2)
+
     # init network
     net = network.Network()
 
     # train network
     all_loss = []
     for e in range(net.epoch_count):
+        epoch_loss = []  # the loss per batch for this epoch
         t_start = time.time()  # start timer
 
-        epoch_loss = []
-        data_batchs, label_batchs = dataset.get_batchs(
-            data_all, label_all, net.batch_size)
+        # split trainig set in to  validation set
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_train, y_train, test_size=0.2)
+
+        # split traning set into batchs
+        X_batchs, y_batchs = dataset.get_batchs(
+            X_train, y_train, net.batch_size)
         try:
-            for data, label in zip(data_batchs, label_batchs):
-                epoch_loss.append(net.train_step(data, label))
+            for X, y in zip(X_batchs, y_batchs):
+                epoch_loss.append(net.train_step(X, y))
             all_loss.append(epoch_loss)
         except KeyboardInterrupt:
             print("training quit by user after %d seconds" %
