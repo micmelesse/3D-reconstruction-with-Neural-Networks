@@ -97,7 +97,17 @@ class Network:
         out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
             self.X: x, self.Y: y})
         writer = tf.summary.FileWriter(
-            "{}/writer".format(self.model_dir), self.sess.graph)
+            "{}/test_writer".format(self.model_dir), self.sess.graph)
+        writer.add_summary(out[1])
+        return out[0]
+
+    def val_step(self, data, label):
+        x = dataset.from_npy(data)
+        y = dataset.from_npy(label)
+        out = self.sess.run([self.loss, self.summary_op, self.print], {
+            self.X: x, self.Y: y})
+        writer = tf.summary.FileWriter(
+            "{}/val_writer".format(self.model_dir), self.sess.graph)
         writer.add_summary(out[1])
         return out[0]
 
@@ -116,3 +126,4 @@ class Network:
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
+    

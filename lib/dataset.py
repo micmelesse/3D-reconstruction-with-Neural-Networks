@@ -75,66 +75,6 @@ def read_paths(paths_dir="out/paths.csv"):
     return pd.read_csv(paths_dir, index_col=0).as_matrix()
 
 
-class Dataset:  # deals with data
-    def __init__(self):
-        self.paths = read_paths()
-        np.random.shuffle(self.paths)
-        self.N = self.paths.shape[0]
-        self.split_index = math.ceil(self.N * 0.8)
-        self.train_index = 0
-        self.test_index = self.split_index
-        self.batch_size = 36
-
-    def next_train_batch(self, batch_size=None):
-        paths_ls = self.next_train_batch_paths(batch_size)
-        if paths_ls is not None:
-            data_label_tuple = (load_data_matrix(
-                paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
-        if data_label_tuple[0] is None:
-            return None, None
-        return data_label_tuple
-
-    def next_test_batch(self, batch_size=None):
-        paths_ls = self.next_test_batch_paths(batch_size)
-        if paths_ls is not None:
-            data_label_tuple = (load_data_matrix(
-                paths_ls[:, 0:-2]), load_labels(paths_ls[:, -2]))
-        if data_label_tuple[0] is None:
-            return None, None
-        return data_label_tuple
-
-    def next_train_batch_paths(self, batch_size=None):
-        if batch_size is None:
-            batch_size = self.batch_size
-
-        prev_index = self.train_index
-        self.train_index += batch_size
-
-        if self.train_index >= self.split_index:
-            self.train_index = 0
-            return None
-        else:
-            return self.paths[prev_index:self.train_index]
-
-    def next_test_batch_paths(self, batch_size=None):
-        if batch_size is None:
-            batch_size = self.batch_size
-
-        prev_index = self.test_index
-        self.test_index += batch_size
-
-        if self.test_index >= self.N:
-            self.test_index = self.split_index
-            return None
-        else:
-            return self.paths[prev_index:self.test_index]
-
-    def reset(self):
-        np.random.shuffle(self.paths)
-        self.train_index = 0
-        self.test_index = self.split_index
-
-
 def main():
     f = None
     try:
