@@ -1,163 +1,129 @@
 import os
 import sys
+
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import lib.utils as utils
-import lib.recurrent_module as recurrent_module
 from datetime import datetime
+import lib.utils as utils
+import lib.dataset as dataset
+import lib.encoder_module as encoder_module
+import lib.recurrent_module as recurrent_module
+import lib.decoder_module as decoder_module
+import lib.loss_module as loss_module
+import lib.optimizer_module as optimizer_module
+
 
 # Recurrent Reconstruction Neural Network (R2N2)
-
-
-class R2N2:
+class Network:
     def __init__(self, params=None):
-        self.session_loss = []
-        self.create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-
         # read params
         if params is None:
-            self.learn_rate, self.batch_size, self.epoch_count = utils.get_params_from_disk()
-            if self.learn_rate is None:
-                self.learn_rate = 0.01
-            if self.batch_size is None:
-                self.batch_size = 16
-            if self.epoch_count is None:
-                self.epoch_count = 5
-
+            learn_rate, batch_size, epoch_count = utils.get_params_from_disk()
+            if learn_rate is None:
+                learn_rate = 0.01
+            if batch_size is None:
+                batch_size = 16
+            if epoch_count is None:
+                epoch_count = 5
         else:
-            self.learn_rate = params['learn_rate']
-            self.batch_size = params['batch_size']
-            self.epoch_count = params['epoch_count']
+            learn_rate = params['learn_rate']
+            batch_size = params['batch_size']
+            epoch_count = params['epoch_count']
 
         print("learn_rate {}, epoch_count {}, batch_size {}".format(
-            self.learn_rate, self.epoch_count, self.batch_size))
+            learn_rate, epoch_count, batch_size))
+
+        # create model_dir
+        create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        model_dir = "out/model_{}_L:{}_E:{}_B:{}".format(
+            create_time, learn_rate, epoch_count, batch_size)
+        if not os.path.isdir(model_dir):
+            os.makedirs(model_dir)
+
+        # net variables
+        self.model_dir = model_dir
+        self.learn_rate = learn_rate
+        self.batch_size = batch_size
+        self.epoch_count = epoch_count
 
         # place holders
-        print("creating network...")
-        with tf.name_scope('input'):
-            self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
-            self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
-            cur_tensor = self.X
+        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
 
-        print("encoder_network")
-        # with tf.name_scope("encoder_network"):
-        k_s = [3, 3]
-        conv_filter_count = [96, 128, 256, 256, 256, 256]
-
-        for i in range(7):
-            if i < 6:
-                with tf.name_scope("conv_block"):
-                    k_s = [7, 7] if i is 0 else k_s
-                    cur_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                        a, filters=conv_filter_count[i], padding='SAME', kernel_size=k_s, activation=None),  cur_tensor)
-                    cur_tensor = tf.map_fn(
-                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  cur_tensor)
-                    cur_tensor = tf.map_fn(
-                        tf.nn.relu,  cur_tensor)
-            elif i == 6:
-                cur_tensor = tf.map_fn(
-                    tf.contrib.layers.flatten,  cur_tensor)
-                cur_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
-                    a, 1024, activation_fn=None), cur_tensor)
-                cur_tensor = tf.map_fn(
-                    tf.nn.relu,  cur_tensor)
-            # print(cur_tensor.shape)
-
-        cur_tensor = tf.verify_tensor_all_finite(
-            cur_tensor, "fc vector (encoder output)")
+        # encoder
+        print("encoder")
+        encoder = encoder_module.Conv_Encoder(self.X)
+        encoded_input = encoder.out_tensor
 
         print("recurrent_module")
+        # recurrent_module
         with tf.name_scope("recurrent_module"):
-            self.gru = recurrent_module.GRU_GRID()
+            GRU_Grid = recurrent_module.GRU_Grid()
             hidden_state = None
-            for t in range(24):  # feed batches of seqeuences
-                hidden_state = tf.verify_tensor_all_finite(self.gru.call(
-                    cur_tensor[:, t, :], hidden_state), "hidden_state {}".format(t))
+            for t in range(24):
+                hidden_state = GRU_Grid.call(
+                    encoded_input[:, t, :], hidden_state)
 
-        cur_tensor = hidden_state
-        # print(cur_tensor.shape)
+        # decoder
+        print("decoder")
+        decoder = decoder_module.Conv_Decoder(hidden_state)
+        logits = decoder.out_tensor
 
-        print("decoder_network")
-        # with tf.name_scope("decoder_network"):
-        k_s = [3, 3, 3]
-        deconv_filter_count = [128, 128, 128, 64, 32, 2]
+        # loss
+        print("loss")
+        self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
+        voxel_softmax = loss_module.Voxel_Softmax(self.Y, logits)
+        self.prediction = voxel_softmax.prediction
+        self.loss = voxel_softmax.batch_loss
+        tf.summary.scalar('loss', self.loss)
 
-        for i in range(6):
-            with tf.name_scope("deconv_block"):
-                if i == 0:
-                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-                elif i in range(1, 3):  # scale up hidden state to 32*32*32
-                    cur_tensor = tf.layers.conv3d(
-                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                    cur_tensor = tf.nn.relu(cur_tensor)
-                    cur_tensor = utils.r2n2_unpool3D(cur_tensor)
-                elif i in range(3, 5):  # reduce number of channels to 2
-                    cur_tensor = tf.layers.conv3d(
-                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
-                    cur_tensor = tf.nn.relu(cur_tensor)
-                elif i == 5:  # final conv before softmax
-                    cur_tensor = tf.layers.conv3d(
-                        cur_tensor, padding='SAME', filters=deconv_filter_count[i], kernel_size=k_s, activation=None)
+        # optimizer
+        print("optimizer")
+        sgd_optimizer = optimizer_module.SGD_optimizer(
+            self.loss, learn_rate)
+        self.apply_grad = sgd_optimizer.apply_grad
 
-        print("loss_function")
-        with tf.name_scope("loss"):
-            logits = tf.verify_tensor_all_finite(
-                cur_tensor, "logits (decoder output)")
-            softmax = tf.nn.softmax(logits)
-            log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
-            label = tf.one_hot(self.Y, 2)
-            cross_entropy = tf.reduce_sum(-tf.multiply(label,
-                                                       log_softmax), axis=-1)
-            losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
-            batch_loss = tf.reduce_mean(losses)
-            tf.summary.scalar("loss", batch_loss)
-            self.loss = batch_loss
-
-        with tf.name_scope("update"):
-            step_count = tf.Variable(0, trainable=False)
-            lr = self.learn_rate
-            optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=lr)
-            grads_and_vars = optimizer.compute_gradients(batch_loss)
-            map(lambda a: tf.verify_tensor_all_finite(
-                a[0], "grads_and_vars"), grads_and_vars)  # assert no Nan or Infs in grad
-
-        self.apply_grad = optimizer.apply_gradients(
-            grads_and_vars, global_step=step_count)
+        # init network
+        print("init session")
+        self.print = tf.Print(
+            self.loss, [sgd_optimizer.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
-        self.print = tf.Print(batch_loss, [batch_loss, lr])
-
-        print("...network created")
-        with tf.name_scope("misc"):
-            self.saver = tf.train.Saver()
-            self.sess = tf.InteractiveSession()
-            self.prediction = tf.argmax(softmax, -1)
-            tf.global_variables_initializer().run()
+        self.sess = tf.InteractiveSession()
+        tf.global_variables_initializer().run()
 
     def train_step(self, data, label):
-        x = utils.to_npy(data)
-        y = utils.to_npy(label)
-        return self.sess.run([self.apply_grad, self.summary_op, self.print, self.loss], {self.X: x, self.Y: y})[-1]
-
-    def save(self, save_dir):
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
-        self.saver.save(self.sess, "{}/model.ckpt".format(save_dir))
-        np.save("{}/loss.npy".format(save_dir), self.session_loss)
-        self.plot_loss(save_dir, self.session_loss)
+        x = dataset.from_npy(data)
+        y = dataset.from_npy(label)
+        out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
+            self.X: x, self.Y: y})
         writer = tf.summary.FileWriter(
-            "{}/writer".format(save_dir), self.sess.graph)
+            "{}/test_writer".format(self.model_dir), self.sess.graph)
+        writer.add_summary(out[1])
+        return out[0]
 
-    def restore(self, model_dir):
-        self.saver.restore(self.sess, tf.train.latest_checkpoint(model_dir))
+    def val_step(self, data, label):
+        x = dataset.from_npy(data)
+        y = dataset.from_npy(label)
+        out = self.sess.run([self.loss, self.summary_op, self.print], {
+            self.X: x, self.Y: y})
+        writer = tf.summary.FileWriter(
+            "{}/val_writer".format(self.model_dir), self.sess.graph)
+        writer.add_summary(out[1])
+        return out[0]
+
+    def get_save_dir(self):
+        i = 0
+        while os.path.exists(os.path.join(self.model_dir, "epoch_{}".format(i))):
+            i += 1
+        save_dir = os.path.join(self.model_dir, "epoch_{}".format(i))
+        os.makedirs(save_dir)
+        return save_dir
+
+    def restore(self):
+        saver = tf.train.import_meta_graph(
+            "{}/model.ckpt.meta".format(self.model_dir))
+        saver.restore(self.sess, tf.train.latest_checkpoint(self.model_dir))
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
-
-    def plot_loss(self, plot_dir, loss_arr):
-        if not os.path.isdir(plot_dir):
-            os.makedirs(plot_dir)
-        plt.plot(np.array(loss_arr).flatten())
-        plt.savefig("{}/loss.png".format(plot_dir), bbox_inches='tight')
-        plt.close()
+    

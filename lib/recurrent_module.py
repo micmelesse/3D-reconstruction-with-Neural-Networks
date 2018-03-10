@@ -6,15 +6,53 @@ import tensorflow as tf
 import lib.utils as utils
 
 
-class WEIGHT_MATRIX_GRID:
-    def __init__(self,  n_x=1024, n_h=128, n_cells=4, initalizer=tf.random_normal):
-        # class variables
-        self.n_x = n_x
-        self.n_h = n_h
-        self.n_cells = n_cells
-        self.initalizer = initalizer
+class GRU_Grid:  # GOOD
+    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
+        with tf.name_scope("GRU_Grid"):
+            self.N = 3
+            self.n_cells = 4
+            self.n_input = 1024
+            self.n_hidden_state = 128
 
-        with tf.name_scope("WEIGHT_MATRIX_GRID"):
+            gru_initializer = tf.contrib.layers.xavier_initializer()
+            self.W = [Weight_Matrix_Grid(initalizer=gru_initializer)]*N
+            self.U = [tf.Variable(gru_initializer(
+                [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
+            self.b = [tf.Variable(gru_initializer(
+                [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
+
+    def linear_sum(self, W, x, U, h, b):
+        return W.multiply(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
+
+    def call(self, fc_input, prev_state):
+        if prev_state is None:
+            prev_state = tf.zeros(
+                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
+
+        # update gate
+        u_t = tf.sigmoid(
+            self.linear_sum(self.W[0], fc_input, self.U[0], prev_state, self.b[0]))
+        # reset gate
+        r_t = tf.sigmoid(
+            self.linear_sum(self.W[1], fc_input, self.U[1], prev_state,  self.b[1]))
+
+        # hidden state
+        h_t_1 = (1 - u_t) * prev_state
+        h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], fc_input,
+                                              self.U[2], r_t * prev_state, self.b[2]))
+        h_t = h_t_1 + h_t_2
+
+        return h_t
+
+
+class Weight_Matrix_Grid:
+    def __init__(self,  n_x=1024, n_h=128, n_cells=4, initalizer=tf.random_normal):
+        with tf.name_scope("Weight_Matrix_Grid"):
+            # class variables
+            self.n_x = n_x
+            self.n_h = n_h
+            self.n_cells = n_cells
+            self.initalizer = initalizer
             x_list = []
             for i in range(self.n_cells):
                 y_list = []
@@ -45,44 +83,7 @@ class WEIGHT_MATRIX_GRID:
         return tf.transpose(tf.convert_to_tensor(x_list), [3, 0, 1, 2, 4])
 
 
-class GRU_GRID:  # GOOD
-    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
-        self.N = 3
-        self.n_cells = 4
-        self.n_input = 1024
-        self.n_hidden_state = 128
-
-        gru_initializer = tf.contrib.layers.xavier_initializer()
-        self.W = [WEIGHT_MATRIX_GRID(initalizer=gru_initializer)]*N
-        self.U = [tf.Variable(gru_initializer(
-            [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
-        self.b = [tf.Variable(gru_initializer(
-            [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
-
-    def linear_sum(self, W, x, U, h, b):
-        return W.multiply(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
-
-    def call(self, fc_input, prev_state):
-        if prev_state is None:
-            prev_state = tf.zeros(
-                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
-
-        # update gate
-        u_t = tf.sigmoid(
-            self.linear_sum(self.W[0], fc_input, self.U[0], prev_state, self.b[0]))
-        # reset gate
-        r_t = tf.sigmoid(
-            self.linear_sum(self.W[1], fc_input, self.U[1], prev_state,  self.b[1]))
-
-        # hidden state
-        h_t_1 = (1 - u_t) * prev_state
-        h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], fc_input,
-                                              self.U[2], r_t * prev_state, self.b[2]))
-
-        return h_t_1 + h_t_2
-
-
-class GRU_TENSOR:  # BAD, creates really big tensors that donot fit into gpus
+class GRU_Tensor:  # BAD, creates really big tensors that donot fit into gpus
     def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
         self.N = 3
         self.n_cells = 4
