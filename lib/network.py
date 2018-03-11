@@ -83,12 +83,16 @@ class Network:
             self.loss, learn_rate)
         self.apply_grad = sgd_optimizer.apply_grad
 
-        # init network
-        print("init session")
+        # misc op
         self.print = tf.Print(
             self.loss, [sgd_optimizer.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
+        self.writer = tf.summary.FileWriter(
+            "{}/writer".format(self.model_dir), self.sess.graph)
+
+        # init network
+        print("initalize variables")
         tf.global_variables_initializer().run()
 
     def train_step(self, data, label):
@@ -96,9 +100,7 @@ class Network:
         y = dataset.from_npy(label)
         out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
             self.X: x, self.Y: y})
-        writer = tf.summary.FileWriter(
-            "{}/test_writer".format(self.model_dir), self.sess.graph)
-        writer.add_summary(out[1])
+        self.writer.add_summary(out[1])
         return out[0]
 
     def val_step(self, data, label):
@@ -106,9 +108,7 @@ class Network:
         y = dataset.from_npy(label)
         out = self.sess.run([self.loss, self.summary_op, self.print], {
             self.X: x, self.Y: y})
-        writer = tf.summary.FileWriter(
-            "{}/val_writer".format(self.model_dir), self.sess.graph)
-        writer.add_summary(out[1])
+        self.writer.add_summary(out[1])
         return out[0]
 
     def get_save_dir(self):
@@ -126,4 +126,3 @@ class Network:
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
-    
