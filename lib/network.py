@@ -111,12 +111,19 @@ class Network:
         self.writer.add_summary(out[1])
         return out[0]
 
-    def get_save_dir(self):
+    def create_epoch_dir(self):
         i = 0
         while os.path.exists(os.path.join(self.model_dir, "epoch_{}".format(i))):
             i += 1
         save_dir = os.path.join(self.model_dir, "epoch_{}".format(i))
         os.makedirs(save_dir)
+        return save_dir
+
+    def get_epoch_dir(self):
+        i = 0
+        while os.path.exists(os.path.join(self.model_dir, "epoch_{}".format(i))):
+            i += 1
+        save_dir = os.path.join(self.model_dir, "epoch_{}".format(i-1))
         return save_dir
 
     def restore(self):

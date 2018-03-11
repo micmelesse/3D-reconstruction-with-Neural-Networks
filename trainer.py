@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 if __name__ == '__main__':
 
     def save_loss(loss_arr, loss_type):
-        save_dir = net.get_save_dir()
+        save_dir = net.get_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_arr)
         tf.train.Saver().save(net.sess, "{}/model.ckpt".format(save_dir))
         plt.plot(np.array(loss_arr).flatten())
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     val_loss = []
     for e in range(net.epoch_count):
         t_start = time.time()  # timer for epoch
+        net.create_epoch_dir()
 
         # split trainig set in to  validation set
         X_train, X_val, y_train, y_val = train_test_split(
@@ -90,4 +91,4 @@ if __name__ == '__main__':
     test_loss = []
     for X, y in zip(X_test_batchs, y_test_batchs):
         test_loss.append(net.val_step(X, y))
-    save_loss(val_loss, 'test')
+    save_loss(test_loss, 'test')
