@@ -84,47 +84,57 @@ class Network:
         self.apply_grad = sgd_optimizer.apply_grad
 
         # misc op
+        print("misc op")
         self.print = tf.Print(
             self.loss, [sgd_optimizer.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
-        self.writer = tf.summary.FileWriter(
-            "{}/writer".format(self.model_dir), self.sess.graph)
+        self.train_writer = tf.summary.FileWriter(
+            "{}/train".format(self.model_dir), self.sess.graph)
+        self.val_writer = tf.summary.FileWriter(
+            "{}/val".format(self.model_dir), self.sess.graph)
+        self.test_writer = tf.summary.FileWriter(
+            "{}/test".format(self.model_dir), self.sess.graph)
 
         # init network
         print("initalize variables")
         tf.global_variables_initializer().run()
 
-    def train_step(self, data, label):
+    def step(self, data, label, type):
         x = dataset.from_npy(data)
         y = dataset.from_npy(label)
-        out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
-            self.X: x, self.Y: y})
-        self.writer.add_summary(out[1])
-        return out[0]
+        if type == "train":
+            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
+                self.X: x, self.Y: y})
+            self.train_writer.add_summary(out[1])
+        elif type == "val":
+            out = self.sess.run([self.loss, self.summary_op, self.print], {
+                self.X: x, self.Y: y})
+            self.val_writer.add_summary(out[1])
+        elif type == "test":
+            out = self.sess.run([self.loss, self.summary_op, self.print], {
+                self.X: x, self.Y: y})
+            self.test_writer.add_summary(out[1])
 
-    def val_step(self, data, label):
-        x = dataset.from_npy(data)
-        y = dataset.from_npy(label)
-        out = self.sess.run([self.loss, self.summary_op, self.print], {
-            self.X: x, self.Y: y})
-        self.writer.add_summary(out[1])
         return out[0]
 
     def create_epoch_dir(self):
-        i = 0
-        while os.path.exists(os.path.join(self.model_dir, "epoch_{}".format(i))):
-            i += 1
-        save_dir = os.path.join(self.model_dir, "epoch_{}".format(i))
+        new_ind = self.epoch_index()+1
+        save_dir = os.path.join(self.model_dir, "epoch_{}".format(new_ind))
         os.makedirs(save_dir)
         return save_dir
 
     def get_epoch_dir(self):
+        cur_ind = self.epoch_index()
+        save_dir = os.path.join(
+            self.model_dir, "epoch_{}".format(cur_ind))
+        return save_dir
+
+    def epoch_index(self):
         i = 0
         while os.path.exists(os.path.join(self.model_dir, "epoch_{}".format(i))):
             i += 1
-        save_dir = os.path.join(self.model_dir, "epoch_{}".format(i-1))
-        return save_dir
+        return i-1
 
     def restore(self):
         saver = tf.train.import_meta_graph(

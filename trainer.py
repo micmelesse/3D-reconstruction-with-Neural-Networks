@@ -19,10 +19,11 @@ from sklearn.model_selection import train_test_split
 if __name__ == '__main__':
 
     def save_loss(loss_arr, loss_type):
+        loss_arr = np.array(loss_arr)
         save_dir = net.get_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_arr)
         tf.train.Saver().save(net.sess, "{}/model.ckpt".format(save_dir))
-        plt.plot(np.array(loss_arr).flatten())
+        plt.plot(loss_arr[-1])
         plt.savefig("{}/plot_{}_loss.png".format(save_dir, loss_type),
                     bbox_inches='tight')
         plt.close()
@@ -51,24 +52,26 @@ if __name__ == '__main__':
 
         # training and validaiton loops
         try:
-             # split traning set into batchs
+            print("training step")
+            # split traning and validation set into batchs
             X_train_batchs, y_train_batchs = dataset.get_batchs(
                 X_train, y_train, net.batch_size)
 
-            # train step
-            epoch_train_loss = []
-            for X, y in zip(X_train_batchs, y_train_batchs):
-                epoch_train_loss.append(net.train_step(X, y))
-            train_loss.append(epoch_train_loss)
-
-            # split validation set into batchs
             X_val_batchs, y_val_batchs = dataset.get_batchs(
                 X_val, y_val, net.batch_size)
+
+            # train step
+            epoch_train_loss = []
+            for i, (X, y) in enumerate(zip(X_train_batchs, y_train_batchs)):
+                epoch_train_loss.append(net.step(X, y, 'train'))
+            train_loss.append(epoch_train_loss)
+
+            print("validation step")
 
             # validation step
             epoch_val_loss = []
             for X, y in zip(X_val_batchs, y_val_batchs):
-                epoch_val_loss.append(net.val_step(X, y))
+                epoch_val_loss.append(net.step(X, y, 'val'))
             val_loss.append(epoch_val_loss)
 
         except KeyboardInterrupt:
@@ -78,7 +81,7 @@ if __name__ == '__main__':
             save_loss(val_loss, 'val')
             break
 
-        print("epoch %d took %d seconds" % (e, time.time()-t_start))
+        print("epoch %d took %d seconds to train" % (e, time.time()-t_start))
         save_loss(train_loss, 'train')
         save_loss(val_loss, 'val')
 
@@ -90,5 +93,5 @@ if __name__ == '__main__':
     # test network
     test_loss = []
     for X, y in zip(X_test_batchs, y_test_batchs):
-        test_loss.append(net.val_step(X, y))
+        test_loss.append(net.step(X, y, 'test'))
     save_loss(test_loss, 'test')
