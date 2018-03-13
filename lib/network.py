@@ -79,14 +79,16 @@ class Network:
 
         # optimizer
         print("optimizer")
+        self.step_count = tf.Variable(
+            0, trainable=False, name="step_count")
         sgd_optimizer = optimizer_module.SGD_optimizer(
-            self.loss, learn_rate)
+            self.loss, learn_rate, self.step_count)
         self.apply_grad = sgd_optimizer.apply_grad
 
         # misc op
         print("misc op")
         self.print = tf.Print(
-            self.loss, [sgd_optimizer.step_count, learn_rate, self.loss])
+            self.loss, [self.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
         self.train_writer = tf.summary.FileWriter(
@@ -106,15 +108,15 @@ class Network:
         if type == "train":
             out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
                 self.X: x, self.Y: y})
-            self.train_writer.add_summary(out[1])
+            self.train_writer.add_summary(out[1], self.step_count)
         elif type == "val":
             out = self.sess.run([self.loss, self.summary_op, self.print], {
                 self.X: x, self.Y: y})
-            self.val_writer.add_summary(out[1])
+            self.val_writer.add_summary(out[1], self.step_count)
         elif type == "test":
             out = self.sess.run([self.loss, self.summary_op, self.print], {
                 self.X: x, self.Y: y})
-            self.test_writer.add_summary(out[1])
+            self.test_writer.add_summary(out[1], self.step_count)
 
         return out[0]
 

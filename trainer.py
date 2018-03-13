@@ -80,7 +80,7 @@ if __name__ == '__main__':
                   (time.time()-t_start))
             save_loss(train_loss, 'train')
             save_loss(val_loss, 'val')
-            break
+            exit()
 
         print("epoch %d took %d seconds to train" % (e, time.time()-t_start))
         save_loss(train_loss, 'train')
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     print("testing network")
     # test network
     while X_test_batchs and y_test_batchs:
-        X = X_train_batchs.popleft()
-        y = y_train_batchs.popleft()
+        X = X_test_batchs.popleft()
+        y = y_test_batchs.popleft()
         test_loss.append(net.step(X, y, 'test'))
     save_loss(test_loss, 'test')
