@@ -78,6 +78,8 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print("training quit by user after %d seconds" %
                   (time.time()-t_start))
+            train_loss.append(epoch_train_loss)
+            val_loss.append(epoch_val_loss)
             save_loss(train_loss, 'train')
             save_loss(val_loss, 'val')
             exit()
