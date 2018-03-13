@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # split into training and test set
     X_train, X_test, y_train, y_test = train_test_split(
-        data_all, label_all, test_size=0.2)
+        data_all, label_all, test_size=0.1)
 
     # init network
     net = network.Network()
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
         # split trainig set in to  validation set
         X_train, X_val, y_train, y_val = train_test_split(
-            X_train, y_train, test_size=0.2)
+            X_train, y_train, test_size=0.1)
 
         # training and validaiton loops
         try:
@@ -58,15 +58,16 @@ if __name__ == '__main__':
             X_val_batchs, y_val_batchs = dataset.get_batchs(
                 X_val, y_val, net.batch_size)
 
-            print("training:{}({}),validation:{}({})" .format(
-                len(X_train), len(X_train_batchs), len(X_val), len(X_val_batchs)))
+            val_interval = len(X_train_batchs)/len(X_val_batchs)
+            print("training: {}({}), validation: {}({}, interval:{})" .format(
+                len(X_train), len(X_train_batchs), len(X_val), len(X_val_batchs), val_interval))
 
             # train step
             counter = 0
             epoch_train_loss, epoch_val_loss = [], []
             while X_train_batchs and y_train_batchs:
                 counter += 1
-                if X_val_batchs and counter >= 10:
+                if X_val_batchs and counter >= val_interval:
                     counter = 0
                     X = X_val_batchs.popleft()
                     y = y_val_batchs.popleft()
