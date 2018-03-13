@@ -1,2 +1,0 @@
-screen
-source activate tensorflow_p36

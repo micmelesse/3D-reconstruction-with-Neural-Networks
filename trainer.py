@@ -28,9 +28,8 @@ if __name__ == '__main__':
                     bbox_inches='tight')
         plt.close()
 
-    # get data
-    data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
-    label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
+    # get preprocessed data
+    data_all, label_all = dataset.get_preprocessed_dataset()
 
     # split into training and test set
     X_train, X_test, y_train, y_test = train_test_split(
@@ -39,9 +38,9 @@ if __name__ == '__main__':
     # init network
     net = network.Network()
 
+    print("training loop")
     # train network
-    train_loss = []
-    val_loss = []
+    train_loss, val_loss, test_loss = [], [], []
     for e in range(net.epoch_count):
         t_start = time.time()  # timer for epoch
         net.create_epoch_dir()
@@ -52,7 +51,6 @@ if __name__ == '__main__':
 
         # training and validaiton loops
         try:
-            print("training step")
             # split traning and validation set into batchs
             X_train_batchs, y_train_batchs = dataset.get_batchs(
                 X_train, y_train, net.batch_size)
@@ -60,18 +58,21 @@ if __name__ == '__main__':
             X_val_batchs, y_val_batchs = dataset.get_batchs(
                 X_val, y_val, net.batch_size)
 
+            val_interval = len(X_train_batchs)//len(X_val_batchs)
+
             # train step
-            epoch_train_loss = []
-            for i, (X, y) in enumerate(zip(X_train_batchs, y_train_batchs)):
-                epoch_train_loss.append(net.step(X, y, 'train'))
+            epoch_train_loss, epoch_val_loss = [], []
+            while X_train_batchs and y_train_batchs:
+
+                if X_val_batchs and len(X_train_batchs) % val_interval == 0:
+                    X = X_val_batchs.popleft()
+                    y = y_val_batchs.popleft()
+                    epoch_val_loss.append(net.step(X, y, 'val'))
+                else:
+                    X = X_train_batchs.popleft()
+                    y = y_train_batchs.popleft()
+                    epoch_train_loss.append(net.step(X, y, 'train'))
             train_loss.append(epoch_train_loss)
-
-            print("validation step")
-
-            # validation step
-            epoch_val_loss = []
-            for X, y in zip(X_val_batchs, y_val_batchs):
-                epoch_val_loss.append(net.step(X, y, 'val'))
             val_loss.append(epoch_val_loss)
 
         except KeyboardInterrupt:
@@ -91,7 +92,8 @@ if __name__ == '__main__':
 
     print("testing network")
     # test network
-    test_loss = []
-    for X, y in zip(X_test_batchs, y_test_batchs):
+    while X_test_batchs and y_test_batchs:
+        X = X_train_batchs.popleft()
+        y = y_train_batchs.popleft()
         test_loss.append(net.step(X, y, 'test'))
     save_loss(test_loss, 'test')

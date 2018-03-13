@@ -4,8 +4,10 @@ import sys
 import math
 import random
 import tarfile
+
 import numpy as np
 import pandas as pd
+from collections import deque
 from lib import path, utils, render
 from third_party import binvox_rw
 
@@ -57,22 +59,26 @@ def to_npy_data_N_label(paths, N=None):
         to_npy('out/labels_{:06d}'.format(i), load_label(paths[i, -2]))
 
 
-def get_batchs(data_all, label_all, batch_size):
+def get_batchs(data, label, batch_size):
+    assert(len(data) == len(label))
+    num_of_batches = math.ceil(len(data)/batch_size)
+    perm = np.random.permutation(len(data))
+    data_batchs = np.array_split(data[perm], num_of_batches)
+    label_batchs = np.array_split(label[perm], num_of_batches)
 
-    N = len(data_all)
-    num_of_batches = math.ceil(N/batch_size)
-    assert(N == len(label_all))
-    perm = np.random.permutation(N)
-    data_all = data_all[perm]
-    label_all = label_all[perm]
-    data_batchs = np.array_split(data_all, num_of_batches)
-    label_batchs = np.array_split(label_all, num_of_batches)
-
-    return data_batchs, label_batchs
+    return deque(data_batchs), deque(label_batchs)
 
 
 def read_paths(paths_dir="out/paths.csv"):
     return pd.read_csv(paths_dir, index_col=0).as_matrix()
+
+
+def get_preprocessed_dataset():
+    # get data
+    data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
+    label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
+
+    return data_all, label_all
 
 
 def main():
