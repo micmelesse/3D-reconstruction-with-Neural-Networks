@@ -11,7 +11,6 @@ import lib.encoder_module as encoder_module
 import lib.recurrent_module as recurrent_module
 import lib.decoder_module as decoder_module
 import lib.loss_module as loss_module
-import lib.optimizer_module as optimizer_module
 
 
 # Recurrent Reconstruction Neural Network (R2N2)
@@ -79,14 +78,18 @@ class Network:
 
         # optimizer
         print("optimizer")
-        self.sgd_optimizer = optimizer_module.SGD_optimizer(
-            self.loss, learn_rate)
-        self.apply_grad = self.sgd_optimizer.apply_grad
+        self.step_count = tf.Variable(
+            0, trainable=False, name="step_count")
+        optimizer = tf.train.GradientDescentOptimizer(
+            learning_rate=learn_rate)
+        grads_and_vars = optimizer.compute_gradients(self.loss)
+        self.apply_grad = optimizer.apply_gradients(
+            grads_and_vars, global_step=self.step_count)
 
         # misc op
         print("misc op")
         self.print = tf.Print(
-            self.loss, [self.sgd_optimizer.step_count, learn_rate, self.loss])
+            self.loss, [self.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
         self.train_writer = tf.summary.FileWriter(
@@ -105,11 +108,11 @@ class Network:
         y = dataset.from_npy(label)
 
         if type == "train":
-            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.sgd_optimizer.step_count], {
+            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count], {
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[1], out[4])
         else:
-            out = self.sess.run([self.loss, self.summary_op, self.print, self.sgd_optimizer.step_count], {
+            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count], {
                 self.X: x, self.Y: y})
             if type == "val":
                 self.val_writer.add_summary(out[1], out[3])
