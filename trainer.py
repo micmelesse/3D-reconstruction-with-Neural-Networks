@@ -58,7 +58,7 @@ if __name__ == '__main__':
             X_val_batchs, y_val_batchs = dataset.get_batchs(
                 X_val, y_val, net.batch_size)
 
-            val_interval = len(X_train_batchs)/len(X_val_batchs)
+            val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
             print("training: {}({}), validation: {}({}, interval:{})" .format(
                 len(X_train), len(X_train_batchs), len(X_val), len(X_val_batchs), val_interval))
 
