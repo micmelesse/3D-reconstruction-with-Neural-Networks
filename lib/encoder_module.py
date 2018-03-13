@@ -15,7 +15,7 @@ class Conv_Encoder:
                     self.out_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
                         a, filters=filter_sizes[i], padding='SAME', kernel_size=kernel_shape, activation=None), self.out_tensor, name="conv2_map")
                     self.out_tensor = tf.map_fn(
-                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  self.out_tensor, , name="max_pool_map")
+                        lambda a: tf.layers.max_pooling2d(a, 2, 2), self.out_tensor, name="max_pool_map")
                     self.out_tensor = tf.map_fn(
                         tf.nn.relu,  self.out_tensor, name="relu_map")
             elif i == 6:
