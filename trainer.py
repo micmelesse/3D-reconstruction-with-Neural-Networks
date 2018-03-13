@@ -61,10 +61,12 @@ if __name__ == '__main__':
             val_interval = len(X_train_batchs)//len(X_val_batchs)
 
             # train step
+            counter = 0
             epoch_train_loss, epoch_val_loss = [], []
             while X_train_batchs and y_train_batchs:
-
-                if X_val_batchs and len(X_train_batchs) % val_interval == 0:
+                counter += 1
+                if X_val_batchs and counter >= val_interval:
+                    counter = 0
                     X = X_val_batchs.popleft()
                     y = y_val_batchs.popleft()
                     epoch_val_loss.append(net.step(X, y, 'val'))

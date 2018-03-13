@@ -103,20 +103,20 @@ class Network:
         print("initalize variables")
         tf.global_variables_initializer().run()
 
-    def step(self, data, label, type):
+    def step(self, data, label, step_type):
         x = dataset.from_npy(data)
         y = dataset.from_npy(label)
 
-        if type == "train":
+        if step_type == "train":
             out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count], {
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[1], out[4])
         else:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count], {
                 self.X: x, self.Y: y})
-            if type == "val":
+            if step_type == "val":
                 self.val_writer.add_summary(out[1], out[3])
-            elif type == "test":
+            elif step_type == "test":
                 self.test_writer.add_summary(out[1], out[3])
 
         # return the loss

@@ -13,15 +13,15 @@ class Conv_Encoder:
                 with tf.name_scope("conv_block"):
                     kernel_shape = [7, 7] if i is 0 else kernel_shape
                     self.out_tensor = tf.map_fn(lambda a: tf.layers.conv2d(
-                        a, filters=filter_sizes[i], padding='SAME', kernel_size=kernel_shape, activation=None),   self.out_tensor)
+                        a, filters=filter_sizes[i], padding='SAME', kernel_size=kernel_shape, activation=None), self.out_tensor, name="conv2_map")
                     self.out_tensor = tf.map_fn(
-                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  self.out_tensor)
+                        lambda a: tf.layers.max_pooling2d(a, 2, 2),  self.out_tensor, , name="max_pool_map")
                     self.out_tensor = tf.map_fn(
-                        tf.nn.relu,  self.out_tensor)
+                        tf.nn.relu,  self.out_tensor, name="relu_map")
             elif i == 6:
                 self.out_tensor = tf.map_fn(
-                    tf.contrib.layers.flatten,  self.out_tensor)
+                    tf.contrib.layers.flatten,  self.out_tensor, name="flatten_map")
                 self.out_tensor = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
-                    a, 1024, activation_fn=None), self.out_tensor)
+                    a, 1024, activation_fn=None), self.out_tensor, name='fully_connected_map')
                 self.out_tensor = tf.map_fn(
-                    tf.nn.relu,  self.out_tensor)
+                    tf.nn.relu,  self.out_tensor, name="relu_map")
