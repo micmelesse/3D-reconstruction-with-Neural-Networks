@@ -58,14 +58,12 @@ if __name__ == '__main__':
             X_val_batchs, y_val_batchs = dataset.get_batchs(
                 X_val, y_val, net.batch_size)
 
-            val_interval = len(X_train_batchs)//len(X_val_batchs)
-
             # train step
             counter = 0
             epoch_train_loss, epoch_val_loss = [], []
             while X_train_batchs and y_train_batchs:
                 counter += 1
-                if X_val_batchs and counter >= val_interval:
+                if X_val_batchs and counter >= 10:
                     counter = 0
                     X = X_val_batchs.popleft()
                     y = y_val_batchs.popleft()

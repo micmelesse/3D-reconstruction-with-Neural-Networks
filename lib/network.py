@@ -115,6 +115,7 @@ class Network:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count], {
                 self.X: x, self.Y: y})
             if step_type == "val":
+                print("validation step")
                 self.val_writer.add_summary(out[1], out[3])
             elif step_type == "test":
                 self.test_writer.add_summary(out[1], out[3])
