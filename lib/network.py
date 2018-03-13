@@ -105,19 +105,20 @@ class Network:
     def step(self, data, label, type):
         x = dataset.from_npy(data)
         y = dataset.from_npy(label)
+        
         if type == "train":
-            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print], {
+            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count], {
                 self.X: x, self.Y: y})
-            self.train_writer.add_summary(out[1], self.step_count)
-        elif type == "val":
-            out = self.sess.run([self.loss, self.summary_op, self.print], {
+            self.train_writer.add_summary(out[1], out[4])
+        else:
+            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count], {
                 self.X: x, self.Y: y})
-            self.val_writer.add_summary(out[1], self.step_count)
-        elif type == "test":
-            out = self.sess.run([self.loss, self.summary_op, self.print], {
-                self.X: x, self.Y: y})
-            self.test_writer.add_summary(out[1], self.step_count)
+            if type == "val":
+                self.val_writer.add_summary(out[1], out[3])
+            elif type == "test":
+                self.test_writer.add_summary(out[1], out[3])
 
+        # return the loss
         return out[0]
 
     def create_epoch_dir(self):
