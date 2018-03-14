@@ -13,15 +13,12 @@ import lib.path as path
 import lib.utils as utils
 from datetime import datetime
 
-from sklearn.model_selection import train_test_split
-
 
 if __name__ == '__main__':
 
     def save_loss(loss_arr, loss_type):
         save_dir = net.get_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_arr)
-        net.saver.save(net.sess, "{}/model.ckpt".format(save_dir))
         plt.plot(np.array(loss_arr)[-1])
         plt.savefig("{}/plot_{}_loss.png".format(save_dir, loss_type),
                     bbox_inches='tight')
@@ -30,12 +27,9 @@ if __name__ == '__main__':
     # get preprocessed data
     data_all, label_all = dataset.get_preprocessed_dataset()
 
-    # split into training and test set
-    X_train, X_test, y_train, y_test = train_test_split(  # shuffled
-        data_all, label_all, test_size=0.1)
-    # split trainig and  `validation set
-    X_train, X_val, y_train, y_val = train_test_split(  # shuffled
-        X_train, y_train, test_size=0.1)
+    # split dataset
+    X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
+        data_all, label_all)
 
     # init network
     net = network.Network()
@@ -82,11 +76,13 @@ if __name__ == '__main__':
                   (time.time()-t_start))
             train_loss.append(epoch_train_loss)
             val_loss.append(epoch_val_loss)
+            net.save()
             save_loss(train_loss, 'train')
             save_loss(val_loss, 'val')
             exit()
 
         print("epoch %d took %d seconds to train" % (e, time.time()-t_start))
+        net.save()
         save_loss(train_loss, 'train')
         save_loss(val_loss, 'val')
 

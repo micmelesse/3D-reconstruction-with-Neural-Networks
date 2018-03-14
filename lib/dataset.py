@@ -5,11 +5,13 @@ import math
 import random
 import tarfile
 
+
 import numpy as np
 import pandas as pd
 from collections import deque
 from lib import path, utils, render
 from third_party import binvox_rw
+from sklearn import model_selection
 
 
 def load_data(data_samples):
@@ -67,6 +69,17 @@ def get_suffeled_batchs(data, label, batch_size):
     label_batchs = np.array_split(label[perm], num_of_batches)
 
     return deque(data_batchs), deque(label_batchs)
+
+
+def train_val_test_split(data, label, split=0.1):
+    # split into training and test set
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(
+        data, label, test_size=split)  # shuffled
+    # split of validation set
+    X_train, X_val, y_train, y_val = model_selection.train_test_split(
+        X_train, y_train, test_size=split)  # shuffled
+
+    return X_train, y_train, X_val, y_val, X_test, y_test
 
 
 def read_paths(paths_dir="out/paths.csv"):

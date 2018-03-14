@@ -143,11 +143,12 @@ class Network:
 
     def save(self):
         cur_dir = self.get_epoch_dir()
-        model_builder = tf.saved_model.builder.SavedModelBuilder(cur_dir)
+        model_builder = tf.saved_model.builder.SavedModelBuilder(
+            cur_dir+"/model")
         model_builder.add_meta_graph_and_variables(self.sess, [cur_dir])
         model_builder.save()
 
-    def restore(self):
+    def restore(self, cur_dir):
         cur_dir = self.get_epoch_dir()
         tf.saved_model.loader.load(self.sess, [cur_dir], cur_dir)
 
