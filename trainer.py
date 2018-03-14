@@ -19,11 +19,10 @@ from sklearn.model_selection import train_test_split
 if __name__ == '__main__':
 
     def save_loss(loss_arr, loss_type):
-        loss_arr = np.array(loss_arr)
         save_dir = net.get_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_arr)
-        tf.train.Saver().save(net.sess, "{}/model.ckpt".format(save_dir))
-        plt.plot(loss_arr[-1])
+        net.saver.save(net.sess, "{}/model.ckpt".format(save_dir))
+        plt.plot(np.array(loss_arr)[-1])
         plt.savefig("{}/plot_{}_loss.png".format(save_dir, loss_type),
                     bbox_inches='tight')
         plt.close()

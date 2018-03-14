@@ -92,6 +92,7 @@ class Network:
             self.loss, [self.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
+        self.saver = tf.train.Saver()
         self.train_writer = tf.summary.FileWriter(
             "{}/train".format(self.model_dir), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
@@ -141,10 +142,8 @@ class Network:
             i += 1
         return i-1
 
-    def restore(self):
-        saver = tf.train.import_meta_graph(
-            "{}/model.ckpt.meta".format(self.model_dir))
-        saver.restore(self.sess, tf.train.latest_checkpoint(self.model_dir))
+    def restore(self, check_path):
+        self.saver.restore(self.sess, "{}/model.ckpt".format(check_path))
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
