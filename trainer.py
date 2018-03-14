@@ -33,7 +33,7 @@ if __name__ == '__main__':
     # split into training and test set
     X_train, X_test, y_train, y_test = train_test_split(  # shuffled
         data_all, label_all, test_size=0.1)
-    # split trainig and  validation set
+    # split trainig and  `validation set
     X_train, X_val, y_train, y_val = train_test_split(  # shuffled
         X_train, y_train, test_size=0.1)
 

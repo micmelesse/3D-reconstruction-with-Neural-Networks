@@ -92,7 +92,6 @@ class Network:
             self.loss, [self.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
-        self.saver = tf.train.Saver()
         self.train_writer = tf.summary.FileWriter(
             "{}/train".format(self.model_dir), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
@@ -125,8 +124,8 @@ class Network:
         return out[0]
 
     def create_epoch_dir(self):
-        new_ind = self.epoch_index()+1
-        save_dir = os.path.join(self.model_dir, "epoch_{}".format(new_ind))
+        cur_ind = self.epoch_index()
+        save_dir = os.path.join(self.model_dir, "epoch_{}".format(cur_ind+1))
         os.makedirs(save_dir)
         return save_dir
 
@@ -142,8 +141,15 @@ class Network:
             i += 1
         return i-1
 
-    def restore(self, check_path):
-        self.saver.restore(self.sess, "{}/model.ckpt".format(check_path))
+    def save(self):
+        cur_dir = self.get_epoch_dir()
+        model_builder = tf.saved_model.builder.SavedModelBuilder(cur_dir)
+        model_builder.add_meta_graph_and_variables(self.sess, [cur_dir])
+        model_builder.save()
+
+    def restore(self):
+        cur_dir = self.get_epoch_dir()
+        tf.saved_model.loader.load(self.sess, [cur_dir], cur_dir)
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
