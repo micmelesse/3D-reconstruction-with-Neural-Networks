@@ -59,7 +59,7 @@ def to_npy_data_N_label(paths, N=None):
         to_npy('out/labels_{:06d}'.format(i), load_label(paths[i, -2]))
 
 
-def get_batchs(data, label, batch_size):
+def get_suffeled_batchs(data, label, batch_size):
     assert(len(data) == len(label))
     num_of_batches = math.ceil(len(data)/batch_size)
     perm = np.random.permutation(len(data))

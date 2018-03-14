@@ -32,8 +32,11 @@ if __name__ == '__main__':
     data_all, label_all = dataset.get_preprocessed_dataset()
 
     # split into training and test set
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_train, X_test, y_train, y_test = train_test_split(  # shuffled
         data_all, label_all, test_size=0.1)
+    # split trainig and  validation set
+    X_train, X_val, y_train, y_val = train_test_split(  # shuffled
+        X_train, y_train, test_size=0.1)
 
     # init network
     net = network.Network()
@@ -45,17 +48,13 @@ if __name__ == '__main__':
         t_start = time.time()  # timer for epoch
         net.create_epoch_dir()
 
-        # split trainig set in to  validation set
-        X_train, X_val, y_train, y_val = train_test_split(
-            X_train, y_train, test_size=0.1)
-
         # training and validaiton loops
         try:
             # split traning and validation set into batchs
-            X_train_batchs, y_train_batchs = dataset.get_batchs(
+            X_train_batchs, y_train_batchs = dataset.get_suffeled_batchs(
                 X_train, y_train, net.batch_size)
 
-            X_val_batchs, y_val_batchs = dataset.get_batchs(
+            X_val_batchs, y_val_batchs = dataset.get_suffeled_batchs(
                 X_val, y_val, net.batch_size)
 
             val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
@@ -93,7 +92,7 @@ if __name__ == '__main__':
         save_loss(val_loss, 'val')
 
     # split test set into batchs
-    X_test_batchs, y_test_batchs = dataset.get_batchs(
+    X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
         X_test, y_test, net.batch_size)
 
     print("testing network")
