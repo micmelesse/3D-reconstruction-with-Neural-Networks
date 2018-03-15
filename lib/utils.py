@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def get_epoch_name(path):
-    return re.search(".*(epoch_.*).*", cur_dir).group(1)
+def get_epoch_name(epoch_dir):
+    return re.search(".*(epoch_.*).*", epoch_dir).group(1)
 
 
 def vis_im(im, f_name=None):
