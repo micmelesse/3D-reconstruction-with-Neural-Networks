@@ -7,7 +7,7 @@ import lib.utils as utils
 
 
 if __name__ == '__main__':
-    model_dir = "/Users/micmelesse/Documents/3D-reconstruction-with-neural-networks/out/model_2018-03-14_23:14:16_L:0.1_E:2_B:2/epoch_1"
+    model_dir = "/Users/micmelesse/Documents/3D-reconstruction-with-neural-networks/out/model_2018-03-15_13:15:23_L:0.1_E:2_B:2/epoch_1"
 
     net = network.Network()
     net.restore(model_dir)
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
         X_test, y_test, net.batch_size)
 
-    print("testing network")
+    print("testing network ...")
     # test network
     i = 0
     while X_test_batchs and y_test_batchs:
@@ -35,3 +35,4 @@ if __name__ == '__main__':
             y[0], "{}/epoch_test/target_{}.png".format(model_dir, i))
         utils.vis_voxel(
             y_hat[0], "{}/epoch_test/prediction_{}.png".format(model_dir, i))
+      print("... done")

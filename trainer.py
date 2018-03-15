@@ -24,6 +24,10 @@ if __name__ == '__main__':
                     bbox_inches='tight')
         plt.close()
 
+    # init network
+    net = network.Network()
+    net.init()
+
     # get preprocessed data
     data_all, label_all = dataset.get_preprocessed_dataset()
 
@@ -31,12 +35,8 @@ if __name__ == '__main__':
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
         data_all, label_all)
 
-    np.save("{}/X_test.npy".format(os.path.dirname(net.model_dir)), X_test)
-    np.save("{}/y_test.npy".format(os.path.dirname(net.model_dir)), y_test)
-
-    # init network
-    net = network.Network()
-    net.init()
+    np.save("{}/X_test.npy".format(net.model_dir), X_test)
+    np.save("{}/y_test.npy".format(net.model_dir), y_test)
 
     print("training loop")
     # train network
