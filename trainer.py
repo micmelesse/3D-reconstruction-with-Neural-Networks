@@ -33,7 +33,8 @@ if __name__ == '__main__':
 
     # init network
     net = network.Network()
-
+    net.init()
+    
     print("training loop")
     # train network
     train_loss, val_loss, test_loss = [], [], []

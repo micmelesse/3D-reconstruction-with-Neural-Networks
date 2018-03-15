@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 
 import numpy as np
 import tensorflow as tf
@@ -98,10 +99,12 @@ class Network:
             "{}/val".format(self.model_dir), self.sess.graph)
         self.test_writer = tf.summary.FileWriter(
             "{}/test".format(self.model_dir), self.sess.graph)
+        self.initializer = tf.global_variables_initializer()
 
-        # init network
+    # init network
+    def init(self):
         print("initalize variables")
-        tf.global_variables_initializer().run()
+        self.initializer.run()
 
     def step(self, data, label, step_type):
         x = dataset.from_npy(data)
@@ -143,14 +146,15 @@ class Network:
 
     def save(self):
         cur_dir = self.get_epoch_dir()
+        epoch_name = utils.get_epoch_name(cur_dir)
         model_builder = tf.saved_model.builder.SavedModelBuilder(
             cur_dir+"/model")
-        model_builder.add_meta_graph_and_variables(self.sess, [cur_dir])
+        model_builder.add_meta_graph_and_variables(self.sess, [epoch_name])
         model_builder.save()
 
-    def restore(self, cur_dir):
-        cur_dir = self.get_epoch_dir()
-        tf.saved_model.loader.load(self.sess, [cur_dir], cur_dir)
+    def restore(self, epoch_dir):
+        epoch_name = utils.get_epoch_name(epoch_dir)
+        tf.saved_model.loader.load(self.sess, [epoch_name], epoch_dir+"/model")
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
