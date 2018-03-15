@@ -93,18 +93,22 @@ class Network:
             self.loss, [self.step_count, learn_rate, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
+        tf.global_variables_initializer().run()
+        print("initalize variables")
+
+        # pointers to training objects
+        self.train_writer = None
+        self.val_writer = None
+        self.test_writer = None
+
+    # init network
+    def init(self):
         self.train_writer = tf.summary.FileWriter(
             "{}/train".format(self.model_dir), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
             "{}/val".format(self.model_dir), self.sess.graph)
         self.test_writer = tf.summary.FileWriter(
             "{}/test".format(self.model_dir), self.sess.graph)
-        self.initializer = tf.global_variables_initializer()
-
-    # init network
-    def init(self):
-        print("initalize variables")
-        self.initializer.run()
 
     def step(self, data, label, step_type):
         x = dataset.from_npy(data)

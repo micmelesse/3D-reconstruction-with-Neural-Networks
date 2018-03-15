@@ -31,10 +31,13 @@ if __name__ == '__main__':
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
         data_all, label_all)
 
+    np.save("{}/X_test.npy".format(os.path.dirname(net.model_dir)), X_test)
+    np.save("{}/y_test.npy".format(os.path.dirname(net.model_dir)), y_test)
+
     # init network
     net = network.Network()
     net.init()
-    
+
     print("training loop")
     # train network
     train_loss, val_loss, test_loss = [], [], []
@@ -52,7 +55,7 @@ if __name__ == '__main__':
                 X_val, y_val, net.batch_size)
 
             val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
-            print("training: {}({}), validation: {}({}), interval:{})" .format(
+            print("training: {}({}), validation: {}({}), interval({})" .format(
                 len(X_train), len(X_train_batchs), len(X_val), len(X_val_batchs), val_interval))
 
             # train step
@@ -87,14 +90,14 @@ if __name__ == '__main__':
         save_loss(train_loss, 'train')
         save_loss(val_loss, 'val')
 
-    # split test set into batchs
-    X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
-        X_test, y_test, net.batch_size)
+    # # split test set into batchs
+    # X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
+    #     X_test, y_test, net.batch_size)
 
-    print("testing network")
-    # test network
-    while X_test_batchs and y_test_batchs:
-        X = X_test_batchs.popleft()
-        y = y_test_batchs.popleft()
-        test_loss.append(net.step(X, y, 'test'))
-    save_loss(test_loss, 'test')
+    # print("testing network")
+    # # test network
+    # while X_test_batchs and y_test_batchs:
+    #     X = X_test_batchs.popleft()
+    #     y = y_test_batchs.popleft()
+    #     test_loss.append(net.step(X, y, 'test'))
+    # save_loss(test_loss, 'test')
