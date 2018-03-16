@@ -7,16 +7,16 @@ import lib.utils as utils
 
 
 if __name__ == '__main__':
-    model_dir = "/Users/micmelesse/Documents/3D-reconstruction-with-neural-networks/out/model_2018-03-15_13:15:23_L:0.1_E:2_B:2/epoch_1"
+    MODEL_DIR = "/Users/micmelesse/Documents/3D-reconstruction-with-neural-networks/aws/model_2018-03-15_18:04:43_L:0.001_E:10_B:16/epoch_0"
 
     net = network.Network()
-    net.restore(model_dir)
-    X_test = np.load("{}/X_test.npy".format(os.path.dirname(model_dir)))
-    y_test = np.load("{}/y_test.npy".format(os.path.dirname(model_dir)))
+    net.restore(MODEL_DIR)
+    X_test = np.load("{}/X_test.npy".format(os.path.dirname(MODEL_DIR)))
+    y_test = np.load("{}/y_test.npy".format(os.path.dirname(MODEL_DIR)))
 
     # split test set into batchs
     X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
-        X_test, y_test, net.batch_size)
+        X_test, y_test, net.BATCH_SIZE)
 
     print("testing network ...")
     # test network
@@ -27,12 +27,12 @@ if __name__ == '__main__':
         y = dataset.from_npy(y_test_batchs.popleft())
         y_hat = net.predict(X)
 
-        os.makedirs("{}/epoch_test".format(model_dir))
+        os.makedirs("{}/tests".format(MODEL_DIR))
 
         utils.vis_multichannel(
-            X[0][1], "{}/epoch_test/feature_maps_{}.png".format(model_dir, i))
+            X[0][1], "{}/epoch_test/feature_maps_{}.png".format(MODEL_DIR, i))
         utils.vis_voxel(
-            y[0], "{}/epoch_test/target_{}.png".format(model_dir, i))
+            y[0], "{}/epoch_test/target_{}.png".format(MODEL_DIR, i))
         utils.vis_voxel(
-            y_hat[0], "{}/epoch_test/prediction_{}.png".format(model_dir, i))
-      print("... done")
+            y_hat[0], "{}/epoch_test/prediction_{}.png".format(MODEL_DIR, i))
+    print("... done")

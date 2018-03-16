@@ -19,7 +19,7 @@ class Network:
     def __init__(self, params=None):
         # read params
         if params is None:
-            params = json.loads(open('params.json').read())["TRAIN_CONST"]
+            params = utils.read_params()['TRAIN_PARAMS']
 
         self.LEARN_RATE = params['LEARN_RATE']
         self.BATCH_SIZE = params['BATCH_SIZE']

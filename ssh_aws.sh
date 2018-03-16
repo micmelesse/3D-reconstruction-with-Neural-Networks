@@ -1,2 +1,2 @@
-source params/aws.params
+source read_params.sh
 ssh -i $KEY $USER@$DNS

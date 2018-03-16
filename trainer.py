@@ -35,13 +35,13 @@ if __name__ == '__main__':
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
         data_all, label_all)
 
-    np.save("{}/X_test.npy".format(net.model_dir), X_test)
-    np.save("{}/y_test.npy".format(net.model_dir), y_test)
+    np.save("{}/X_test.npy".format(net.MODEL_DIR), X_test)
+    np.save("{}/y_test.npy".format(net.MODEL_DIR), y_test)
 
     print("training loop")
     # train network
     train_loss, val_loss, test_loss = [], [], []
-    for e in range(net.epoch_count):
+    for e in range(net.EPOCH_COUNT):
         t_start = time.time()  # timer for epoch
         net.create_epoch_dir()
 
@@ -49,10 +49,10 @@ if __name__ == '__main__':
         try:
             # split traning and validation set into batchs
             X_train_batchs, y_train_batchs = dataset.get_suffeled_batchs(
-                X_train, y_train, net.batch_size)
+                X_train, y_train, net.BATCH_SIZE)
 
             X_val_batchs, y_val_batchs = dataset.get_suffeled_batchs(
-                X_val, y_val, net.batch_size)
+                X_val, y_val, net.BATCH_SIZE)
 
             val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
             print("training: {}({}), validation: {}({}), interval({})" .format(
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     # # split test set into batchs
     # X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
-    #     X_test, y_test, net.batch_size)
+    #     X_test, y_test, net.BATCH_SIZE)
 
     # print("testing network")
     # # test network

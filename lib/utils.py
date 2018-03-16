@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import sys
 import math
 import numpy as np
@@ -109,7 +110,11 @@ def check_dir():
             os.makedirs(d)
 
 
-def read_param(param_line):
+def read_params(json_dir="params.json"):
+    return json.loads(open(json_dir).read())
+
+
+def regex_params(param_line):
     regex = "^.*=(.*)$"
     return re.findall(regex, param_line)[0]
 
@@ -123,17 +128,17 @@ def get_params_from_disk():
         pass
 
     try:
-        learn_rate = float(read_param(f.readline()))
+        learn_rate = float(regex_params(f.readline()))
     except:
         learn_rate = None
 
     try:
-        batch_size = int(read_param(f.readline()))
+        batch_size = int(regex_params(f.readline()))
     except:
         batch_size = None
 
     try:
-        epoch = int(read_param(f.readline()))
+        epoch = int(regex_params(f.readline()))
     except:
         epoch = None
 
