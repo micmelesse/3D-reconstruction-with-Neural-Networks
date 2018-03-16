@@ -1,7 +1,7 @@
 import os
 import sys
 import re
-
+import json
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -19,33 +19,16 @@ class Network:
     def __init__(self, params=None):
         # read params
         if params is None:
-            learn_rate, batch_size, epoch_count = utils.get_params_from_disk()
-            if learn_rate is None:
-                learn_rate = 0.01
-            if batch_size is None:
-                batch_size = 16
-            if epoch_count is None:
-                epoch_count = 5
-        else:
-            learn_rate = params['learn_rate']
-            batch_size = params['batch_size']
-            epoch_count = params['epoch_count']
+            params = json.loads(open('params.json').read())["TRAIN_CONST"]
 
-        print("learn_rate {}, epoch_count {}, batch_size {}".format(
-            learn_rate, epoch_count, batch_size))
-
-        # create model_dir
-        create_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        model_dir = "out/model_{}_L:{}_E:{}_B:{}".format(
-            create_time, learn_rate, epoch_count, batch_size)
-        if not os.path.isdir(model_dir):
-            os.makedirs(model_dir)
-
-        # net variables
-        self.model_dir = model_dir
-        self.learn_rate = learn_rate
-        self.batch_size = batch_size
-        self.epoch_count = epoch_count
+        self.LEARN_RATE = params['LEARN_RATE']
+        self.BATCH_SIZE = params['BATCH_SIZE']
+        self.EPOCH_COUNT = params['EPOCH_COUNT']
+        self.CREATE_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        self.MODEL_DIR = "out/model_{}_L:{}_E:{}_B:{}".format(
+            self.CREATE_TIME, self.LEARN_RATE, self.EPOCH_COUNT, self.BATCH_SIZE)
+        if not os.path.isdir(self.MODEL_DIR):
+            os.makedirs(self.MODEL_DIR)
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
@@ -82,7 +65,7 @@ class Network:
         self.step_count = tf.Variable(
             0, trainable=False, name="step_count")
         optimizer = tf.train.GradientDescentOptimizer(
-            learning_rate=learn_rate)
+            learning_rate=self.LEARN_RATE)
         grads_and_vars = optimizer.compute_gradients(self.loss)
         self.apply_grad = optimizer.apply_gradients(
             grads_and_vars, global_step=self.step_count)
@@ -90,11 +73,12 @@ class Network:
         # misc op
         print("misc op")
         self.print = tf.Print(
-            self.loss, [self.step_count, learn_rate, self.loss])
+            self.loss, [self.step_count, self.LEARN_RATE, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
-        tf.global_variables_initializer().run()
+
         print("initalize variables")
+        tf.global_variables_initializer().run()
 
         # pointers to training objects
         self.train_writer = None
@@ -104,11 +88,11 @@ class Network:
     # init network
     def init(self):
         self.train_writer = tf.summary.FileWriter(
-            "{}/train".format(self.model_dir), self.sess.graph)
+            "{}/train".format(self.MODEL_DIR), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
-            "{}/val".format(self.model_dir), self.sess.graph)
+            "{}/val".format(self.MODEL_DIR), self.sess.graph)
         self.test_writer = tf.summary.FileWriter(
-            "{}/test".format(self.model_dir), self.sess.graph)
+            "{}/test".format(self.MODEL_DIR), self.sess.graph)
 
     def step(self, data, label, step_type):
         x = dataset.from_npy(data)
@@ -132,19 +116,19 @@ class Network:
 
     def create_epoch_dir(self):
         cur_ind = self.epoch_index()
-        save_dir = os.path.join(self.model_dir, "epoch_{}".format(cur_ind+1))
+        save_dir = os.path.join(self.MODEL_DIR, "epoch_{}".format(cur_ind+1))
         os.makedirs(save_dir)
         return save_dir
 
     def get_epoch_dir(self):
         cur_ind = self.epoch_index()
         save_dir = os.path.join(
-            self.model_dir, "epoch_{}".format(cur_ind))
+            self.MODEL_DIR, "epoch_{}".format(cur_ind))
         return save_dir
 
     def epoch_index(self):
         i = 0
-        while os.path.exists(os.path.join(self.model_dir, "epoch_{}".format(i))):
+        while os.path.exists(os.path.join(self.MODEL_DIR, "epoch_{}".format(i))):
             i += 1
         return i-1
 
@@ -162,3 +146,11 @@ class Network:
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
+
+    def info(self):
+        print("LEARN_RATE:{}".format(
+            self.LEARN_RATE))
+        print("EPOCH_COUNT:{}".format(
+            self.EPOCH_COUNT))
+        print("BATCH_SIZE:{}".format(
+            self.BATCH_SIZE))
