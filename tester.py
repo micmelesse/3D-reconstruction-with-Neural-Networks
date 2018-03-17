@@ -7,7 +7,7 @@ import lib.utils as utils
 
 
 if __name__ == '__main__':
-    MODEL_DIR = "/Users/micmelesse/Documents/3D-reconstruction-with-neural-networks/aws/model_2018-03-15_18:04:43_L:0.001_E:10_B:16/epoch_0"
+    MODEL_DIR = utils.read_params()['TRAIN_PARAMS']['LOG_DIR']
 
     net = network.Network()
     net.restore(MODEL_DIR)
