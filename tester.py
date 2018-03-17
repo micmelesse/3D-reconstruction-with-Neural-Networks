@@ -13,6 +13,7 @@ if __name__ == '__main__':
     net.restore(MODEL_DIR)
     X_test = np.load("{}/X_test.npy".format(os.path.dirname(MODEL_DIR)))
     y_test = np.load("{}/y_test.npy".format(os.path.dirname(MODEL_DIR)))
+    os.makedirs("{}/epoch_test".format(MODEL_DIR))
 
     # split test set into batchs
     X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
@@ -26,8 +27,6 @@ if __name__ == '__main__':
         X = dataset.from_npy(X_test_batchs.popleft())
         y = dataset.from_npy(y_test_batchs.popleft())
         y_hat = net.predict(X)
-
-        os.makedirs("{}/epoch_test".format(MODEL_DIR))
 
         utils.vis_multichannel(
             X[0][1], "{}/epoch_test/feature_maps_{}.png".format(MODEL_DIR, i))
