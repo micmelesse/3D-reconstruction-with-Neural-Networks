@@ -19,7 +19,7 @@ if __name__ == '__main__':
     def save_loss(loss_arr, loss_type):
         save_dir = net.get_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_arr)
-        plt.plot(np.array(loss_arr)[-1])
+        plt.plot(np.array(loss_arr).flat)
         plt.savefig("{}/plot_{}_loss.png".format(save_dir, loss_type),
                     bbox_inches='tight')
         plt.close()

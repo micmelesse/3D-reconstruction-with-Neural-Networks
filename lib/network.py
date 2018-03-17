@@ -27,8 +27,6 @@ class Network:
         self.CREATE_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self.MODEL_DIR = "out/model_{}_L:{}_E:{}_B:{}".format(
             self.CREATE_TIME, self.LEARN_RATE, self.EPOCH_COUNT, self.BATCH_SIZE)
-        if not os.path.isdir(self.MODEL_DIR):
-            os.makedirs(self.MODEL_DIR)
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
@@ -87,6 +85,8 @@ class Network:
 
     # init network
     def init(self):
+        if not os.path.isdir(self.MODEL_DIR):
+            os.makedirs(self.MODEL_DIR)
         self.train_writer = tf.summary.FileWriter(
             "{}/train".format(self.MODEL_DIR), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
@@ -106,13 +106,35 @@ class Network:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count], {
                 self.X: x, self.Y: y})
             if step_type == "val":
-                print("validation step")
                 self.val_writer.add_summary(out[1], out[3])
             elif step_type == "test":
                 self.test_writer.add_summary(out[1], out[3])
 
         # return the loss
         return out[0]
+
+    def save(self):
+        cur_dir = self.get_epoch_dir()
+        epoch_name = utils.grep_epoch_name(cur_dir)
+        model_builder = tf.saved_model.builder.SavedModelBuilder(
+            cur_dir+"/model")
+        model_builder.add_meta_graph_and_variables(self.sess, [epoch_name])
+        model_builder.save()
+
+    def restore(self, epoch_dir):
+        epoch_name = utils.grep_epoch_name(epoch_dir)
+        tf.saved_model.loader.load(self.sess, [epoch_name], epoch_dir+"/model")
+
+    def predict(self, x):
+        return self.sess.run([self.prediction], {self.X: x})[0]
+
+    def info(self):
+        print("LEARN_RATE:{}".format(
+            self.LEARN_RATE))
+        print("EPOCH_COUNT:{}".format(
+            self.EPOCH_COUNT))
+        print("BATCH_SIZE:{}".format(
+            self.BATCH_SIZE))
 
     def create_epoch_dir(self):
         cur_ind = self.epoch_index()
@@ -131,26 +153,3 @@ class Network:
         while os.path.exists(os.path.join(self.MODEL_DIR, "epoch_{}".format(i))):
             i += 1
         return i-1
-
-    def save(self):
-        cur_dir = self.get_epoch_dir()
-        epoch_name = utils.get_epoch_name(cur_dir)
-        model_builder = tf.saved_model.builder.SavedModelBuilder(
-            cur_dir+"/model")
-        model_builder.add_meta_graph_and_variables(self.sess, [epoch_name])
-        model_builder.save()
-
-    def restore(self, epoch_dir):
-        epoch_name = utils.get_epoch_name(epoch_dir)
-        tf.saved_model.loader.load(self.sess, [epoch_name], epoch_dir+"/model")
-
-    def predict(self, x):
-        return self.sess.run([self.prediction], {self.X: x})[0]
-
-    def info(self):
-        print("LEARN_RATE:{}".format(
-            self.LEARN_RATE))
-        print("EPOCH_COUNT:{}".format(
-            self.EPOCH_COUNT))
-        print("BATCH_SIZE:{}".format(
-            self.BATCH_SIZE))

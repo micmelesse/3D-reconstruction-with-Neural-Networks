@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def get_epoch_name(epoch_dir):
+def grep_epoch_name(epoch_dir):
     return re.search(".*(epoch_.*).*", epoch_dir).group(1)
 
 
@@ -114,7 +114,7 @@ def read_params(json_dir="params.json"):
     return json.loads(open(json_dir).read())
 
 
-def regex_params(param_line):
+def grep_params(param_line):
     regex = "^.*=(.*)$"
     return re.findall(regex, param_line)[0]
 
@@ -128,17 +128,17 @@ def get_params_from_disk():
         pass
 
     try:
-        learn_rate = float(regex_params(f.readline()))
+        learn_rate = float(grep_params(f.readline()))
     except:
         learn_rate = None
 
     try:
-        batch_size = int(regex_params(f.readline()))
+        batch_size = int(grep_params(f.readline()))
     except:
         batch_size = None
 
     try:
-        epoch = int(regex_params(f.readline()))
+        epoch = int(grep_params(f.readline()))
     except:
         epoch = None
 
