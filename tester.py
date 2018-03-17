@@ -27,7 +27,7 @@ if __name__ == '__main__':
         y = dataset.from_npy(y_test_batchs.popleft())
         y_hat = net.predict(X)
 
-        os.makedirs("{}/tests".format(MODEL_DIR))
+        os.makedirs("{}/epoch_test".format(MODEL_DIR))
 
         utils.vis_multichannel(
             X[0][1], "{}/epoch_test/feature_maps_{}.png".format(MODEL_DIR, i))
