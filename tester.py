@@ -7,7 +7,7 @@ import lib.utils as utils
 
 
 if __name__ == '__main__':
-    MODEL_DIR = utils.read_params()['TRAIN_PARAMS']['LOG_DIR']
+    MODEL_DIR = utils.read_params()['TRAIN_PARAMS']['TEST_DIR']
 
     net = network.Network()
     net.restore(MODEL_DIR)
