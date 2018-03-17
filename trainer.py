@@ -89,15 +89,3 @@ if __name__ == '__main__':
         net.save()
         save_loss(train_loss, 'train')
         save_loss(val_loss, 'val')
-
-    # # split test set into batchs
-    # X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
-    #     X_test, y_test, net.BATCH_SIZE)
-
-    # print("testing network")
-    # # test network
-    # while X_test_batchs and y_test_batchs:
-    #     X = X_test_batchs.popleft()
-    #     y = y_test_batchs.popleft()
-    #     test_loss.append(net.step(X, y, 'test'))
-    # save_loss(test_loss, 'test')

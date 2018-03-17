@@ -7,13 +7,14 @@ import lib.utils as utils
 
 
 if __name__ == '__main__':
-    MODEL_DIR = utils.read_params()['TEST_PARAMS']['TEST_DIR']
+    # MODEL_DIR = utils.read_params()['TEST_PARAMS']['TEST_DIR']
+    EPOCH_DIR = "/Users/micmelesse/Documents/3D-reconstruction-with-neural-networks/aws/model_2018-03-13_21:02:57_L:0.001_E:10_B:16/epoch_0"
 
     net = network.Network()
-    net.restore(MODEL_DIR)
-    X_test = np.load("{}/X_test.npy".format(os.path.dirname(MODEL_DIR)))
-    y_test = np.load("{}/y_test.npy".format(os.path.dirname(MODEL_DIR)))
-    os.makedirs("{}/epoch_test".format(MODEL_DIR))
+    net.restore(EPOCH_DIR)
+    X_test, y_test = dataset.get_preprocessed_dataset()
+    EPOCH_TEST_DIR = "{}/predictions".format(EPOCH_DIR)
+    os.makedirs(EPOCH_TEST_DIR)
 
     # split test set into batchs
     X_test_batchs, y_test_batchs = dataset.get_suffeled_batchs(
@@ -29,9 +30,9 @@ if __name__ == '__main__':
         y_hat = net.predict(X)
 
         utils.vis_multichannel(
-            X[0][1], "{}/epoch_test/feature_maps_{}.png".format(MODEL_DIR, i))
+            X[0][1], "{}/feature_maps_{}.png".format(EPOCH_TEST_DIR, i))
         utils.vis_voxel(
-            y[0], "{}/epoch_test/target_{}.png".format(MODEL_DIR, i))
+            y[0], "{}/target_{}.png".format(EPOCH_TEST_DIR, i))
         utils.vis_voxel(
-            y_hat[0], "{}/epoch_test/prediction_{}.png".format(MODEL_DIR, i))
+            y_hat[0], "{}/prediction_{}.png".format(EPOCH_TEST_DIR, i))
     print("... done")

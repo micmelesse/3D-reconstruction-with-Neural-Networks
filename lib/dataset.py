@@ -94,6 +94,12 @@ def get_preprocessed_dataset():
     return data_all, label_all
 
 
+def get_model_testset(model_epoch_dir):
+    X_test = np.load("{}/X_test.npy".format(os.path.dirname(model_epoch_dir)))
+    y_test = np.load("{}/y_test.npy".format(os.path.dirname(model_epoch_dir)))
+    return X_test, y_test
+
+
 def main():
     f = None
     try:
@@ -102,7 +108,7 @@ def main():
         pass
 
     try:
-        example_count = int(utils.read_param(f.readline()))
+        example_count = int(utils.grep_params(f.readline()))
     except:
         example_count = None
 

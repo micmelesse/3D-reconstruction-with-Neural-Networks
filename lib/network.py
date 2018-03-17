@@ -117,13 +117,14 @@ class Network:
         cur_dir = self.get_epoch_dir()
         epoch_name = utils.grep_epoch_name(cur_dir)
         model_builder = tf.saved_model.builder.SavedModelBuilder(
-            cur_dir+"/model")
+            cur_dir + "/model")
         model_builder.add_meta_graph_and_variables(self.sess, [epoch_name])
         model_builder.save()
 
     def restore(self, epoch_dir):
         epoch_name = utils.grep_epoch_name(epoch_dir)
-        tf.saved_model.loader.load(self.sess, [epoch_name], epoch_dir+"/model")
+        tf.saved_model.loader.load(
+            self.sess, [epoch_name], epoch_dir + "/model")
 
     def predict(self, x):
         return self.sess.run([self.prediction], {self.X: x})[0]
