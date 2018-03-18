@@ -1,2 +1,2 @@
-source params/logs.params
-tensorboard --logdir=$log_dir
+source read_params.sh
+tensorboard --logdir=$LOG_DIR
