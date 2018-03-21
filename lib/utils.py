@@ -7,44 +7,36 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from skimage import exposure
+from PIL import Image
 
 
 def grep_epoch_name(epoch_dir):
     return re.search(".*(epoch_.*).*", epoch_dir).group(1)
 
 
+def vis_montage(im, axis, f_name=None):
+    ret_im = exposure.rescale_intensity(montage(im, axis))
+    return vis_im(ret_im, f_name)
+
+
 def vis_im(im, f_name=None):
     fig = plt.figure()
     if f_name is None:
         return plt.imshow(im)
-
     plt.imsave(f_name, im)
     plt.clf()
     plt.close()
 
 
 def vis_multichannel(im, f_name=None):
-    fig = plt.figure()
-    mulitchannel_montage = montage_multichannel(im)
-    if f_name is None:
-        return plt.imshow(mulitchannel_montage)
-
-    plt.imsave(f_name, mulitchannel_montage)
-    plt.clf()
-    plt.close()
-    return
+    mulitchannel_montage = montage(im, -1)
+    return vis_im(mulitchannel_montage, f_name)
 
 
 def vis_sequence(im, f_name=None):
-    fig = plt.figure()
-    sequence_montage = montage_sequence(im)
-    if f_name is None:
-        return plt.imshow(sequence_montage)
-
-    plt.imsave(f_name, sequence_montage)
-    plt.clf()
-    plt.close()
-    return
+    sequence_montage = montage(im, 0)
+    return vis_im(sequence_montage, f_name)
 
 
 def vis_voxel(vox, f_name=None):
@@ -58,14 +50,6 @@ def vis_voxel(vox, f_name=None):
     plt.savefig(f_name, bbox_inches='tight')
     plt.clf()
     plt.close()
-
-
-def montage_sequence(im_seqeunce):
-    return montage(im_seqeunce, 0)
-
-
-def montage_multichannel(im_multichannel):
-    return montage(im_multichannel, -1)
 
 
 def montage(packed_ims, axis):

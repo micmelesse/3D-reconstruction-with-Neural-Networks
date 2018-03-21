@@ -4,13 +4,11 @@ import sys
 import math
 import random
 import tarfile
-
-
 import numpy as np
 import pandas as pd
 from collections import deque
-from lib import path, utils, render
 from third_party import binvox_rw
+from lib import path, utils, render
 from sklearn import model_selection
 
 
@@ -101,21 +99,11 @@ def get_model_testset(model_epoch_dir):
 
 
 def main():
-    f = None
-    try:
-        f = open("params/dataset.params")
-    except:
-        pass
-
-    try:
-        example_count = int(utils.grep_params(f.readline()))
-    except:
-        example_count = None
-
-    if f:
-        f.close()
-
+    example_count = utils.read_params()['TRAIN_PARAMS']['SAMPLE_SIZE']
     if not os.path.isfile("out/paths.csv"):
         path.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
-
     to_npy_data_N_label(read_paths(), N=example_count)
+
+
+if __name__ == '__main__':
+    main()
