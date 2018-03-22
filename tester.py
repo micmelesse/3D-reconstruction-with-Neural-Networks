@@ -7,7 +7,7 @@ import lib.utils as utils
 
 
 if __name__ == '__main__':
-    # MODEL_DIR = utils.read_params()['TEST_PARAMS']['TEST_DIR']
+    # MODEL_DIR = utils.read_params()['DIRS']['TEST_DIR']
     EPOCH_DIR = "/Users/micmelesse/Documents/3D-reconstruction-with-neural-networks/aws/model_2018-03-13_21:02:57_L:0.001_E:10_B:16/epoch_0"
 
     net = network.Network()
