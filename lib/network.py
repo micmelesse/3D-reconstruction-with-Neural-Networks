@@ -53,9 +53,16 @@ class Network:
         # loss
         print("loss")
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
-        voxel_softmax = loss_module.Voxel_Softmax(self.Y, logits)
-        self.prediction = voxel_softmax.prediction
-        self.loss = voxel_softmax.batch_loss
+        with tf.name_scope("loss"):
+            # softmax =
+            log_softmax = tf.nn.log_softmax(logits)  # avoids log(0)
+            label = tf.one_hot(self.Y, 2)
+            cross_entropy = tf.reduce_sum(-tf.multiply(label,
+                                                       log_softmax), axis=-1)
+            losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
+            self.prediction = tf.argmax(tf.nn.softmax(logits), -1)
+            self.loss = tf.reduce_mean(losses)
+
         tf.summary.scalar('loss', self.loss)
 
         # optimizer
@@ -102,7 +109,7 @@ class Network:
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[1], out[4])
         else:
-            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count], {
+            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction], {
                 self.X: x, self.Y: y})
             if step_type == "val":
                 self.val_writer.add_summary(out[1], out[3])

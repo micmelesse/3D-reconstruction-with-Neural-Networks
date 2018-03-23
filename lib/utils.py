@@ -3,6 +3,7 @@ import re
 import json
 import sys
 import math
+import shutil
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -104,4 +105,10 @@ def grep_params(param_line):
 
 def make_dir(file_dir):
     if not os.path.isdir(file_dir):
+        os.makedirs(file_dir)
+
+
+def clean_dir(file_dir):
+    if os.path.isdir(file_dir):
+        shutil.rmtree(file_dir)
         os.makedirs(file_dir)
