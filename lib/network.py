@@ -85,8 +85,7 @@ class Network:
 
     # init network
     def init(self):
-        if not os.path.isdir(self.MODEL_DIR):
-            os.makedirs(self.MODEL_DIR)
+        utils.make_dir(self.MODEL_DIR)
         self.train_writer = tf.summary.FileWriter(
             "{}/train".format(self.MODEL_DIR), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
@@ -140,7 +139,7 @@ class Network:
     def create_epoch_dir(self):
         cur_ind = self.epoch_index()
         save_dir = os.path.join(self.MODEL_DIR, "epoch_{}".format(cur_ind+1))
-        os.makedirs(save_dir)
+        utils.make_dir(save_dir)
         return save_dir
 
     def get_epoch_dir(self):

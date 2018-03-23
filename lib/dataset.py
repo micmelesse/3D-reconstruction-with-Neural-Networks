@@ -92,9 +92,12 @@ def get_preprocessed_dataset():
     return data_all, label_all
 
 
-def get_model_testset(model_epoch_dir):
-    X_test = np.load("{}/X_test.npy".format(os.path.dirname(model_epoch_dir)))
-    y_test = np.load("{}/y_test.npy".format(os.path.dirname(model_epoch_dir)))
+def get_model_testset(epoch_dir):
+    model_dir = os.path.dirname(epoch_dir)
+    X_test = np.load(
+        "{}/X_test.npy".format(model_dir))
+    y_test = np.load(
+        "{}/y_test.npy".format(model_dir))
     return X_test, y_test
 
 

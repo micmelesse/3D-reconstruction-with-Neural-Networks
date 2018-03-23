@@ -52,6 +52,14 @@ def vis_voxel(vox, f_name=None):
     plt.close()
 
 
+def hstack(a, b):
+    return np.hstack((a, b))
+
+
+def vstack(a, b):
+    return np.vstack((a, b))
+
+
 def montage(packed_ims, axis):
     """display as an Image the contents of packed_ims in a square gird along an aribitray axis"""
     if packed_ims.ndim == 2:
@@ -79,19 +87,10 @@ def montage(packed_ims, axis):
     return matrix
 
 
-def hstack(a, b):
-    return np.hstack((a, b))
-
-
-def vstack(a, b):
-    return np.vstack((a, b))
-
-
 def check_dir():
-    TRAIN_DIRS = ["out", "params", "data", "aws"]
+    TRAIN_DIRS = ["out", "data", "aws"]
     for d in TRAIN_DIRS:
-        if not os.path.isdir(d):
-            os.makedirs(d)
+        make_dir(d)
 
 
 def read_params(json_dir="params.json"):
@@ -103,30 +102,6 @@ def grep_params(param_line):
     return re.findall(regex, param_line)[0]
 
 
-def get_params_from_disk():
-    f = None
-
-    try:
-        f = open("params/train.params")
-    except:
-        pass
-
-    try:
-        learn_rate = float(grep_params(f.readline()))
-    except:
-        learn_rate = None
-
-    try:
-        batch_size = int(grep_params(f.readline()))
-    except:
-        batch_size = None
-
-    try:
-        epoch = int(grep_params(f.readline()))
-    except:
-        epoch = None
-
-    if f:
-        f.close()
-
-    return learn_rate, batch_size, epoch
+def make_dir(file_dir):
+    if not os.path.isdir(file_dir):
+        os.makedirs(file_dir)

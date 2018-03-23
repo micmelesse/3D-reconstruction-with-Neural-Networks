@@ -3,8 +3,9 @@ import sys
 import random
 import trimesh
 import numpy as np
-from PIL import Image
 import lib.path as path
+import lib.utils as utils
+from PIL import Image
 
 
 def get_render_sequence(render_paths):
@@ -29,7 +30,7 @@ def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24
             continue
         try:
             mesh_obj = trimesh.load_mesh(mesh_path)
-        except Exception as e:
+        except:
             print("failed to load {}".format(mesh_path))
             continue
 
@@ -58,7 +59,7 @@ def write_renders_to_disk(mesh, renders, render_count=10):
         renders))
     # FIXME: stupid but clean
     os.system("rm -rf {}".format(renders))
-    os.makedirs(renders)
+    utils.make_dir(renders)
     scene = mesh.scene()
     for i in range(render_count):
         angle = np.radians(random.randint(15, 30))
