@@ -85,11 +85,10 @@ def read_paths(paths_dir="out/paths.csv"):
     return pd.read_csv(paths_dir, index_col=0).as_matrix()
 
 
+# get data and labels
 def get_preprocessed_dataset():
-    # get data
-    data_all = np.array(sorted(path.construct_path_lists("out", "data_")))
-    label_all = np.array(sorted(path.construct_path_lists("out", "labels_")))
-
+    data_all = np.array(sorted(path.construct_path_lists("out", ["_x.npy"])))
+    label_all = np.array(sorted(path.construct_path_lists("out", ["_y.npy"])))
     return data_all, label_all
 
 

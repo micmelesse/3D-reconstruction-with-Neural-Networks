@@ -5,8 +5,6 @@ from filecmp import dircmp
 
 
 def construct_path_lists(data_dir, file_filter):
-    # print("[construct_path_lists] parsing dir \"/{}\" for files with \"{}\" in their name".format(data_dir, file_filter))
-
     if isinstance(file_filter, str):
         file_filter = [file_filter]
     paths = [[] for _ in range(len(file_filter))]
