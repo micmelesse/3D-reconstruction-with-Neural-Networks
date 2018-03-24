@@ -21,23 +21,22 @@ if __name__ == '__main__':
         save_dir = net.get_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_arr)
         plt.plot(loss_arr.flatten())
-        plt.savefig("{}/{}_loss_plot.png".format(save_dir, loss_type),
+        plt.savefig("{}/{}_loss.png".format(save_dir, loss_type),
                     bbox_inches='tight')
         plt.close()
 
-    # init network
-    net = network.Network()
-    net.init()
-
     # get preprocessed data
     data_all, label_all = dataset.get_preprocessed_dataset()
-
     # split dataset
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
         data_all, label_all)
 
     np.save("{}/X_test.npy".format(net.MODEL_DIR), X_test)
     np.save("{}/y_test.npy".format(net.MODEL_DIR), y_test)
+
+    # init network
+    net = network.Network()
+    net.init()
 
     print("training loop")
     # train network

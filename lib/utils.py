@@ -26,8 +26,8 @@ def vis_im(im, f_name=None):
     if f_name is None:
         return plt.imshow(im)
     plt.imsave(f_name, im)
-    fig.clf()
-    fig.close()
+    plt.clf()
+    plt.close()
 
 
 def vis_multichannel(im, f_name=None):
@@ -40,13 +40,15 @@ def vis_sequence(im, f_name=None):
     return vis_im(sequence_montage, f_name)
 
 
-def vis_voxel(vox, colors=None, f_name=None):
+def vis_voxel(vox, color=None, f_name=None):
+
+    if color is None:
+        color = np.full((32, 32, 32), np.random.rand(1))
+
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    if colors is None:
-        ax.voxels(vox, edgecolor='k')
-    else:
-        ax.voxels(vox, facecolors=colors, edgecolor='k')
+    color_map = plt.get_cmap('Spectral')
+    ax.voxels(vox, facecolors=color_map(color), edgecolor='k')
 
     if f_name is None:
         return fig.show()
@@ -125,9 +127,5 @@ def clean_dir(file_dir):
         os.makedirs(file_dir)
 
 
-def vis_validation(X_batch, y_batch, y_hat_batch, cur_dir):
-
-    for X, y, y_hat in zip(X_batch, y_batch, y_hat_batch):
-        montage_sequence(X)
-        vis_voxel(y, "{}/target_{}.png".format(cur_dir, i))
-        uvis_voxel(y_hat, "{}/prediction_{}.png".format(cur_dir, i))
+def get_file_name(path):
+    return os.path.splitext(os.path.basename(path))[0]

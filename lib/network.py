@@ -101,18 +101,25 @@ class Network:
             "{}/test".format(self.MODEL_DIR), self.sess.graph)
 
     def step(self, data, label, step_type):
+        cur_dir = self.get_epoch_dir()
         x = dataset.from_npy(data)
         y = dataset.from_npy(label)
-        cur_dir = self.get_epoch_dir()
+        x_name = utils.get_file_name(data[0])
+        y_name = utils.get_file_name(label[0])
+
         if step_type == "train":
             out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count], {
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[1], out[4])
         else:
-            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction], {
+            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
 
-            utils.vis_validation(x, y, out[4], cur_dir)
+            utils.vis_sequence(x[0], "{}/{}.png".format(cur_dir, x_name))
+            utils.vis_voxel(y[0], "{}/{}.png".format(cur_dir, y_name))
+            utils.vis_voxel(
+                out[4][0], out[5][0], "{}/{}_prediction.png".format(cur_dir, y_name))
+
             if step_type == "val":
                 self.val_writer.add_summary(out[1], out[3])
             elif step_type == "test":
