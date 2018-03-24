@@ -58,6 +58,10 @@ def vis_voxel(vox, color=None, f_name=None):
     fig.close()
 
 
+def vis_prediction(y_hat):
+    return vis_voxel(y_hat[0][0], y_hat[1][0][:, :, :, 0])
+
+
 def hstack(a, b):
     return np.hstack((a, b))
 
