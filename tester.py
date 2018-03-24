@@ -32,7 +32,7 @@ if __name__ == '__main__':
         X = dataset.from_npy(X_test_batchs.popleft())
         y = dataset.from_npy(y_test_batchs.popleft())
         y_hat = net.predict(X)
-
+        
         utils.vis_multichannel(
             X[0][1], "{}/feature_maps_{}.png".format(PREDICTIONS_DIR, i))
         utils.vis_voxel(

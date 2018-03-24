@@ -26,31 +26,34 @@ def vis_im(im, f_name=None):
     if f_name is None:
         return plt.imshow(im)
     plt.imsave(f_name, im)
-    plt.clf()
-    plt.close()
+    fig.clf()
+    fig.close()
 
 
 def vis_multichannel(im, f_name=None):
-    mulitchannel_montage = montage(im, -1)
+    mulitchannel_montage = montage_multichannel(im)
     return vis_im(mulitchannel_montage, f_name)
 
 
 def vis_sequence(im, f_name=None):
-    sequence_montage = montage(im, 0)
+    sequence_montage = montage_sequence(im)
     return vis_im(sequence_montage, f_name)
 
 
-def vis_voxel(vox, f_name=None):
+def vis_voxel(vox, colors=None, f_name=None):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.voxels(vox, edgecolor='k')
-    ax.view_init(30, 30)
-    if f_name is None:
-        return plt.show()
+    if colors is None:
+        ax.voxels(vox, edgecolor='k')
+    else:
+        ax.voxels(vox, facecolors=colors, edgecolor='k')
 
-    plt.savefig(f_name, bbox_inches='tight')
-    plt.clf()
-    plt.close()
+    if f_name is None:
+        return fig.show()
+
+    fig.savefig(f_name, bbox_inches='tight')
+    fig.clf()
+    fig.close()
 
 
 def hstack(a, b):
@@ -59,6 +62,14 @@ def hstack(a, b):
 
 def vstack(a, b):
     return np.vstack((a, b))
+
+
+def montage_multichannel(im):
+    return montage(im, -1)
+
+
+def montage_sequence(im):
+    return montage(im, 0)
 
 
 def montage(packed_ims, axis):
@@ -112,3 +123,11 @@ def clean_dir(file_dir):
     if os.path.isdir(file_dir):
         shutil.rmtree(file_dir)
         os.makedirs(file_dir)
+
+
+def vis_validation(X_batch, y_batch, y_hat_batch, cur_dir):
+
+    for X, y, y_hat in zip(X_batch, y_batch, y_hat_batch):
+        montage_sequence(X)
+        vis_voxel(y, "{}/target_{}.png".format(cur_dir, i))
+        uvis_voxel(y_hat, "{}/prediction_{}.png".format(cur_dir, i))
