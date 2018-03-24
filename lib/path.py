@@ -39,11 +39,10 @@ def write_path_csv(data_dir, label_dir):
         lambda data_row: os.path.join(label_dir, data_row.common_dirs), axis=1)
 
     table = []
-    for i, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
-        data_row = []
+    for n, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
+        data_row = [os.path.dirname(n)+"_"+os.path.basename(n)]
         data_row += construct_path_lists(d, [".png"])
         data_row += construct_path_lists(l, [".binvox"])
-        data_row += [i]
         table.append(data_row)
 
     paths = pd.DataFrame(table)

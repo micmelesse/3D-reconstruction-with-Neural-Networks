@@ -54,9 +54,10 @@ def to_npy_data_N_label(paths, N=None):
 
     print("convert {} datapoints and labels to npy".format(N))
     for i in range(N):
-        to_npy('out/data_{:06d}'.format(i),
-               load_data(paths[i, 0:-2]))
-        to_npy('out/labels_{:06d}'.format(i), load_label(paths[i, -2]))
+        model_name = paths[i, 0]
+        to_npy('out/{}_x'.format(model_name),
+               load_data(paths[i, 1:-1]))
+        to_npy('out/{}_y'.format(model_name), load_label(paths[i, -1]))
 
 
 def get_suffeled_batchs(data, label, batch_size):
