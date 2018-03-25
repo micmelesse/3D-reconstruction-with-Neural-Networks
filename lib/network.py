@@ -81,7 +81,7 @@ class Network:
         # misc op
         print("misc op")
         self.print = tf.Print(
-            self.loss, [self.step_count, self.LEARN_RATE, self.loss, self.softmax])
+            self.loss, [self.step_count, self.LEARN_RATE, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
 
@@ -123,7 +123,6 @@ class Network:
             out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[1], out[4])
-            vis_step()
 
         else:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction, self.softmax], {
@@ -131,6 +130,7 @@ class Network:
 
             if step_type == "val":
                 self.val_writer.add_summary(out[1], out[3])
+                vis_step()
             elif step_type == "test":
                 self.test_writer.add_summary(out[1], out[3])
 
