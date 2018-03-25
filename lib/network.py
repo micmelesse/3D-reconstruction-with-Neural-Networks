@@ -107,13 +107,27 @@ class Network:
         def vis_step(i=0):
             x_name = utils.get_file_name(data[i])
             y_name = utils.get_file_name(label[i])
-            utils.vis_sequence(x[i], "{}/{}.png".format(cur_dir, x_name))
-            utils.vis_voxel(y[i], color=np.full((32, 32, 32), 1),
-                            f_name="{}/{}.png".format(cur_dir, y_name))
+            sequence = x[i]
+            voxel = y[i]
+            softmax = out[-1][i]
+            softmax_0 = softmax[:, :, :, 0]
+            softmax_1 = softmax[:, :, :, 1]
+            prediction = out[-2][i]
+            step_count = out[-3]
+
+            utils.vis_sequence(
+                sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
+            utils.vis_voxel(voxel,
+                            f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
             utils.vis_voxel(
-                out[-1][i][:, :, :, 0], f_name="{}/{}_hat_0.png".format(cur_dir, y_name))
+                softmax_0, softmax_0, f_name="{}/{}_{}_softmax_0.png".format(cur_dir, step_count, y_name))
             utils.vis_voxel(
-                out[-1][i][:, :, :, 1], f_name="{}/{}_hat_1.png".format(cur_dir, y_name))
+                softmax_1, softmax_1, f_name="{}/{}_{}_softmax_1.png".format(cur_dir, step_count, y_name))
+
+            utils.vis_voxel(
+                prediction, softmax_0, f_name="{}/{}_{}_prediction_0.png".format(cur_dir, step_count, y_name))
+            utils.vis_voxel(
+                prediction, softmax_1, f_name="{}/{}_{}_prediction_1.png".format(cur_dir, step_count, y_name))
 
         cur_dir = self.get_epoch_dir()
         x = dataset.from_npy(data)
@@ -122,17 +136,17 @@ class Network:
         if step_type == "train":
             out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
-            self.train_writer.add_summary(out[1], out[4])
+            self.train_writer.add_summary(out[1], out[-3])
 
         else:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
 
             if step_type == "val":
-                self.val_writer.add_summary(out[1], out[3])
+                self.val_writer.add_summary(out[1], out[-3])
                 vis_step()
             elif step_type == "test":
-                self.test_writer.add_summary(out[1], out[3])
+                self.test_writer.add_summary(out[1], out[-3])
 
         # return the loss
         return out[0]

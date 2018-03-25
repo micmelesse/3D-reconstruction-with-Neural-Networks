@@ -17,10 +17,10 @@ from datetime import datetime
 if __name__ == '__main__':
 
     def save_loss(loss_arr, loss_type):
-        loss_arr = np.array(loss_arr)
+        loss_ndarr = np.array(loss_arr)
         save_dir = net.get_epoch_dir()
-        np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_arr)
-        plt.plot(loss_arr.flatten())
+        np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_ndarr)
+        plt.plot(loss_ndarr.flatten())
         plt.savefig("{}/{}_loss.png".format(save_dir, loss_type),
                     bbox_inches='tight')
         plt.close()
@@ -54,8 +54,8 @@ if __name__ == '__main__':
                 X_val, y_val, net.BATCH_SIZE)
 
             val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
-            print("training: {}({}), validation: {}({}), interval({})" .format(
-                len(X_train), len(X_train_batchs), len(X_val), len(X_val_batchs), val_interval))
+            print("training: {}, validation: {}" .format(
+                len(X_train_batchs), len(X_val_batchs)))
 
             # train step
             counter = 0

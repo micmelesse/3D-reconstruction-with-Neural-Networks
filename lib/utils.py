@@ -43,7 +43,7 @@ def vis_sequence(im, f_name=None):
 def vis_voxel(vox, color=None, f_name=None):
 
     if color is None:
-        color = vox
+        color = vox.astype(int)
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
