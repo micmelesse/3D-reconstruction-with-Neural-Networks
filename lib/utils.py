@@ -55,7 +55,7 @@ def vis_voxel(vox, color=None, f_name=None):
 
     fig.savefig(f_name, bbox_inches='tight')
     fig.clf()
-    fig.close()
+    plt.close()
 
 
 def vis_prediction(y_hat):

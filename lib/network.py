@@ -114,11 +114,13 @@ class Network:
         else:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
-
-            utils.vis_sequence(x[0], "{}/{}.png".format(cur_dir, x_name))
-            utils.vis_voxel(y[0], "{}/{}.png".format(cur_dir, y_name))
+            i = 0
+            utils.vis_sequence(x[i], "{}/{}.png".format(cur_dir, x_name))
+            utils.vis_voxel(y[i], f_name="{}/{}.png".format(cur_dir, y_name))
             utils.vis_voxel(
-                out[4][0], out[5][0], "{}/{}_prediction.png".format(cur_dir, y_name))
+                out[4][i], out[5][i][:, :, :, 0], "{}/{}_hat_0.png".format(cur_dir, y_name))
+            utils.vis_voxel(
+                out[4][i], out[5][i][:, :, :, 1], "{}/{}_hat_1.png".format(cur_dir, y_name))
 
             if step_type == "val":
                 self.val_writer.add_summary(out[1], out[3])
