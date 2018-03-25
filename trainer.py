@@ -26,17 +26,16 @@ if __name__ == '__main__':
         plt.close()
 
     # get preprocessed data
-    data_all, label_all = dataset.get_preprocessed_dataset()
+    data, label = dataset.get_preprocessed_dataset()
     # split dataset
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
-        data_all, label_all)
-
-    np.save("{}/X_test.npy".format(net.MODEL_DIR), X_test)
-    np.save("{}/y_test.npy".format(net.MODEL_DIR), y_test)
+        data, label)
 
     # init network
     net = network.Network()
     net.init()
+    np.save("{}/X_test.npy".format(net.MODEL_DIR), X_test)
+    np.save("{}/y_test.npy".format(net.MODEL_DIR), y_test)
 
     print("training loop")
     # train network
