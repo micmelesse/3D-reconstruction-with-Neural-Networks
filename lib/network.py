@@ -138,15 +138,17 @@ class Network:
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[1], out[-3])
 
+            vis_step()
         else:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
 
             if step_type == "val":
                 self.val_writer.add_summary(out[1], out[-3])
-                vis_step()
             elif step_type == "test":
                 self.test_writer.add_summary(out[1], out[-3])
+
+            vis_step()
 
         # return the loss
         return out[0]
