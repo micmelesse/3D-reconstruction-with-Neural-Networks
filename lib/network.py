@@ -54,8 +54,11 @@ class Network:
         print("loss")
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
         with tf.name_scope("loss"):
-            self.softmax = tf.nn.softmax(self.logits)
-            log_softmax = tf.nn.log_softmax(self.logits)  # avoids log(0)
+            epsilon = 1e-10
+            self.softmax = tf.clip_by_value(
+                tf.nn.softmax(self.logits), epsilon, 1-epsilon)
+            log_softmax = tf.log(self.softmax)
+            # log_softmax = tf.nn.log_softmax(self.logits)  # avoids log(0)
             label = tf.one_hot(self.Y, 2)
             cross_entropy = tf.reduce_sum(-tf.multiply(label,
                                                        log_softmax), axis=-1)
@@ -78,7 +81,7 @@ class Network:
         # misc op
         print("misc op")
         self.print = tf.Print(
-            self.loss, [self.step_count, self.LEARN_RATE, self.loss])
+            self.loss, [self.step_count, self.LEARN_RATE, self.loss, self.softmax])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
 
@@ -101,26 +104,30 @@ class Network:
             "{}/test".format(self.MODEL_DIR), self.sess.graph)
 
     def step(self, data, label, step_type):
+        def vis_step(i=0):
+            x_name = utils.get_file_name(data[i])
+            y_name = utils.get_file_name(label[i])
+            utils.vis_sequence(x[i], "{}/{}.png".format(cur_dir, x_name))
+            utils.vis_voxel(y[i], color=np.full((32, 32, 32), 1),
+                            f_name="{}/{}.png".format(cur_dir, y_name))
+            utils.vis_voxel(
+                out[-1][i][:, :, :, 0], f_name="{}/{}_hat_0.png".format(cur_dir, y_name))
+            utils.vis_voxel(
+                out[-1][i][:, :, :, 1], f_name="{}/{}_hat_1.png".format(cur_dir, y_name))
+
         cur_dir = self.get_epoch_dir()
         x = dataset.from_npy(data)
         y = dataset.from_npy(label)
-        x_name = utils.get_file_name(data[0])
-        y_name = utils.get_file_name(label[0])
 
         if step_type == "train":
-            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count], {
+            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[1], out[4])
+            vis_step()
+
         else:
             out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction, self.softmax], {
                 self.X: x, self.Y: y})
-            i = 0
-            utils.vis_sequence(x[i], "{}/{}.png".format(cur_dir, x_name))
-            utils.vis_voxel(y[i], f_name="{}/{}.png".format(cur_dir, y_name))
-            utils.vis_voxel(
-                out[4][i], out[5][i][:, :, :, 0], "{}/{}_hat_0.png".format(cur_dir, y_name))
-            utils.vis_voxel(
-                out[4][i], out[5][i][:, :, :, 1], "{}/{}_hat_1.png".format(cur_dir, y_name))
 
             if step_type == "val":
                 self.val_writer.add_summary(out[1], out[3])
