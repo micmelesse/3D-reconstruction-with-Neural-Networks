@@ -115,8 +115,15 @@ class Network:
             prediction = out[-2][i]
             step_count = out[-3]
 
+            np.save(
+                "{}/{}_{}_softmax.npy".format(cur_dir, step_count, y_name), softmax)
+
+            np.save("{}/{}_{}_prediction.npy".format(cur_dir,
+                                                     step_count, y_name), prediction)
+
             utils.vis_sequence(
                 sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
+
             utils.vis_voxel(voxel,
                             f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
             utils.vis_voxel(
@@ -150,8 +157,7 @@ class Network:
 
             vis_step()
 
-        # return the loss
-        return out[0]
+        return out[0]  # return the loss
 
     def save(self):
         cur_dir = self.get_epoch_dir()
