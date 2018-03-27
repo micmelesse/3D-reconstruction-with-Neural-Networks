@@ -53,19 +53,9 @@ class Network:
         # loss
         print("loss")
         self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
-        with tf.name_scope("loss"):
-            epsilon = 1e-10
-            self.softmax = tf.clip_by_value(
-                tf.nn.softmax(self.logits), epsilon, 1-epsilon)
-            log_softmax = tf.log(self.softmax)
-            # log_softmax = tf.nn.log_softmax(self.logits)  # avoids log(0)
-            label = tf.one_hot(self.Y, 2)
-            cross_entropy = tf.reduce_sum(-tf.multiply(label,
-                                                       log_softmax), axis=-1)
-            losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])
-            self.prediction = tf.argmax(self.softmax, -1)
-            self.loss = tf.reduce_mean(losses)
-
+        voxel_loss = loss_module.Voxel_Softmax(self.Y, self.logits)
+        self.loss = voxel_loss.loss
+        self.softmax = voxel_loss.softmax
         tf.summary.scalar('loss', self.loss)
 
         # optimizer
@@ -89,13 +79,6 @@ class Network:
         tf.global_variables_initializer().run()
 
         # pointers to training objects
-        self.train_writer = None
-        self.val_writer = None
-        self.test_writer = None
-
-    # init network
-    def init(self):
-        utils.make_dir(self.MODEL_DIR)
         self.train_writer = tf.summary.FileWriter(
             "{}/train".format(self.MODEL_DIR), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
@@ -104,56 +87,46 @@ class Network:
             "{}/test".format(self.MODEL_DIR), self.sess.graph)
 
     def step(self, data, label, step_type):
-        def vis_step(i=0):
+        utils.make_dir(self.MODEL_DIR)
+
+        def vis_step():
+            i = np.random.randint(0, len(data))
             x_name = utils.get_file_name(data[i])
             y_name = utils.get_file_name(label[i])
             sequence = x[i]
             voxel = y[i]
-            softmax = out[-1][i]
-            softmax_0 = softmax[:, :, :, 0]
-            softmax_1 = softmax[:, :, :, 1]
-            prediction = out[-2][i]
-            step_count = out[-3]
+            softmax = out[5][i]
+            step_count = out[4]
+
+            # save plots
+            utils.vis_sequence(
+                sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
+            utils.vis_voxel(voxel,
+                            f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
+            utils.vis_softmax(
+                softmax, f_name="{}/{}_{}p.png".format(cur_dir, step_count, y_name))
 
             np.save(
                 "{}/{}_{}_softmax.npy".format(cur_dir, step_count, y_name), softmax)
-
-            np.save("{}/{}_{}_prediction.npy".format(cur_dir,
-                                                     step_count, y_name), prediction)
-
-            utils.vis_sequence(
-                sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
-
-            utils.vis_voxel(voxel,
-                            f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
-            utils.vis_voxel(
-                softmax_0, softmax_0, f_name="{}/{}_{}_softmax_0.png".format(cur_dir, step_count, y_name))
-            utils.vis_voxel(
-                softmax_1, softmax_1, f_name="{}/{}_{}_softmax_1.png".format(cur_dir, step_count, y_name))
-
-            utils.vis_voxel(
-                prediction, softmax_0, f_name="{}/{}_{}_prediction_0.png".format(cur_dir, step_count, y_name))
-            utils.vis_voxel(
-                prediction, softmax_1, f_name="{}/{}_{}_prediction_1.png".format(cur_dir, step_count, y_name))
 
         cur_dir = self.get_epoch_dir()
         x = dataset.from_npy(data)
         y = dataset.from_npy(label)
 
         if step_type == "train":
-            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count, self.prediction, self.softmax], {
+            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count], {
                 self.X: x, self.Y: y})
-            self.train_writer.add_summary(out[1], out[-3])
+            self.train_writer.add_summary(out[1], global_step=out[4])
 
             # vis_step()
         else:
-            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.prediction, self.softmax], {
+            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.softmax], {
                 self.X: x, self.Y: y})
 
             if step_type == "val":
-                self.val_writer.add_summary(out[1], out[-3])
+                self.val_writer.add_summary(out[1], global_step=out[4])
             elif step_type == "test":
-                self.test_writer.add_summary(out[1], out[-3])
+                self.test_writer.add_summary(out[1], global_step=out[4])
 
             vis_step()
 
@@ -173,7 +146,7 @@ class Network:
             self.sess, [epoch_name], epoch_dir + "/model")
 
     def predict(self, x):
-        return self.sess.run([self.prediction, self.softmax], {self.X: x})
+        return self.sess.run([self.softmax], {self.X: x})
 
     def info(self):
         print("LEARN_RATE:{}".format(

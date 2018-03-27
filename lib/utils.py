@@ -12,10 +12,6 @@ from skimage import exposure
 from PIL import Image
 
 
-def grep_epoch_name(epoch_dir):
-    return re.search(".*(epoch_.*).*", epoch_dir).group(1)
-
-
 def vis_montage(im, axis, f_name=None):
     ret_im = exposure.rescale_intensity(montage(im, axis))
     return vis_im(ret_im, f_name)
@@ -47,7 +43,7 @@ def vis_voxel(vox, color=None, f_name=None):
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    color_map = plt.get_cmap('Spectral')
+    color_map = plt.get_cmap('RdYlBu')
     ax.voxels(vox, facecolors=color_map(color), edgecolor='k')
 
     if f_name is None:
@@ -58,8 +54,8 @@ def vis_voxel(vox, color=None, f_name=None):
     plt.close()
 
 
-def vis_prediction(y_hat):
-    return vis_voxel(y_hat[0][0], y_hat[1][0][:, :, :, 0])
+def vis_softmax(y_hat, f_name=None):
+    return vis_voxel(np.argmax(y_hat, axis=-1), y_hat[:, :, :, 1], f_name=f_name)
 
 
 def hstack(a, b):
@@ -113,6 +109,10 @@ def check_dir():
 
 def read_params(json_dir="params.json"):
     return json.loads(open(json_dir).read())
+
+
+def grep_epoch_name(epoch_dir):
+    return re.search(".*(epoch_.*).*", epoch_dir).group(1)
 
 
 def grep_params(param_line):

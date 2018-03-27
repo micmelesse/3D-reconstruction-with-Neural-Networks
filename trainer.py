@@ -33,7 +33,6 @@ if __name__ == '__main__':
 
     # init network
     net = network.Network()
-    net.init()
     np.save("{}/X_test.npy".format(net.MODEL_DIR), X_test)
     np.save("{}/y_test.npy".format(net.MODEL_DIR), y_test)
 
