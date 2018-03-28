@@ -13,6 +13,8 @@ import lib.recurrent_module as recurrent_module
 import lib.decoder_module as decoder_module
 import lib.loss_module as loss_module
 
+import lib.vis as vis
+
 
 # Recurrent Reconstruction Neural Network (R2N2)
 class Network:
@@ -88,37 +90,13 @@ class Network:
 
     def step(self, data, label, step_type):
         utils.make_dir(self.MODEL_DIR)
-
-        def vis_step():
-            i = np.random.randint(0, len(data))
-            x_name = utils.get_file_name(data[i])
-            y_name = utils.get_file_name(label[i])
-            sequence = x[i]
-            voxel = y[i]
-            softmax = out[0][i]
-            step_count = out[4]
-
-            # save plots
-            utils.vis_sequence(
-                sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
-            utils.vis_voxel(voxel,
-                            f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
-            utils.vis_softmax(
-                softmax, f_name="{}/{}_{}p.png".format(cur_dir, step_count, y_name))
-
-            np.save(
-                "{}/{}_{}_softmax.npy".format(cur_dir, step_count, y_name), softmax)
-
         cur_dir = self.get_epoch_dir()
-        x = dataset.from_npy(data)
-        y = dataset.from_npy(label)
+        x, y = dataset.from_npy(data), dataset.from_npy(label)
 
         if step_type == "train":
             out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count], {
                 self.X: x, self.Y: y})
             self.train_writer.add_summary(out[2], global_step=out[4])
-
-            # vis_step()
         else:
             out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count], {
                 self.X: x, self.Y: y})
@@ -128,7 +106,20 @@ class Network:
             elif step_type == "test":
                 self.test_writer.add_summary(out[2], global_step=out[4])
 
-            vis_step()
+            i = np.random.randint(0, len(data))
+            x_name = utils.get_file_name(data[i])
+            y_name = utils.get_file_name(label[i])
+            sequence, voxel, softmax, step_count = x[i], y[i], out[0][i], out[4]
+
+            # save plots
+            vis.sequence(
+                sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
+            vis.voxel(voxel,
+                      f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
+            vis.softmax(
+                softmax, f_name="{}/{}_{}_prediction.png".format(cur_dir, step_count, y_name))
+            np.save(
+                "{}/{}_{}_softmax.npy".format(cur_dir, step_count, y_name), softmax)
 
         return out[1]  # return the loss
 
