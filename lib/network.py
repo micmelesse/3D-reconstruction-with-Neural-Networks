@@ -95,7 +95,7 @@ class Network:
             y_name = utils.get_file_name(label[i])
             sequence = x[i]
             voxel = y[i]
-            softmax = out[5][i]
+            softmax = out[0][i]
             step_count = out[4]
 
             # save plots
@@ -114,23 +114,23 @@ class Network:
         y = dataset.from_npy(label)
 
         if step_type == "train":
-            out = self.sess.run([self.loss, self.summary_op, self.apply_grad, self.print, self.step_count], {
+            out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count], {
                 self.X: x, self.Y: y})
-            self.train_writer.add_summary(out[1], global_step=out[4])
+            self.train_writer.add_summary(out[2], global_step=out[4])
 
             # vis_step()
         else:
-            out = self.sess.run([self.loss, self.summary_op, self.print, self.step_count, self.softmax], {
+            out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count], {
                 self.X: x, self.Y: y})
 
             if step_type == "val":
-                self.val_writer.add_summary(out[1], global_step=out[4])
+                self.val_writer.add_summary(out[2], global_step=out[4])
             elif step_type == "test":
-                self.test_writer.add_summary(out[1], global_step=out[4])
+                self.test_writer.add_summary(out[2], global_step=out[4])
 
             vis_step()
 
-        return out[0]  # return the loss
+        return out[1]  # return the loss
 
     def save(self):
         cur_dir = self.get_epoch_dir()
@@ -142,8 +142,10 @@ class Network:
 
     def restore(self, epoch_dir):
         epoch_name = utils.grep_epoch_name(epoch_dir)
+        new_sess = tf.Session(graph=tf.Graph())
         tf.saved_model.loader.load(
-            self.sess, [epoch_name], epoch_dir + "/model")
+            new_sess, [epoch_name], epoch_dir + "/model")
+        self.sess = new_sess
 
     def predict(self, x):
         return self.sess.run([self.softmax], {self.X: x})
