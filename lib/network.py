@@ -32,7 +32,9 @@ class Network:
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
-        X_cropped = tf.random_crop(self.X[:, :, :, :, 0:3], [None, 24, 127, 127, 3])
+        X_drop_alpha = self.X[:, :, :, :, 0:3]
+        X_cropped = tf.map_fn(lambda a: tf.random_crop(
+            a, [24, 127, 127, 3]), X_drop_alpha)
 
         # encoder
         print("encoder")
@@ -133,7 +135,6 @@ class Network:
         model_builder.add_meta_graph_and_variables(self.sess, [epoch_name])
         model_builder.save()
 
-    
     def predict(self, x):
         return self.sess.run([self.softmax], {self.X: x})
 
