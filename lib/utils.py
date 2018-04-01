@@ -12,12 +12,39 @@ from skimage import exposure
 from PIL import Image
 
 
-def hstack(a, b):
-    return np.hstack((a, b))
+def montage(packed_ims, axis):
+    """display as an Image the contents of packed_ims in a square gird along an aribitray axis"""
+    if packed_ims.ndim == 2:
+        return packed_ims
+
+    # bring axis to the front
+    packed_ims = np.rollaxis(packed_ims, axis)
+
+    N = len(packed_ims)
+    n_tile = math.ceil(math.sqrt(N))
+    rows = []
+    for i in range(n_tile):
+        im = packed_ims[i * n_tile]
+        for j in range(1, n_tile):
+            ind = i * n_tile + j
+            if ind < N:
+                im = hstack(im, packed_ims[ind])
+            else:
+                im = hstack(im, np.zeros_like(packed_ims[0]))
+        rows.append(im)
+
+    matrix = rows[0]
+    for i in range(1, len(rows)):
+        matrix = vstack(matrix, rows[i])
+    return matrix
 
 
-def vstack(a, b):
-    return np.vstack((a, b))
+def montage_multichannel(im):
+    return montage(im, -1)
+
+
+def montage_sequence(im):
+    return montage(im, 0)
 
 
 def prep_dir():
@@ -66,3 +93,11 @@ def clean_dir(file_dir):
 
 def get_file_name(path):
     return os.path.splitext(os.path.basename(path))[0]
+
+
+def hstack(a, b):
+    return np.hstack((a, b))
+
+
+def vstack(a, b):
+    return np.vstack((a, b))

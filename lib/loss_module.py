@@ -10,7 +10,8 @@ class Voxel_Softmax:
                 tf.nn.softmax(logits), epsilon, 1-epsilon)
             log_softmax = tf.log(self.softmax)
             # log_softmax = tf.nn.log_softmax(self.logits)  # avoids log(0)
-            label = tf.one_hot(Y, 2)
+            # label = tf.one_hot(Y, 2) # one hot encoding is done in preprocessing
+            label = tf.cast(Y, tf.float32)
             cross_entropy = tf.reduce_sum(-tf.multiply(label,
                                                        log_softmax), axis=-1)
             losses = tf.reduce_mean(cross_entropy, axis=[1, 2, 3])

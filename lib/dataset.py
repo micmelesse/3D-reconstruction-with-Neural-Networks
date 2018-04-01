@@ -10,6 +10,7 @@ from collections import deque
 from third_party import binvox_rw
 from lib import path, utils, render
 from sklearn import model_selection
+from keras.utils import to_categorical
 
 
 def load_data(data_samples):
@@ -57,7 +58,8 @@ def to_npy_data_N_label(paths, N=None):
         model_name = paths[i, 0]
         to_npy('out/{}_x'.format(model_name),
                load_data(paths[i, 1:-1]))
-        to_npy('out/{}_y'.format(model_name), load_label(paths[i, -1]))
+        to_npy('out/{}_y'.format(model_name),
+               (to_categorical(load_label(paths[i, -1]))).astype(np.uint8))
 
 
 def get_suffeled_batchs(data, label, batch_size):
@@ -87,9 +89,16 @@ def read_paths(paths_dir="out/paths.csv"):
 
 # get data and labels
 def get_preprocessed_dataset():
-    data_all = np.array(sorted(path.construct_path_lists("out", ["_x.npy"])))
-    label_all = np.array(sorted(path.construct_path_lists("out", ["_y.npy"])))
-    return data_all, label_all
+    data_all = sorted(path.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(path.construct_path_lists("out", ["_y.npy"]))
+    return np.array(data_all), np.array(label_all)
+
+
+def load_preprocessed_sample():
+    data_all = sorted(path.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(path.construct_path_lists("out", ["_y.npy"]))
+    i = np.random.randint(0, len(data_all))
+    return np.load(data_all[i]), np.load(label_all[i])
 
 
 def load_model_testset(epoch_dir):

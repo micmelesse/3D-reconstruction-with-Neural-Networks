@@ -54,7 +54,7 @@ class Network:
 
         # loss
         print("loss")
-        self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32])
+        self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32, 2])
         voxel_loss = loss_module.Voxel_Softmax(self.Y, self.logits)
         self.loss = voxel_loss.loss
         self.softmax = voxel_loss.softmax
@@ -109,17 +109,18 @@ class Network:
             i = np.random.randint(0, len(data))
             x_name = utils.get_file_name(data[i])
             y_name = utils.get_file_name(label[i])
+            f_name = x_name[0:-2]
             sequence, voxel, softmax, step_count = x[i], y[i], out[0][i], out[4]
 
             # save plots
             vis.sequence(
                 sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
-            vis.voxel(voxel,
-                      f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
+            vis.softmax(voxel,
+                        f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
             vis.softmax(
-                softmax, f_name="{}/{}_{}_prediction.png".format(cur_dir, step_count, y_name))
+                softmax, f_name="{}/{}_{}_p.png".format(cur_dir, step_count, f_name))
             np.save(
-                "{}/{}_{}_softmax.npy".format(cur_dir, step_count, y_name), softmax)
+                "{}/{}_{}_sm.npy".format(cur_dir, step_count, f_name), softmax)
 
         return out[1]  # return the loss
 
