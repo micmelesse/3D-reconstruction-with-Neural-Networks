@@ -25,12 +25,14 @@ def save_im(im, f_name=None):
 def voxel(vox, color=None, f_name=None):
 
     if color is None:
-        color = vox.astype(int)
+        color = 'red'
+    else:
+        color_map = plt.get_cmap('coolwarm')
+        color = color_map(color)
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    color_map = plt.get_cmap('RdYlBu')
-    ax.voxels(vox, facecolors=color_map(color), edgecolor='k')
+    ax.voxels(vox, facecolors=color, edgecolor='k')
 
     if f_name is None:
         return fig.show()
@@ -38,6 +40,10 @@ def voxel(vox, color=None, f_name=None):
     fig.savefig(f_name, bbox_inches='tight')
     fig.clf()
     plt.close()
+
+
+def label(y, f_name=None):
+    return voxel(np.argmax(y, axis=-1), f_name=f_name)
 
 
 def softmax(y_hat, f_name=None):

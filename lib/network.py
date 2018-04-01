@@ -32,10 +32,11 @@ class Network:
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
+        X_cropped = tf.random_crop(self.X[:, :, :, :, 0:3], [None, 24, 127, 127, 3])
 
         # encoder
         print("encoder")
-        encoder = encoder_module.Conv_Encoder(self.X)
+        encoder = encoder_module.Conv_Encoder(X_cropped)
         encoded_input = encoder.out_tensor
 
         print("recurrent_module")
@@ -132,13 +133,7 @@ class Network:
         model_builder.add_meta_graph_and_variables(self.sess, [epoch_name])
         model_builder.save()
 
-    def restore(self, epoch_dir):
-        epoch_name = utils.grep_epoch_name(epoch_dir)
-        new_sess = tf.Session(graph=tf.Graph())
-        tf.saved_model.loader.load(
-            new_sess, [epoch_name], epoch_dir + "/model")
-        self.sess = new_sess
-
+    
     def predict(self, x):
         return self.sess.run([self.softmax], {self.X: x})
 
