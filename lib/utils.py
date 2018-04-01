@@ -20,10 +20,24 @@ def vstack(a, b):
     return np.vstack((a, b))
 
 
-def check_dir():
+def prep_dir():
     TRAIN_DIRS = ["out", "data", "aws"]
     for d in TRAIN_DIRS:
         make_dir(d)
+
+    param_data = {
+        "TRAIN_PARAMS": {
+        },
+        "AWS_PARAMS": {
+        },
+        "DIRS": {
+        }
+    }
+    param_name = "params.json"
+
+    if not os.path.exists(param_name):
+        with open(param_name, 'w') as param_file:
+            json.dump(param_data, param_file)
 
 
 def read_params(json_dir="params.json"):
