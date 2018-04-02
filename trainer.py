@@ -9,7 +9,6 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import lib.dataset as dataset
 import lib.network as network
-import lib.path as path
 import lib.utils as utils
 from datetime import datetime
 

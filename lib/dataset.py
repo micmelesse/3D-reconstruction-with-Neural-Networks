@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from collections import deque
 from third_party import binvox_rw
-from lib import path, utils, render
+from lib import utils, render
 from sklearn import model_selection
 from keras.utils import to_categorical
 
@@ -89,14 +89,14 @@ def read_paths(paths_dir="out/paths.csv"):
 
 # get data and labels
 def get_preprocessed_dataset():
-    data_all = sorted(path.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(path.construct_path_lists("out", ["_y.npy"]))
+    data_all = sorted(utils.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(utils.construct_path_lists("out", ["_y.npy"]))
     return np.array(data_all), np.array(label_all)
 
 
 def load_preprocessed_sample():
-    data_all = sorted(path.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(path.construct_path_lists("out", ["_y.npy"]))
+    data_all = sorted(utils.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(utils.construct_path_lists("out", ["_y.npy"]))
     i = np.random.randint(0, len(data_all))
     return np.load(data_all[i]), np.load(label_all[i])
 
@@ -113,7 +113,7 @@ def load_model_testset(epoch_dir):
 def main():
     example_count = utils.read_params()['TRAIN_PARAMS']['SAMPLE_SIZE']
     if not os.path.isfile("out/paths.csv"):
-        path.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
+        utils.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
     to_npy_data_N_label(read_paths(), N=example_count)
 
 
