@@ -16,6 +16,7 @@
 *.pdf
 *.pem
 *.params
+*.json
 *.ckpt.*
 *checkpoint*
 aws_*
