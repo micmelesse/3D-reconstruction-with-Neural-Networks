@@ -51,7 +51,7 @@ def montage_sequence(im):
 
 
 def prep_dir():
-    TRAIN_DIRS = ["out", "data", "aws","results"]
+    TRAIN_DIRS = ["out", "data", "aws", "results"]
     for d in TRAIN_DIRS:
         make_dir(d)
 
@@ -74,13 +74,28 @@ def read_params(json_dir="params.json"):
     return json.loads(open(json_dir).read())
 
 
+def grep_params(s):
+    regex = "^.*=(.*)$"
+    return re.findall(regex, s)[0]
+
+
 def grep_epoch_name(epoch_dir):
     return re.search(".*(epoch_.*).*", epoch_dir).group(1)
 
 
-def grep_params(param_line):
-    regex = "^.*=(.*)$"
-    return re.findall(regex, param_line)[0]
+def grep_learning_rate(s):
+    regex = "^.*L:(.*?)_.*$"
+    return float(re.findall(regex, s)[0])
+
+
+def grep_batch_size(s):
+    regex = "^.*B:(.*?)_.*$"
+    return float(re.findall(regex, s)[0])
+
+
+def grep_epoch_count(s):
+    regex = "^.*E:(.*?)_.*$"
+    return float(re.findall(regex, s)[0])
 
 
 def make_dir(file_dir):

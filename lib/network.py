@@ -121,7 +121,7 @@ class Network:
             vis.softmax(voxel,
                         f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
             vis.softmax(
-                softmax, f_name="{}/{}_{}_p.png".format(cur_dir, step_count, f_name))
+                softmax, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
             np.save(
                 "{}/{}_{}_sm.npy".format(cur_dir, step_count, f_name), softmax)
 

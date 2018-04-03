@@ -1,5 +1,11 @@
-import lib.utils as utils
-from lib.path import construct_path_lists
+import numpy as np
+import matplotlib.pyplot as plt
+from lib.utils import construct_path_lists
 
-
-print(construct_path_lists("aws","L:0.01"))
+i = 4
+l = construct_path_lists("aws", "loss.npy")[i]
+print(l)
+p = np.load(l)
+print(p.shape)
+plt.plot(p)
+plt.show()
