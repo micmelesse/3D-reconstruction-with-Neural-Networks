@@ -24,7 +24,7 @@ def save_im(im, f_name=None):
 
 def voxel(vox, color=None, f_name=None):
 
-    if color is None:
+    if color is None or np.var(color) == 0:
         color = 'red'
     else:
         color_map = plt.get_cmap('coolwarm')

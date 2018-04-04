@@ -12,6 +12,7 @@ import lib.encoder_module as encoder_module
 import lib.recurrent_module as recurrent_module
 import lib.decoder_module as decoder_module
 import lib.loss_module as loss_module
+from lib.utils import grep_epoch_name
 
 import lib.vis as vis
 
@@ -163,3 +164,19 @@ class Network:
         while os.path.exists(os.path.join(self.MODEL_DIR, "epoch_{}".format(i))):
             i += 1
         return i-1
+
+
+class Network_restored:
+    def __init__(self, model_dir):
+        epoch_name = grep_epoch_name(model_dir)
+        self.sess = tf.Session(graph=tf.Graph())
+        tf.saved_model.loader.load(
+            self.sess, [epoch_name], model_dir + "/model")
+
+    def predict(self, x, in_name="Placeholder: 0", sm_name="loss/clip_by_value: 0"):
+        if x.ndim == 4:
+            x = np.expand_dims(x, 0)
+
+        softmax = self.sess.graph.get_tensor_by_name(sm_name)
+        in_tensor = self.sess.graph.get_tensor_by_name(in_name)
+        return self.sess.run(softmax, {in_tensor: x})

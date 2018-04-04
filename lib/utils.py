@@ -74,6 +74,14 @@ def read_params(json_dir="params.json"):
     return json.loads(open(json_dir).read())
 
 
+def fix_nparray(path):
+    arr = np.load(path)
+    l = []
+    for i in arr:
+        l += i
+    np.save(path, np.array(l))
+
+
 def grep_params(s):
     regex = "^.*=(.*)$"
     return re.findall(regex, s)[0]
@@ -132,6 +140,8 @@ def construct_path_lists(data_dir, file_filter):
                 if f_substr in f_name:
                     (paths[i]).append(root + '/' + f_name)
 
+    for p in paths:
+        p.sort()
     if len(file_filter) == 1:
         return paths[0]
 
