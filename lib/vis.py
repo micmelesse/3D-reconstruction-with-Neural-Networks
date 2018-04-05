@@ -3,6 +3,8 @@ import re
 import json
 import sys
 import math
+
+import cv2
 import shutil
 import numpy as np
 import tensorflow as tf
@@ -23,8 +25,9 @@ def save_im(im, f_name=None):
 
 
 def voxel(vox, color=None, f_name=None):
-
-    if color is None or np.var(color) == 0:
+    vox = vox.transpose(2, 0, 1)
+    color = color.transpose(2, 0, 1)
+    if color is None or len(np.unique(color)) <= 2:
         color = 'red'
     else:
         color_map = plt.get_cmap('coolwarm')
@@ -33,6 +36,7 @@ def voxel(vox, color=None, f_name=None):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.voxels(vox, facecolors=color, edgecolor='k')
+    ax.view_init(30, 45)
 
     if f_name is None:
         return fig.show()
@@ -63,3 +67,10 @@ def multichannel(im, f_name=None):
 def sequence(im, f_name=None):
     sequence_montage = utils.montage_sequence(im)
     return save_im(sequence_montage, f_name)
+
+
+def create_gif(im_list):
+    vid = cv2.VideoWriter("")
+    for im in im_list:
+        vid.write(im)
+    # vid.
