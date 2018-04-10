@@ -25,9 +25,8 @@ ShapeNe*
 .ipynb_checkpoints*
 __pycache*
 .vscod*
-confi*
-docs*
-out*
-data*
-aws*
+docs
+out
+data
+aws
 params.json
