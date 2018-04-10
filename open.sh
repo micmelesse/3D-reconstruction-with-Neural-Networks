@@ -1,3 +1,1 @@
-#!/bin/bash
-jupyter notebook
-
+sh jupyter.sh

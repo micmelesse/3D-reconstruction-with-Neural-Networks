@@ -3,8 +3,6 @@ import re
 import json
 import sys
 import math
-
-import cv2
 import shutil
 import numpy as np
 import tensorflow as tf
@@ -13,6 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from skimage import exposure
 from PIL import Image
 from lib import utils
+from cv2 import VideoWriter
 
 
 def save_im(im, f_name=None):
@@ -70,7 +69,7 @@ def sequence(im, f_name=None):
 
 
 def create_gif(im_list):
-    vid = cv2.VideoWriter("")
+    vid = VideoWriter("test.mp4")
     for im in im_list:
         vid.write(im)
-    # vid.
+

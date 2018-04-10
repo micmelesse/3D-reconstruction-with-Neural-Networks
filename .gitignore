@@ -19,15 +19,15 @@
 *.json
 *.ckpt.*
 *checkpoint*
-aws_*
 model_*
 ShapeNe*
 *tfevents*
-.ipynb_checkpoint*
+.ipynb_checkpoints*
 __pycache*
 .vscod*
 confi*
 docs*
 out*
 data*
+aws*
 params.json
