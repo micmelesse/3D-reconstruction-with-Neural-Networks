@@ -14,6 +14,13 @@ from datetime import datetime
 
 
 if __name__ == '__main__':
+    def save_dataset_split():
+        np.save("{}/X_train.npy".format(net.MODEL_DIR), X_train)
+        np.save("{}/y_train.npy".format(net.MODEL_DIR), y_train)
+        np.save("{}/X_val.npy".format(net.MODEL_DIR), X_val)
+        np.save("{}/y_val.npy".format(net.MODEL_DIR), y_val)
+        np.save("{}/X_test.npy".format(net.MODEL_DIR), X_test)
+        np.save("{}/y_test.npy".format(net.MODEL_DIR), y_test)
 
     def save_loss(loss_arr, loss_type):
         loss_ndarr = np.array(loss_arr)
@@ -32,8 +39,7 @@ if __name__ == '__main__':
 
     # init network
     net = network.Network()
-    np.save("{}/X_test.npy".format(net.MODEL_DIR), X_test)
-    np.save("{}/y_test.npy".format(net.MODEL_DIR), y_test)
+    save_dataset_split()
 
     print("training loop")
     # train network
@@ -47,7 +53,6 @@ if __name__ == '__main__':
             # split traning and validation set into batchs
             X_train_batchs, y_train_batchs = dataset.get_suffeled_batchs(
                 X_train, y_train, net.BATCH_SIZE)
-
             X_val_batchs, y_val_batchs = dataset.get_suffeled_batchs(
                 X_val, y_val, net.BATCH_SIZE)
 
