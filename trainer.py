@@ -28,23 +28,26 @@ if __name__ == '__main__':
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_ndarr)
         plt.plot(loss_ndarr.flatten())
         plt.savefig("{}/{}_loss.png".format(save_dir, loss_type),
-                    bbox_inches='tight')
+                    bbox_inches="tight")
         plt.close()
 
     # get preprocessed data
     data, label = dataset.get_preprocessed_dataset()
-    # split dataset
-    X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
-        data, label)
 
     # init network
     net = network.Network()
+    train_params = net.get_params()["TRAIN_PARAMS"]
+    print(train_params)
+
+    # split dataset
+    X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
+        data, label)
     save_dataset_split()
 
     print("training loop")
     # train network
     train_loss, val_loss, test_loss = [], [], []
-    for e in range(net.EPOCH_COUNT):
+    for e in range(train_params["EPOCH_COUNT"]):
         t_start = time.time()  # timer for epoch
         net.create_epoch_dir()
 
@@ -52,9 +55,9 @@ if __name__ == '__main__':
         try:
             # split traning and validation set into batchs
             X_train_batchs, y_train_batchs = dataset.get_suffeled_batchs(
-                X_train, y_train, net.BATCH_SIZE)
+                X_train, y_train, train_params["BATCH_SIZE"])
             X_val_batchs, y_val_batchs = dataset.get_suffeled_batchs(
-                X_val, y_val, net.BATCH_SIZE)
+                X_val, y_val, train_params["BATCH_SIZE"])
 
             val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
             print("training: {}, validation: {}" .format(

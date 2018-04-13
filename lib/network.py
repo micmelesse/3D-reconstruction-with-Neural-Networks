@@ -19,17 +19,17 @@ import lib.vis as vis
 
 # Recurrent Reconstruction Neural Network (R2N2)
 class Network:
-    def __init__(self, params=None):
+    def __init__(self, train_params=None):
         # read params
-        if params is None:
-            params = utils.read_params()['TRAIN_PARAMS']
+        if train_params is None:
+            train_params = utils.read_params()['TRAIN_PARAMS']
 
-        self.LEARN_RATE = params['LEARN_RATE']
-        self.BATCH_SIZE = params['BATCH_SIZE']
-        self.EPOCH_COUNT = params['EPOCH_COUNT']
         self.CREATE_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        self.MODEL_DIR = "out/model_{}_L:{}_E:{}_B:{}".format(
-            self.CREATE_TIME, self.LEARN_RATE, self.EPOCH_COUNT, self.BATCH_SIZE)
+        self.MODEL_DIR = "out/model_{}".format(self.CREATE_TIME)
+        utils.make_dir(self.MODEL_DIR)
+
+        with open(self.MODEL_DIR + '/train_params.json', 'w') as f:
+            json.dump({"TRAIN_PARAMS": train_params}, f)
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
@@ -68,8 +68,13 @@ class Network:
         print("optimizer")
         self.step_count = tf.Variable(
             0, trainable=False, name="step_count")
-        optimizer = tf.train.GradientDescentOptimizer(
-            learning_rate=self.LEARN_RATE)
+
+        if train_params['OPTIMIZER'] == "ADAM":
+            optimizer = tf.train.AdamOptimizer()
+        else:
+            optimizer = tf.train.GradientDescentOptimizer(
+                learning_rate=train_params['LEARN_RATE'])
+
         grads_and_vars = optimizer.compute_gradients(self.loss)
         self.apply_grad = optimizer.apply_gradients(
             grads_and_vars, global_step=self.step_count)
@@ -77,7 +82,7 @@ class Network:
         # misc op
         print("misc op")
         self.print = tf.Print(
-            self.loss, [self.step_count, self.LEARN_RATE, self.loss])
+            self.loss, [self.step_count, train_params['LEARN_RATE'], self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
 
@@ -139,13 +144,10 @@ class Network:
     def predict(self, x):
         return self.sess.run([self.softmax], {self.X: x})
 
-    def info(self):
-        print("LEARN_RATE:{}".format(
-            self.LEARN_RATE))
-        print("EPOCH_COUNT:{}".format(
-            self.EPOCH_COUNT))
-        print("BATCH_SIZE:{}".format(
-            self.BATCH_SIZE))
+    def get_params(self):
+        utils.make_dir(self.MODEL_DIR)
+        with open(self.MODEL_DIR+"/train_params.json") as fp:
+            return json.load(fp)
 
     def create_epoch_dir(self):
         cur_ind = self.epoch_index()
