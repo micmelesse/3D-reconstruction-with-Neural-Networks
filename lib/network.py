@@ -68,16 +68,12 @@ class Network:
         print("optimizer")
         self.step_count = tf.Variable(
             0, trainable=False, name="step_count")
-
         if train_params["OPTIMIZER"] == "ADAM":
-            optimizer = tf.train.AdamOptimizer()
-            self.print = tf.Print(
-                self.loss, [self.step_count, optimizer._lr, self.loss])
+            optimizer = tf.train.AdamOptimizer(
+                epsilon=train_params["LEARN_RATE"])
         else:
             optimizer = tf.train.GradientDescentOptimizer(
                 learning_rate=train_params["LEARN_RATE"])
-            self.print = tf.Print(
-                self.loss, [self.step_count, optimizer._learning_rate, self.loss])
 
         grads_and_vars = optimizer.compute_gradients(self.loss)
         self.apply_grad = optimizer.apply_gradients(
@@ -85,6 +81,7 @@ class Network:
 
         # misc op
         print("misc op")
+        self.print = tf.Print(self.loss, [self.step_count, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
 
