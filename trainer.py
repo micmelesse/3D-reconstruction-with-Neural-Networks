@@ -31,13 +31,15 @@ if __name__ == '__main__':
                     bbox_inches="tight")
         plt.close()
 
+    # params on disk
+    train_params = utils.get_params()["TRAIN_PARAMS"]
+    print(utils)
     # get preprocessed data
     data, label = dataset.get_preprocessed_dataset()
 
     # init network
     net = network.Network()
     train_params = net.get_params()["TRAIN_PARAMS"]
-    print(train_params)
 
     # split dataset
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
