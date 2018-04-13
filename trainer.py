@@ -32,8 +32,8 @@ if __name__ == '__main__':
         plt.close()
 
     # params on disk
-    train_params = utils.read_params()["TRAIN_PARAMS"]
-    print(utils)
+    print(utils.read_params()["TRAIN_PARAMS"])
+    
     # get preprocessed data
     data, label = dataset.get_preprocessed_dataset()
 
