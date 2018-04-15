@@ -15,39 +15,12 @@ from PIL import Image
 from filecmp import dircmp
 
 
-def montage(packed_ims, axis):
-    """display as an Image the contents of packed_ims in a square gird along an aribitray axis"""
-    if packed_ims.ndim == 2:
-        return packed_ims
-
-    # bring axis to the front
-    packed_ims = np.rollaxis(packed_ims, axis)
-
-    N = len(packed_ims)
-    n_tile = math.ceil(math.sqrt(N))
-    rows = []
-    for i in range(n_tile):
-        im = packed_ims[i * n_tile]
-        for j in range(1, n_tile):
-            ind = i * n_tile + j
-            if ind < N:
-                im = hstack(im, packed_ims[ind])
-            else:
-                im = hstack(im, np.zeros_like(packed_ims[0]))
-        rows.append(im)
-
-    matrix = rows[0]
-    for i in range(1, len(rows)):
-        matrix = vstack(matrix, rows[i])
-    return matrix
-
-
-def montage_multichannel(im):
-    return montage(im, -1)
-
-
-def montage_sequence(im):
-    return montage(im, 0)
+def list_folders(path="."):
+    folder_list = sorted(next(os.walk(path))[1])
+    ret = []
+    for f in folder_list:
+        ret.append(path+"/"+f)
+    return ret
 
 
 def prep_dir():
@@ -106,6 +79,16 @@ def grep_epoch_count(s):
     return float(re.findall(regex, s)[0])
 
 
+def grep_obj_id(s):
+    regex = "^(.*)_(.*_.*)_(x|y|yp|p|sm).(png|npy)$"
+    return re.search(regex, os.path.basename(s)).group(2)
+
+
+def grep_stepcount(s):
+    regex = "^(.*)_(.*_.*)_(x|y|yp|p|sm).(png|npy)$"
+    return re.search(regex, os.path.basename(s)).group(1)
+
+
 def make_dir(file_dir):
     if not os.path.isdir(file_dir):
         os.makedirs(file_dir)
@@ -127,6 +110,41 @@ def hstack(a, b):
 
 def vstack(a, b):
     return np.vstack((a, b))
+
+
+def montage_multichannel(im):
+    return montage(im, -1)
+
+
+def montage_sequence(im):
+    return montage(im, 0)
+
+
+def montage(packed_ims, axis):
+    """display as an Image the contents of packed_ims in a square gird along an aribitray axis"""
+    if packed_ims.ndim == 2:
+        return packed_ims
+
+    # bring axis to the front
+    packed_ims = np.rollaxis(packed_ims, axis)
+
+    N = len(packed_ims)
+    n_tile = math.ceil(math.sqrt(N))
+    rows = []
+    for i in range(n_tile):
+        im = packed_ims[i * n_tile]
+        for j in range(1, n_tile):
+            ind = i * n_tile + j
+            if ind < N:
+                im = hstack(im, packed_ims[ind])
+            else:
+                im = hstack(im, np.zeros_like(packed_ims[0]))
+        rows.append(im)
+
+    matrix = rows[0]
+    for i in range(1, len(rows)):
+        matrix = vstack(matrix, rows[i])
+    return matrix
 
 
 def construct_path_lists(data_dir, file_filter):

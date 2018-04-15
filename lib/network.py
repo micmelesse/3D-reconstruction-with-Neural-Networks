@@ -99,36 +99,33 @@ class Network:
     def step(self, data, label, step_type):
         utils.make_dir(self.MODEL_DIR)
         cur_dir = self.get_epoch_dir()
-        x, y = dataset.from_npy(data), dataset.from_npy(label)
+        data_npy, label_npy = dataset.from_npy(data), dataset.from_npy(label)
 
         if step_type == "train":
             out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count], {
-                self.X: x, self.Y: y})
+                self.X: data_npy, self.Y: label_npy})
             self.train_writer.add_summary(out[2], global_step=out[4])
         else:
             out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count], {
-                self.X: x, self.Y: y})
+                self.X: data_npy, self.Y: label_npy})
 
             if step_type == "val":
                 self.val_writer.add_summary(out[2], global_step=out[4])
             elif step_type == "test":
                 self.test_writer.add_summary(out[2], global_step=out[4])
 
-            i = np.random.randint(0, len(data))
-            x_name = utils.get_file_name(data[i])
-            y_name = utils.get_file_name(label[i])
-            f_name = x_name[0:-2]
-            sequence, voxel, softmax, step_count = x[i], y[i], out[0][i], out[4]
-
-            # save plots
-            vis.sequence(
-                sequence, f_name="{}/{}_{}.png".format(cur_dir, step_count, x_name))
-            vis.softmax(voxel,
-                        f_name="{}/{}_{}.png".format(cur_dir, step_count, y_name))
-            vis.softmax(
-                softmax, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
-            np.save(
-                "{}/{}_{}_sm.npy".format(cur_dir, step_count, f_name), softmax)
+            step_count = out[4]
+            # display the result of each element of the validation batch
+            for x, y, yp, name in zip(data_npy, label_npy, out[0], data):
+                f_name = utils.get_file_name(name)[0:-2]
+                vis.sequence(
+                    x, f_name="{}/{}_{}_x.png".format(cur_dir, step_count, f_name))
+                vis.softmax(
+                    y, f_name="{}/{}_{}_y.png".format(cur_dir, step_count, f_name))
+                vis.softmax(
+                    yp, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
+                np.save(
+                    "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
 
         return out[1]  # return the loss
 

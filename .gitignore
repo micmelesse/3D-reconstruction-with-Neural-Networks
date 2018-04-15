@@ -17,6 +17,7 @@
 *.pem
 *.params
 *.json
+*.mp4
 *.ckpt.*
 *checkpoint*
 model_*

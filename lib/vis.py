@@ -11,7 +11,6 @@ from mpl_toolkits.mplot3d import Axes3D
 from skimage import exposure
 from PIL import Image
 from lib import utils
-from cv2 import VideoWriter
 
 
 def save_im(im, f_name=None):
@@ -68,8 +67,5 @@ def sequence(im, f_name=None):
     return save_im(sequence_montage, f_name)
 
 
-def create_gif(im_list):
-    vid = VideoWriter("test.mp4")
-    for im in im_list:
-        vid.write(im)
-
+def create_video(im_list):
+    pass
