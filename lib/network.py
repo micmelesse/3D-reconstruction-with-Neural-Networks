@@ -70,7 +70,7 @@ class Network:
             0, trainable=False, name="step_count")
         if train_params["OPTIMIZER"] == "ADAM":
             optimizer = tf.train.AdamOptimizer(
-                epsilon=train_params["LEARN_RATE"])
+                learning_rate=train_params["LEARN_RATE"])
         else:
             optimizer = tf.train.GradientDescentOptimizer(
                 learning_rate=train_params["LEARN_RATE"])
