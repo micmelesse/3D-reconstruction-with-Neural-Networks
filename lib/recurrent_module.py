@@ -14,11 +14,11 @@ class GRU_Grid:
             self.n_input = 1024
             self.n_hidden_state = 128
 
-            initializer = tf.contrib.layers.xavier_initializer()
-            self.W = [Weight_Matrix_Grid(initalizer=initializer)]*N
-            self.U = [tf.Variable(initializer(
+            xavier = tf.contrib.layers.xavier_initializer()
+            self.W = [Weight_Matrix_Grid(initalizer=xavier)]*N
+            self.U = [tf.Variable(xavier(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
-            self.b = [tf.Variable(initializer(
+            self.b = [tf.Variable(xavier(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
     def linear_sum(self, W, x, U, h, b):
@@ -46,18 +46,18 @@ class GRU_Grid:
 
 
 class LSTM_Grid:
-    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
+    def __init__(self, N=4, n_cells=4, n_input=1024, n_hidden_state=128):
         with tf.name_scope("LSTM_Grid"):
             self.N = 4
             self.n_cells = 4
             self.n_input = 1024
             self.n_hidden_state = 128
 
-            initializer = tf.contrib.layers.xavier_initializer()
-            self.W = [Weight_Matrix_Grid(initalizer=initializer)]*N
-            self.U = [tf.Variable(initializer(
+            xavier = tf.contrib.layers.xavier_initializer()
+            self.W = [Weight_Matrix_Grid(initalizer=xavier)]*N
+            self.U = [tf.Variable(xavier(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
-            self.b = [tf.Variable(initializer(
+            self.b = [tf.Variable(xavier(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
     def linear_sum(self, W, x, U, h, b):
