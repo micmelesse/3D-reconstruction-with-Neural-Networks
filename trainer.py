@@ -26,6 +26,10 @@ if __name__ == '__main__':
         loss_ndarr = np.array(loss_arr)
         save_dir = net.get_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_ndarr)
+
+    def plot_loss(loss_arr, loss_type):
+        loss_ndarr = np.array(loss_arr)
+        save_dir = net.get_epoch_dir()
         plt.plot(loss_ndarr.flatten())
         plt.savefig("{}/{}_loss.png".format(save_dir, loss_type),
                     bbox_inches="tight")
@@ -33,7 +37,7 @@ if __name__ == '__main__':
 
     # params on disk
     print(utils.read_params()["TRAIN_PARAMS"])
-    
+
     # get preprocessed data
     data, label = dataset.get_preprocessed_dataset()
 
@@ -96,3 +100,5 @@ if __name__ == '__main__':
         net.save()
         save_loss(train_loss, 'train')
         save_loss(val_loss, 'val')
+        plot_loss(train_loss, 'train')
+        plot_loss(val_loss, 'val')
