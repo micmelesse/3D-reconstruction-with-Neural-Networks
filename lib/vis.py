@@ -23,6 +23,8 @@ def save_im(im, f_name=None):
 
 
 def voxel(vox, color=None, f_name=None):
+    assert(vox.ndim == 3)
+
     vox = vox.transpose(2, 0, 1)
     color = color.transpose(2, 0, 1)
     if color is None or len(np.unique(color)) <= 2:

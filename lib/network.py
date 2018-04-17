@@ -69,7 +69,6 @@ class Network:
         self.step_count = tf.Variable(
             0, trainable=False, name="step_count")
         if train_params["OPTIMIZER"] == "ADAM":
-            print(train_params["LEARN_RATE"], train_params["ADAM_EPSILON"])
             optimizer = tf.train.AdamOptimizer(
                 learning_rate=train_params["LEARN_RATE"], epsilon=train_params["ADAM_EPSILON"])
         else:
@@ -79,6 +78,10 @@ class Network:
         grads_and_vars = optimizer.compute_gradients(self.loss)
         self.apply_grad = optimizer.apply_gradients(
             grads_and_vars, global_step=self.step_count)
+
+        params = tf.trainable_variables()
+        for p in params:
+            tf.summary.histogram(p.name, p)
 
         # misc op
         print("misc op")
