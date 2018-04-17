@@ -69,6 +69,7 @@ class Network:
         self.step_count = tf.Variable(
             0, trainable=False, name="step_count")
         if train_params["OPTIMIZER"] == "ADAM":
+            print(train_params["LEARN_RATE"], train_params["ADAM_EPSILON"])
             optimizer = tf.train.AdamOptimizer(
                 learning_rate=train_params["LEARN_RATE"], epsilon=train_params["ADAM_EPSILON"])
         else:
