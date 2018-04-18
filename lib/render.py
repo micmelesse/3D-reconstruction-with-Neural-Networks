@@ -3,7 +3,7 @@ import sys
 import random
 import trimesh
 import numpy as np
-import lib.utils as utils
+from lib import utils, dataset
 from PIL import Image
 
 
@@ -17,7 +17,7 @@ def get_render_sequence(render_paths):
 def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
-    pathlist_tuple = utils.construct_path_lists(
+    pathlist_tuple = dataset.construct_path_lists(
         dataset_dir, ['.obj', '.mtl'])
     pathlist = pathlist_tuple[0]  # DANGER, RANDOM
     random.shuffle(pathlist)

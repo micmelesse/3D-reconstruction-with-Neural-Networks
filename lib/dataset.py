@@ -6,9 +6,10 @@ import random
 import tarfile
 import numpy as np
 import pandas as pd
+from filecmp import dircmp
 from collections import deque
 from third_party import binvox_rw
-from lib import utils, render
+from lib import utils, render, dataset
 from sklearn import model_selection
 from keras.utils import to_categorical
 
@@ -49,7 +50,7 @@ def from_npy(npy_path):
     return np.stack(ret)
 
 
-def to_npy_data_N_label(paths, N=None):
+def convert_dataset_to_npy(paths, N=None):
     if N is None or N <= 0 or N >= len(paths):
         N = len(paths)
 
@@ -89,14 +90,14 @@ def read_paths(paths_dir="out/paths.csv"):
 
 # get data and labels
 def get_preprocessed_dataset():
-    data_all = sorted(utils.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(utils.construct_path_lists("out", ["_y.npy"]))
+    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
     return np.array(data_all), np.array(label_all)
 
 
 def load_preprocessed_sample():
-    data_all = sorted(utils.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(utils.construct_path_lists("out", ["_y.npy"]))
+    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
     i = np.random.randint(0, len(data_all))
     return np.load(data_all[i]), np.load(label_all[i])
 
@@ -110,11 +111,57 @@ def load_model_testset(epoch_dir):
     return X_test, y_test
 
 
+def construct_path_lists(data_dir, file_filter):
+    if isinstance(file_filter, str):
+        file_filter = [file_filter]
+    paths = [[] for _ in range(len(file_filter))]
+
+    for root, _, files in os.walk(data_dir):
+        for f_name in files:
+            for i, f_substr in enumerate(file_filter):
+                if f_substr in f_name:
+                    (paths[i]).append(root + '/' + f_name)
+
+    for p in paths:
+        p.sort()
+    if len(file_filter) == 1:
+        return paths[0]
+
+    return tuple(paths)
+
+
+def write_path_csv(data_dir, label_dir):
+    print("creating path csv for {} and {}".format(data_dir, label_dir))
+
+    common_paths = []
+    for dir_top, subdir_cmps in dircmp(data_dir, label_dir).subdirs.items():
+        for dir_bot in subdir_cmps.common_dirs:
+            common_paths.append(os.path.join(dir_top, dir_bot))
+
+    mapping = pd.DataFrame(common_paths, columns=["common_dirs"])
+    mapping['data_dirs'] = mapping.apply(
+        lambda data_row: os.path.join(data_dir, data_row.common_dirs), axis=1)
+
+    mapping['label_dirs'] = mapping.apply(
+        lambda data_row: os.path.join(label_dir, data_row.common_dirs), axis=1)
+
+    table = []
+    for n, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
+        data_row = [os.path.dirname(n)+"_"+os.path.basename(n)]
+        data_row += construct_path_lists(d, [".png"])
+        data_row += construct_path_lists(l, [".binvox"])
+        table.append(data_row)
+
+    paths = pd.DataFrame(table)
+    paths.to_csv("out/paths.csv")
+    return paths
+
+
 def main():
     example_count = utils.read_params()['TRAIN_PARAMS']['SAMPLE_SIZE']
     if not os.path.isfile("out/paths.csv"):
-        utils.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
-    to_npy_data_N_label(read_paths(), N=example_count)
+        dataset.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
+    convert_dataset_to_npy(read_paths(), N=example_count)
 
 
 if __name__ == '__main__':

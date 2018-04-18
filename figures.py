@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from lib.utils import construct_path_lists
+from lib.dataset import construct_path_lists
 
 i = 4
 l = construct_path_lists("aws", "loss.npy")[i]
