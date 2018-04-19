@@ -58,11 +58,22 @@ class Network:
 
         # loss
         print("loss")
-        self.Y = tf.placeholder(tf.uint8, [None, 32, 32, 32, 2])
-        voxel_loss = loss_module.Voxel_Softmax(self.Y, self.logits)
+        self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
+        voxel_loss = loss_module.Voxel_Softmax(self.Y_onehot, self.logits)
         self.loss = voxel_loss.loss
         self.softmax = voxel_loss.softmax
         tf.summary.scalar("loss", self.loss)
+
+        # metric
+        print("metrics")
+        Y = tf.argmax(self.Y_onehot, -1)
+        predictions = tf.argmax(self.softmax, -1)
+        tf.summary.scalar(
+            "accuracy", tf.metrics.accuracy(Y, predictions))
+        tf.summary.scalar(
+            "rmse", tf.metrics.root_mean_squared_error(self.Y_onehot, self.softmax))
+        iou = tf.metrics.mean_iou(Y, predictions, 2)[0]
+        tf.summary.scalar("iou", iou)
 
         # optimizer
         print("optimizer")
@@ -107,11 +118,11 @@ class Network:
 
         if step_type == "train":
             out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count], {
-                self.X: data_npy, self.Y: label_npy})
+                self.X: data_npy, self.Y_onehot: label_npy})
             self.train_writer.add_summary(out[2], global_step=out[4])
         else:
             out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count], {
-                self.X: data_npy, self.Y: label_npy})
+                self.X: data_npy, self.Y_onehot: label_npy})
 
             if step_type == "val":
                 self.val_writer.add_summary(out[2], global_step=out[4])

@@ -1,4 +1,5 @@
 """deals with data for project"""
+import re
 import os
 import sys
 import math
@@ -6,20 +7,41 @@ import random
 import tarfile
 import numpy as np
 import pandas as pd
+from PIL import Image
 from filecmp import dircmp
 from collections import deque
 from third_party import binvox_rw
-from lib import utils, render, dataset
+from lib import utils, dataset
 from sklearn import model_selection
 from keras.utils import to_categorical
 
 
+def load_obj_id(obj_id):
+    data_path, label_path = id_to_path(obj_id)
+    return load_data(data_path), load_label(label_path)
+
+
+def id_to_path(obj_id, data_dir="./data/ShapeNetRendering/", label_dir="./data/ShapeNetVox32/"):
+    regex = re.search("(.*)_(.*)", obj_id)
+    ret_1 = os.path.join(data_dir, regex.group(1), regex.group(2))
+    ret_2 = os.path.join(label_dir, regex.group(1), regex.group(2))
+    return ret_1, ret_2
+
+
+def get_img_sequence(render_paths):
+    ret = []
+    for r in render_paths:
+        ret.append(np.array(Image.open(r)))
+    return np.stack(ret)
+
+
 def load_data(data_samples):
-    if data_samples.ndim == 1:
-        data_samples = [data_samples]
+    if isinstance(data_samples, str) or data_samples.ndim == 1:
+        return get_img_sequence([data_samples])
+    print(data_samples)
     ret = []
     for d in data_samples:
-        data_row = render.get_render_sequence(d)
+        data_row = get_img_sequence(d)
         ret.append(data_row)
 
     return (np.stack(ret) if len(ret) != 1 else ret[0])
@@ -35,6 +57,37 @@ def load_label(label_samples):
             ret.append(binvox_rw.read_as_3d_array(f).data)
 
     return (np.stack(ret) if len(ret) != 1 else ret[0])
+
+# get data and labels
+
+
+def load_preprocessed_dataset():
+    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
+    return np.array(data_all), np.array(label_all)
+
+
+def load_preprocessed_sample():
+    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
+    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
+    i = np.random.randint(0, len(data_all))
+    return np.load(data_all[i]), np.load(label_all[i])
+
+
+def load_testset(model_dir):
+    try:
+        X_test = np.load(
+            "{}/X_test.npy".format(model_dir))
+        y_test = np.load(
+            "{}/y_test.npy".format(model_dir))
+    except:
+        model_dir = os.path.dirname(model_dir)
+        X_test = np.load(
+            "{}/X_test.npy".format(model_dir))
+        y_test = np.load(
+            "{}/y_test.npy".format(model_dir))
+
+    return X_test, y_test
 
 
 def to_npy(out_dir, arr):
@@ -86,29 +139,6 @@ def train_val_test_split(data, label, split=0.1):
 
 def read_paths(paths_dir="out/paths.csv"):
     return pd.read_csv(paths_dir, index_col=0).as_matrix()
-
-
-# get data and labels
-def get_preprocessed_dataset():
-    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
-    return np.array(data_all), np.array(label_all)
-
-
-def load_preprocessed_sample():
-    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
-    i = np.random.randint(0, len(data_all))
-    return np.load(data_all[i]), np.load(label_all[i])
-
-
-def load_model_testset(epoch_dir):
-    model_dir = os.path.dirname(epoch_dir)
-    X_test = np.load(
-        "{}/X_test.npy".format(model_dir))
-    y_test = np.load(
-        "{}/y_test.npy".format(model_dir))
-    return X_test, y_test
 
 
 def construct_path_lists(data_dir, file_filter):

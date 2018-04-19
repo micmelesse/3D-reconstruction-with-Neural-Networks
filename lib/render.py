@@ -7,13 +7,6 @@ from lib import utils, dataset
 from PIL import Image
 
 
-def get_render_sequence(render_paths):
-    ret = []
-    for r in render_paths:
-        ret.append(np.array(Image.open(r)))
-    return np.stack(ret)
-
-
 def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 

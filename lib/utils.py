@@ -80,13 +80,15 @@ def grep_epoch_count(s):
 
 
 def grep_obj_id(s):
-    regex = "^(.*)_(.*_.*)_(x|y|yp|p|sm).(png|npy)$"
-    return re.search(regex, os.path.basename(s)).group(2)
+    s = os.path.basename(s)
+    regex = "(.*_.*)_(x|y|yp|p|sm).(png|npy)$"
+    return re.search(regex, s).group(1)
 
 
 def grep_stepcount(s):
-    regex = "^(.*)_(.*_.*)_(x|y|yp|p|sm).(png|npy)$"
-    return re.search(regex, os.path.basename(s)).group(1)
+    s = os.path.basename(s)
+    regex = "(.*)_(.*_.*)_(x|y|yp|p|sm).(png|npy)$"
+    return re.search(regex, s).group(1)
 
 
 def make_dir(file_dir):
@@ -110,8 +112,3 @@ def hstack(a, b):
 
 def vstack(a, b):
     return np.vstack((a, b))
-
-
-
-
-

@@ -39,7 +39,7 @@ if __name__ == '__main__':
     print(utils.read_params()["TRAIN_PARAMS"])
 
     # get preprocessed data
-    data, label = dataset.get_preprocessed_dataset()
+    data, label = dataset.load_preprocessed_dataset()
 
     # init network
     net = network.Network()
