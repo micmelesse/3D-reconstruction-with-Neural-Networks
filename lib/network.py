@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import lib.utils as utils
 import lib.dataset as dataset
-import lib.encoder_module as encoder_module
+import lib.encoder as encoder
 import lib.recurrent_module as recurrent_module
-import lib.decoder_module as decoder_module
-import lib.loss_module as loss_module
+import lib.decoder as decoder
+import lib.loss as loss
 from lib.utils import grep_epoch_name
 
 import lib.vis as vis
@@ -39,8 +39,8 @@ class Network:
 
         # encoder
         print("encoder")
-        encoder = encoder_module.Conv_Encoder(X_cropped)
-        encoded_input = encoder.out_tensor
+        en = encoder.Conv_Encoder(X_cropped)
+        encoded_input = en.out_tensor
 
         print("recurrent_module")
         # recurrent_module
@@ -53,13 +53,13 @@ class Network:
 
         # decoder
         print("decoder")
-        decoder = decoder_module.Conv_Decoder(hidden_state)
-        self.logits = decoder.out_tensor
+        de = decoder.Conv_Decoder(hidden_state)
+        self.logits = de.out_tensor
 
         # loss
         print("loss")
         self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
-        voxel_loss = loss_module.Voxel_Softmax(self.Y_onehot, self.logits)
+        voxel_loss = loss.Voxel_Softmax(self.Y_onehot, self.logits)
         self.loss = voxel_loss.loss
         self.softmax = voxel_loss.softmax
         tf.summary.scalar("loss", self.loss)
@@ -68,11 +68,13 @@ class Network:
         print("metrics")
         Y = tf.argmax(self.Y_onehot, -1)
         predictions = tf.argmax(self.softmax, -1)
-        tf.summary.scalar(
-            "accuracy", tf.metrics.accuracy(Y, predictions))
-        tf.summary.scalar(
-            "rmse", tf.metrics.root_mean_squared_error(self.Y_onehot, self.softmax))
-        iou = tf.metrics.mean_iou(Y, predictions, 2)[0]
+        acc, self.acc_op = tf.metrics.accuracy(Y, predictions)
+        rms, self.rms_op = tf.metrics.root_mean_squared_error(
+            self.Y_onehot, self.softmax)
+        iou, self.iou_op = tf.metrics.mean_iou(Y, predictions, 2)
+
+        tf.summary.scalar("accuracy", acc)
+        tf.summary.scalar("rmse", rms)
         tf.summary.scalar("iou", iou)
 
         # optimizer
@@ -100,10 +102,9 @@ class Network:
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
 
-        print("initalize variables")
-        tf.global_variables_initializer().run()
-
-        # pointers to training objects
+        
+        # pointers to summary objects
+        print("summary writers")
         self.train_writer = tf.summary.FileWriter(
             "{}/train".format(self.MODEL_DIR), self.sess.graph)
         self.val_writer = tf.summary.FileWriter(
@@ -111,17 +112,21 @@ class Network:
         self.test_writer = tf.summary.FileWriter(
             "{}/test".format(self.MODEL_DIR), self.sess.graph)
 
+        print("initalize variables")
+        tf.global_variables_initializer().run()
+        tf.local_variables_initializer().run()
+
     def step(self, data, label, step_type):
         utils.make_dir(self.MODEL_DIR)
         cur_dir = self.get_epoch_dir()
         data_npy, label_npy = dataset.from_npy(data), dataset.from_npy(label)
 
         if step_type == "train":
-            out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count], {
+            out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count, self.acc_op, self.iou_op, self.rms_op], {
                 self.X: data_npy, self.Y_onehot: label_npy})
             self.train_writer.add_summary(out[2], global_step=out[4])
         else:
-            out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count], {
+            out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count, self.acc_op, self.iou_op, self.rms_op], {
                 self.X: data_npy, self.Y_onehot: label_npy})
 
             if step_type == "val":
