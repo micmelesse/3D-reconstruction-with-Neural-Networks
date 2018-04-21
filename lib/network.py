@@ -12,8 +12,6 @@ import lib.encoder as encoder
 import lib.recurrent_module as recurrent_module
 import lib.decoder as decoder
 import lib.loss as loss
-from lib.utils import grep_epoch_name
-
 import lib.vis as vis
 
 
@@ -138,11 +136,11 @@ class Network:
             # display the result of each element of the validation batch
             for x, y, yp, name in zip(data_npy, label_npy, out[0], data):
                 f_name = utils.get_file_name(name)[0:-2]
-                vis.sequence(
+                vis.img_sequence(
                     x, f_name="{}/{}_{}_x.png".format(cur_dir, step_count, f_name))
-                vis.softmax(
+                vis.voxel_binary(
                     y, f_name="{}/{}_{}_y.png".format(cur_dir, step_count, f_name))
-                vis.softmax(
+                vis.voxel_binary(
                     yp, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
                 np.save(
                     "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
@@ -186,7 +184,7 @@ class Network:
 
 class Network_restored:
     def __init__(self, model_dir):
-        epoch_name = grep_epoch_name(model_dir)
+        epoch_name = utils.grep_epoch_name(model_dir)
         self.sess = tf.Session(graph=tf.Graph())
         tf.saved_model.loader.load(
             self.sess, [epoch_name], model_dir + "/model")

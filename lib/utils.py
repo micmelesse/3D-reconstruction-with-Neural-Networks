@@ -1,9 +1,18 @@
+
 import os
 import re
+import glob
 import json
 import sys
 import math
 import shutil
+import lib.network as network
+import lib.dataset as dataset
+import lib.encoder as encoder
+import lib.recurrent_module as recurrent_module
+import lib.decoder as decoder
+import lib.loss as loss
+import lib.vis as vis
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -11,8 +20,19 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from skimage import exposure
 from PIL import Image
-
+from natsort import natsorted
 from filecmp import dircmp
+
+
+def model_predictions(obj_id, model_dir):
+    x, y = dataset.load_obj_id(grep_obj_id(obj_id))
+    for i in range(40):
+        net = network.Network_restored("{}/epoch_{}".format(model_dir, i))
+        yp = net.predict(x)
+
+
+def filter_files(regex):
+    return natsorted(glob.glob(regex, recursive=True))
 
 
 def list_folders(path="."):

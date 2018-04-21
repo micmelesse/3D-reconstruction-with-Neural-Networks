@@ -18,7 +18,7 @@ from keras.utils import to_categorical
 
 def load_obj_id(obj_id):
     data_path, label_path = id_to_path(obj_id)
-    return load_data(data_path), load_label(label_path)
+    return load_imgs_from_dir(data_path), np.squeeze(load_voxs_from_dir(label_path))
 
 
 def id_to_path(obj_id, data_dir="./data/ShapeNetRendering/", label_dir="./data/ShapeNetVox32/"):
@@ -28,20 +28,53 @@ def id_to_path(obj_id, data_dir="./data/ShapeNetRendering/", label_dir="./data/S
     return ret_1, ret_2
 
 
-def get_img_sequence(render_paths):
+# img loading functions
+def load_img(img_path):
+    return np.array(Image.open(img_path))
+
+
+def load_imgs(img_path_list):
+    assert(isinstance(img_path_list, list))
+
     ret = []
-    for r in render_paths:
-        ret.append(np.array(Image.open(r)))
+    for p in img_path_list:
+        ret.append(load_img(p))
     return np.stack(ret)
 
 
-def load_data(data_samples):
-    if isinstance(data_samples, str) or data_samples.ndim == 1:
-        return get_img_sequence([data_samples])
-    print(data_samples)
+def load_imgs_from_dir(img_dir):
+    img_path_list = construct_path_lists(img_dir, [".png"])
+    return load_imgs(img_path_list)
+
+
+# voxel loading functions
+def load_vox(vox_path):
+    with open(vox_path, 'rb') as f:
+        return to_categorical(binvox_rw.read_as_3d_array(f).data)
+
+
+def load_voxs(vox_path_list):
+    assert(isinstance(vox_path_list, list))
+
     ret = []
-    for d in data_samples:
-        data_row = get_img_sequence(d)
+    for p in vox_path_list:
+        ret.append(load_vox(p))
+    return np.stack(ret)
+
+
+def load_voxs_from_dir(vox_dir):
+    vox_path_list = construct_path_lists(vox_dir, [".binvox"])
+    return load_voxs(vox_path_list)
+
+
+#  dataset loading functions
+def load_data(data_samples):
+    if isinstance(data_samples, str):
+        data_samples = [data_samples]
+
+    ret = []
+    for data_path in data_samples:
+        data_row = load_imgs(data_path)
         ret.append(data_row)
 
     return (np.stack(ret) if len(ret) != 1 else ret[0])
@@ -58,9 +91,8 @@ def load_label(label_samples):
 
     return (np.stack(ret) if len(ret) != 1 else ret[0])
 
+
 # get data and labels
-
-
 def load_preprocessed_dataset():
     data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
     label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
