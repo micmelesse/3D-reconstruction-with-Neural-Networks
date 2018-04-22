@@ -24,12 +24,12 @@ if __name__ == '__main__':
 
     def save_loss(loss_arr, loss_type):
         loss_ndarr = np.array(loss_arr)
-        save_dir = net.get_epoch_dir()
+        save_dir = net.get_cur_epoch_dir()
         np.save("{}/{}_loss.npy".format(save_dir, loss_type), loss_ndarr)
 
     def plot_loss(loss_arr, loss_type):
         loss_ndarr = np.array(loss_arr)
-        save_dir = net.get_epoch_dir()
+        save_dir = net.get_cur_epoch_dir()
         plt.plot(loss_ndarr.flatten())
         plt.savefig("{}/{}_loss.png".format(save_dir, loss_type),
                     bbox_inches="tight")

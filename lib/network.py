@@ -100,7 +100,6 @@ class Network:
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
 
-        
         # pointers to summary objects
         print("summary writers")
         self.train_writer = tf.summary.FileWriter(
@@ -116,7 +115,7 @@ class Network:
 
     def step(self, data, label, step_type):
         utils.make_dir(self.MODEL_DIR)
-        cur_dir = self.get_epoch_dir()
+        cur_dir = self.get_cur_epoch_dir()
         data_npy, label_npy = dataset.from_npy(data), dataset.from_npy(label)
 
         if step_type == "train":
@@ -148,7 +147,7 @@ class Network:
         return out[1]  # return the loss
 
     def save(self):
-        cur_dir = self.get_epoch_dir()
+        cur_dir = self.get_cur_epoch_dir()
         epoch_name = utils.grep_epoch_name(cur_dir)
         model_builder = tf.saved_model.builder.SavedModelBuilder(
             cur_dir + "/model")
@@ -169,17 +168,15 @@ class Network:
         utils.make_dir(save_dir)
         return save_dir
 
-    def get_epoch_dir(self):
+    def get_cur_epoch_dir(self):
         cur_ind = self.epoch_index()
         save_dir = os.path.join(
             self.MODEL_DIR, "epoch_{}".format(cur_ind))
         return save_dir
 
     def epoch_index(self):
-        i = 0
-        while os.path.exists(os.path.join(self.MODEL_DIR, "epoch_{}".format(i))):
-            i += 1
-        return i-1
+        model_info = utils.get_model_info(self.MODEL_DIR)
+        return model_info["EPOCH_INDEX"]
 
 
 class Network_restored:

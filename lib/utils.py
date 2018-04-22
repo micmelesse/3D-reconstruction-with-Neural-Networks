@@ -24,9 +24,27 @@ from natsort import natsorted
 from filecmp import dircmp
 
 
-def model_predictions(obj_id, model_dir):
+def is_epoch_dir(epoch_dir):
+    return "epoch_" in epoch_dir
+
+
+def get_model_info(model_dir):
+    if is_epoch_dir(model_dir):
+        model_dir = os.path.dirname(model_dir)
+
+    model_info = {}
+    i = 0
+    while os.path.exists(os.path.join(model_dir, "epoch_{}".format(i))):
+        i += 1
+    model_info["EPOCH_COUNT"] = i
+    model_info["EPOCH_INDEX"] = i-1
+    return model_info
+
+
+def get_model_predictions(obj_id, model_dir):
+    model_info = get_model_info(model_dir)
     x, y = dataset.load_obj_id(grep_obj_id(obj_id))
-    for i in range(40):
+    for i in range(model_info["EPOCH_COUNT"]):
         net = network.Network_restored("{}/epoch_{}".format(model_dir, i))
         yp = net.predict(x)
 
