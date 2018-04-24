@@ -40,16 +40,19 @@ class Network:
         with tf.name_scope("recurrent_module"):
             GRU_Grid = recurrent_module.GRU_Grid()
             hidden_state = None
-            i = tf.constant(0)
+            for t in range(24):
+                hidden_state = GRU_Grid.call(
+                    encoded_input[:, t, :], hidden_state)
+            
+            # i = tf.constant(0)
+            # def condition(i):
+            #     return tf.less(i, n_timesteps)
 
-            def condition(i):
-                return tf.less(i, n_timesteps)
-
-            def body(i):
-                tf.add(i, 1)
-                return GRU_Grid.call(
-                    encoded_input[:, i, :], hidden_state)
-            hidden_state = tf.while_loop(condition, body, [i])
+            # def body(i):
+            #     tf.add(i, 1)
+            #     return GRU_Grid.call(
+            #         encoded_input[:, i, :], hidden_state)
+            # hidden_state = tf.while_loop(condition, body, [i])
 
         # decoder
         print("decoder")
