@@ -7,18 +7,20 @@ from lib import utils
 
 
 class GRU_Grid:
-    def __init__(self, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
+    def __init__(self, init=None, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
         with tf.name_scope("GRU_Grid"):
             self.N = 3
             self.n_cells = 4
             self.n_input = 1024
             self.n_hidden_state = 128
 
-            xavier = tf.contrib.layers.xavier_initializer()
-            self.W = [Weight_Matrix_Grid(initalizer=xavier)]*N
-            self.U = [tf.Variable(xavier(
+            if init is None:
+                init = tf.random_uniform_initializer()
+
+            self.W = [Weight_Matrix_Grid(initalizer=init)]*N
+            self.U = [tf.Variable(init(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
-            self.b = [tf.Variable(xavier(
+            self.b = [tf.Variable(init(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
     def linear_sum(self, W, x, U, h, b):

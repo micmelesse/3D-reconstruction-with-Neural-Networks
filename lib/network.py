@@ -11,24 +11,26 @@ from lib import dataset, encoder, recurrent_module, decoder, loss, vis, utils
 
 # Recurrent Reconstruction Neural Network (R2N2)
 class Network:
-    def __init__(self, train_params=None):
+    def __init__(self, params=None):
         # read params
-        if train_params is None:
-            train_params = utils.read_params()['TRAIN_PARAMS']
+        if params is None:
+            self.train_params = utils.read_params()['TRAIN_PARAMS']
+        else:
+            self.train_params = params
 
         self.CREATE_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self.MODEL_DIR = "out/model_{}".format(self.CREATE_TIME)
         utils.make_dir(self.MODEL_DIR)
 
         with open(self.MODEL_DIR + '/train_params.json', 'w') as f:
-            json.dump({"TRAIN_PARAMS": train_params}, f)
+            json.dump({"TRAIN_PARAMS": self.train_params}, f)
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
-        n_timesteps = tf.shape(self.X)[1]
+        # n_timesteps = tf.shape(self.X)[1]
         X_drop_alpha = self.X[:, :, :, :, 0:3]
         X_cropped = tf.map_fn(lambda a: tf.random_crop(
-            a, [24, 127, 127, 3]), X_drop_alpha)
+            a, [24, 127, 127, 3]), X_drop_alpha, name="random_crops")
 
         # encoder
         print("encoder")
@@ -38,7 +40,12 @@ class Network:
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("recurrent_module"):
-            GRU_Grid = recurrent_module.GRU_Grid()
+            if self.train_params["INITIALIZER"] == "XAVIER":
+                init = tf.contrib.layers.xavier_initializer()
+            else:
+                init = tf.random_uniform_initializer()
+
+            GRU_Grid = recurrent_module.GRU_Grid(init=init)
             hidden_state = None
             for t in range(24):
                 hidden_state = GRU_Grid.call(
@@ -69,12 +76,13 @@ class Network:
 
         # metric
         print("metrics")
-        Y = tf.argmax(self.Y_onehot, -1)
-        predictions = tf.argmax(self.softmax, -1)
-        acc, self.acc_op = tf.metrics.accuracy(Y, predictions)
-        rms, self.rms_op = tf.metrics.root_mean_squared_error(
-            self.Y_onehot, self.softmax)
-        iou, self.iou_op = tf.metrics.mean_iou(Y, predictions, 2)
+        with tf.name_scope("metrics"):
+            Y = tf.argmax(self.Y_onehot, -1)
+            predictions = tf.argmax(self.softmax, -1)
+            acc, self.acc_op = tf.metrics.accuracy(Y, predictions)
+            rms, self.rms_op = tf.metrics.root_mean_squared_error(
+                self.Y_onehot, self.softmax)
+            iou, self.iou_op = tf.metrics.mean_iou(Y, predictions, 2)
 
         tf.summary.scalar("accuracy", acc)
         tf.summary.scalar("rmse", rms)
@@ -84,12 +92,12 @@ class Network:
         print("optimizer")
         self.step_count = tf.Variable(
             0, trainable=False, name="step_count")
-        if train_params["OPTIMIZER"] == "ADAM":
+        if self.train_params["OPTIMIZER"] == "ADAM":
             optimizer = tf.train.AdamOptimizer(
-                learning_rate=train_params["LEARN_RATE"], epsilon=train_params["ADAM_EPSILON"])
+                learning_rate=self.train_params["ADAM_LEARN_RATE"], epsilon=self.train_params["ADAM_EPSILON"])
         else:
             optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=train_params["LEARN_RATE"])
+                learning_rate=self.train_params["LEARN_RATE"])
 
         grads_and_vars = optimizer.compute_gradients(self.loss)
         self.apply_grad = optimizer.apply_gradients(
@@ -118,7 +126,7 @@ class Network:
         tf.global_variables_initializer().run()
         tf.local_variables_initializer().run()
 
-    def step(self, data, label, step_type, vis_validation=False):
+    def step(self, data, label, step_type):
         utils.make_dir(self.MODEL_DIR)
         cur_dir = self.get_cur_epoch_dir()
         data_npy, label_npy = dataset.from_npy(data), dataset.from_npy(label)
@@ -138,7 +146,7 @@ class Network:
 
             step_count = out[4]
             # display the result of each element of the validation batch
-            if vis_validation:
+            if self.train_params["VIS_VALIDATION"]:
                 for x, y, yp, name in zip(data_npy, label_npy, out[0], data):
                     f_name = utils.get_file_name(name)[0:-2]
                     vis.img_sequence(
