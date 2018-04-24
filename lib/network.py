@@ -24,11 +24,11 @@ class Network:
             json.dump({"TRAIN_PARAMS": train_params}, f)
 
         # place holders
-        self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
         n_timesteps = tf.shape(self.X)[1]
         X_drop_alpha = self.X[:, :, :, :, 0:3]
         X_cropped = tf.map_fn(lambda a: tf.random_crop(
-            a, [n_timesteps, 127, 127, 3]), X_drop_alpha)
+            a, [24, 127, 127, 3]), X_drop_alpha)
 
         # encoder
         print("encoder")
@@ -43,7 +43,7 @@ class Network:
             for t in range(24):
                 hidden_state = GRU_Grid.call(
                     encoded_input[:, t, :], hidden_state)
-            
+
             # i = tf.constant(0)
             # def condition(i):
             #     return tf.less(i, n_timesteps)
