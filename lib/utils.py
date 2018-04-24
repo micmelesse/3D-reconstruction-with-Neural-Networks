@@ -6,13 +6,6 @@ import json
 import sys
 import math
 import shutil
-import lib.network as network
-import lib.dataset as dataset
-import lib.encoder as encoder
-import lib.recurrent_module as recurrent_module
-import lib.decoder as decoder
-import lib.loss as loss
-import lib.vis as vis
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -22,6 +15,7 @@ from skimage import exposure
 from PIL import Image
 from natsort import natsorted
 from filecmp import dircmp
+from lib import dataset, encoder, recurrent_module, decoder, loss, vis, utils
 
 
 def is_epoch_dir(epoch_dir):

@@ -6,13 +6,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from datetime import datetime
-import lib.utils as utils
-import lib.dataset as dataset
-import lib.encoder as encoder
-import lib.recurrent_module as recurrent_module
-import lib.decoder as decoder
-import lib.loss as loss
-import lib.vis as vis
+from lib import dataset, encoder, recurrent_module, decoder, loss, vis, utils
 
 
 # Recurrent Reconstruction Neural Network (R2N2)
@@ -30,14 +24,15 @@ class Network:
             json.dump({"TRAIN_PARAMS": train_params}, f)
 
         # place holders
-        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
+        self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+        n_timesteps = tf.shape(self.X)[1]
         X_drop_alpha = self.X[:, :, :, :, 0:3]
         X_cropped = tf.map_fn(lambda a: tf.random_crop(
-            a, [24, 127, 127, 3]), X_drop_alpha)
+            a, [n_timesteps, 127, 127, 3]), X_drop_alpha)
 
         # encoder
         print("encoder")
-        en = encoder.Conv_Encoder(X_cropped)
+        en = encoder.Original_Encoder(X_cropped)
         encoded_input = en.out_tensor
 
         print("recurrent_module")
@@ -45,13 +40,20 @@ class Network:
         with tf.name_scope("recurrent_module"):
             GRU_Grid = recurrent_module.GRU_Grid()
             hidden_state = None
-            for t in range(24):
-                hidden_state = GRU_Grid.call(
-                    encoded_input[:, t, :], hidden_state)
+            i = tf.constant(0)
+
+            def condition(i):
+                return tf.less(i, n_timesteps)
+
+            def body(i):
+                tf.add(i, 1)
+                return GRU_Grid.call(
+                    encoded_input[:, i, :], hidden_state)
+            hidden_state = tf.while_loop(condition, body, [i])
 
         # decoder
         print("decoder")
-        de = decoder.Conv_Decoder(hidden_state)
+        de = decoder.Original_Decoder(hidden_state)
         self.logits = de.out_tensor
 
         # loss
@@ -113,18 +115,18 @@ class Network:
         tf.global_variables_initializer().run()
         tf.local_variables_initializer().run()
 
-    def step(self, data, label, step_type):
+    def step(self, data, label, step_type, vis_validation=False):
         utils.make_dir(self.MODEL_DIR)
         cur_dir = self.get_cur_epoch_dir()
         data_npy, label_npy = dataset.from_npy(data), dataset.from_npy(label)
 
         if step_type == "train":
-            out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count, self.acc_op, self.iou_op, self.rms_op], {
-                self.X: data_npy, self.Y_onehot: label_npy})
+            out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count,
+                                 self.acc_op, self.iou_op, self.rms_op], {self.X: data_npy, self.Y_onehot: label_npy})
             self.train_writer.add_summary(out[2], global_step=out[4])
         else:
-            out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count, self.acc_op, self.iou_op, self.rms_op], {
-                self.X: data_npy, self.Y_onehot: label_npy})
+            out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count,
+                                 self.acc_op, self.iou_op, self.rms_op], {self.X: data_npy, self.Y_onehot: label_npy})
 
             if step_type == "val":
                 self.val_writer.add_summary(out[2], global_step=out[4])
@@ -133,16 +135,17 @@ class Network:
 
             step_count = out[4]
             # display the result of each element of the validation batch
-            for x, y, yp, name in zip(data_npy, label_npy, out[0], data):
-                f_name = utils.get_file_name(name)[0:-2]
-                vis.img_sequence(
-                    x, f_name="{}/{}_{}_x.png".format(cur_dir, step_count, f_name))
-                vis.voxel_binary(
-                    y, f_name="{}/{}_{}_y.png".format(cur_dir, step_count, f_name))
-                vis.voxel_binary(
-                    yp, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
-                np.save(
-                    "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
+            if vis_validation:
+                for x, y, yp, name in zip(data_npy, label_npy, out[0], data):
+                    f_name = utils.get_file_name(name)[0:-2]
+                    vis.img_sequence(
+                        x, f_name="{}/{}_{}_x.png".format(cur_dir, step_count, f_name))
+                    vis.voxel_binary(
+                        y, f_name="{}/{}_{}_y.png".format(cur_dir, step_count, f_name))
+                    vis.voxel_binary(
+                        yp, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
+                    np.save(
+                        "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
 
         return out[1]  # return the loss
 

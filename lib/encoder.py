@@ -1,7 +1,11 @@
 import tensorflow as tf
 
 
-class Conv_Encoder:
+class Dilated_Encoder:
+    pass
+
+
+class Original_Encoder:
     def __init__(self, prev_layer, filter_sizes=[96, 128, 256, 256, 256, 256]):
 
         assert (len(filter_sizes) == 6)

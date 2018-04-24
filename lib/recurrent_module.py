@@ -3,7 +3,7 @@ import sys
 import math
 import numpy as np
 import tensorflow as tf
-import lib.utils as utils
+from lib import utils
 
 
 class GRU_Grid:
