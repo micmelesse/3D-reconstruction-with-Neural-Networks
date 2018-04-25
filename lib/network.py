@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from datetime import datetime
-from lib import dataset, encoder, recurrent_module, decoder, loss, vis, utils
+from lib import dataset, preprocessor, encoder, recurrent_module, decoder, loss, vis, utils
 
 
 # Recurrent Reconstruction Neural Network (R2N2)
@@ -33,24 +33,20 @@ class Network:
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
-        n_batchsize = tf.shape(self.X)[0]
-        # n_timesteps = tf.shape(self.X)[1]
-        n_timesteps = 24
-        # randomly crop & drop alpha channel
-        X_dropped_alpha = self.X[:, :, :, :, 0:3]
-        X_cropped = tf.map_fn(lambda a: tf.random_crop(
-            a, [n_timesteps, 127, 127, 3]), X_dropped_alpha, name="random_crops")
+        pp = preprocessor.Preprocessor(self.X)
+        X_preprocessed = pp.out_tensor
 
         # encoder
         print("encoder")
-        en = encoder.Original_Encoder(X_cropped)
+        en = encoder.Original_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
 
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("recurrent_module"):
-            GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
+            n_batchsize = tf.shape(self.X)[0]
             hidden_state = tf.zeros([n_batchsize, 4, 4, 4, 128])
+            GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
             for t in range(24):
                 hidden_state = GRU_Grid.call(
                     encoded_input[:, t, :], hidden_state)
@@ -115,9 +111,9 @@ class Network:
         self.apply_grad = optimizer.apply_gradients(
             grads_and_vars, global_step=self.step_count)
 
-        trainable_parameters = tf.trainable_variables()
-        for p in trainable_parameters:
-            tf.summary.histogram(p.name, p)
+        # trainable_parameters = tf.trainable_variables()
+        # for p in trainable_parameters:
+        #     tf.summary.histogram(p.name, p)
 
         # misc op
         print("misc op")
@@ -127,14 +123,15 @@ class Network:
 
         # pointers to summary objects
         print("summary writers")
-        if params["MODE"] == "TRAIN":
+
+        if params["MODE"] == "TEST":
+            self.test_writer = tf.summary.FileWriter(
+                "{}/test".format(self.MODEL_DIR), self.sess.graph)
+        else:
             self.train_writer = tf.summary.FileWriter(
                 "{}/train".format(self.MODEL_DIR), self.sess.graph)
             self.val_writer = tf.summary.FileWriter(
                 "{}/val".format(self.MODEL_DIR), self.sess.graph)
-        if params["MODE"] == "TEST":
-            self.test_writer = tf.summary.FileWriter(
-                "{}/test".format(self.MODEL_DIR), self.sess.graph)
 
         print("ready!")
 
@@ -224,3 +221,6 @@ class Network_restored:
         softmax = self.sess.graph.get_tensor_by_name(sm_name)
         in_tensor = self.sess.graph.get_tensor_by_name(in_name)
         return self.sess.run(softmax, {in_tensor: x})
+
+    def feature_maps(self, x):
+        pass
