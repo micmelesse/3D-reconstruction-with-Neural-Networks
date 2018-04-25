@@ -14,9 +14,15 @@ class Network:
     def __init__(self, params=None):
         # read params
         if params is None:
-            self.train_params = utils.read_params()['TRAIN_PARAMS']
+            params = utils.read_params()
+            self.train_params = params['TRAIN_PARAMS']
         else:
             self.train_params = params
+
+        if self.train_params["INITIALIZER"] == "XAVIER":
+            init = tf.contrib.layers.xavier_initializer()
+        else:
+            init = tf.random_normal_initializer()
 
         self.CREATE_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         self.MODEL_DIR = "out/model_{}".format(self.CREATE_TIME)
@@ -25,42 +31,48 @@ class Network:
         with open(self.MODEL_DIR + '/train_params.json', 'w') as f:
             json.dump({"TRAIN_PARAMS": self.train_params}, f)
 
-        if self.train_params["INITIALIZER"] == "XAVIER":
-            init = tf.contrib.layers.xavier_initializer()
-        else:
-            init = tf.random_normal_initializer()
-
         # place holders
         self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+        n_batchsize = tf.shape(self.X)[0]
         n_timesteps = tf.shape(self.X)[1]
+        # n_timesteps = 24
         # randomly crop & drop alpha channel
+        X_dropped_alpha = self.X[:, :, :, :, 0:3]
         X_cropped = tf.map_fn(lambda a: tf.random_crop(
-            a, [n_timesteps, 127, 127, 3]), self.X[:, :, :, :, 0:3], name="random_crops")
+            a, [n_timesteps, 127, 127, 3]), X_dropped_alpha, name="random_crops")
 
         # encoder
         print("encoder")
-        en = encoder.Original_Encoder(X_cropped, initializer=init)
+        en = encoder.Original_Encoder(X_cropped)
         encoded_input = en.out_tensor
+        print(encoded_input.shape)
 
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("recurrent_module"):
             GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
-            hidden_state = tf.zeros(
-                [n_timesteps, 4, 4, 4, 128])
-
-            i = tf.constant(0)
-
-            def condition(h, i):
-                return tf.less(i, n_timesteps)
-
-            def body(h, i):
-                tf.add(i, 1)
+            hidden_state = tf.zeros([n_batchsize, 4, 4, 4, 128])
+            for t in range(24):
                 hidden_state = GRU_Grid.call(
-                    encoded_input[:, i, :], h)
-                return hidden_state, i
+                    encoded_input[:, t, :], hidden_state)
 
-            hidden_state, i = tf.while_loop(condition, body, [hidden_state, i])
+            # GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
+            # hidden_state = tf.zeros(
+            #     [n_batchsize, 4, 4, 4, 128])
+
+            # i = tf.constant(0)`
+
+            # def condition(h, i):
+            #     return tf.less(i, n_timesteps)
+
+            # def body(h, i):
+            #
+            #     hidden_state = GRU_Grid.call(
+            #         encoded_input[:, i, :], h)
+            #       tf.add(i, 1)
+            #     return hidden_state, i
+
+            # hidden_state, i = tf.while_loop(condition, body, [hidden_state, i])
 
         # decoder
         print("decoder")
@@ -104,8 +116,8 @@ class Network:
         self.apply_grad = optimizer.apply_gradients(
             grads_and_vars, global_step=self.step_count)
 
-        params = tf.trainable_variables()
-        for p in params:
+        trainable_parameters = tf.trainable_variables()
+        for p in trainable_parameters:
             tf.summary.histogram(p.name, p)
 
         # misc op
@@ -116,13 +128,18 @@ class Network:
 
         # pointers to summary objects
         print("summary writers")
-        self.train_writer = tf.summary.FileWriter(
-            "{}/train".format(self.MODEL_DIR), self.sess.graph)
-        self.val_writer = tf.summary.FileWriter(
-            "{}/val".format(self.MODEL_DIR), self.sess.graph)
-        self.test_writer = tf.summary.FileWriter(
-            "{}/test".format(self.MODEL_DIR), self.sess.graph)
+        if params["MODE"] == "TRAIN":
+            self.train_writer = tf.summary.FileWriter(
+                "{}/train".format(self.MODEL_DIR), self.sess.graph)
+            self.val_writer = tf.summary.FileWriter(
+                "{}/val".format(self.MODEL_DIR), self.sess.graph)
+        if params["MODE"] == "TEST":
+            self.test_writer = tf.summary.FileWriter(
+                "{}/test".format(self.MODEL_DIR), self.sess.graph)
 
+        print("ready!")
+
+    def init_parameters(self):
         print("initalize variables")
         tf.global_variables_initializer().run()
         tf.local_variables_initializer().run()

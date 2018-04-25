@@ -15,7 +15,7 @@ class GRU_Grid:
             self.n_hidden_state = 128
 
             if initializer is None:
-                init = tf.random_normal_initializer()
+                init = tf.contrib.layers.xavier_initializer()
             else:
                 init = initializer
 
@@ -45,7 +45,6 @@ class GRU_Grid:
         h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], fc_input,
                                               self.U[2], r_t * prev_hidden, self.b[2]))
         h_t = h_t_1 + h_t_2
-
         return h_t
 
 

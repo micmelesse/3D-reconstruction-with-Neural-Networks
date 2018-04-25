@@ -1,20 +1,29 @@
 import tensorflow as tf
+import numpy as np
+from numpy.random import choice
 
 
 def conv_sequence(sequence, n_in_filter, n_out_filter, initializer=None, K=3, S=[1, 1, 1, 1], P="SAME"):
     with tf.name_scope("conv_sequence"):
         if initializer is None:
-            initializer = tf.random_normal_initializer()
+            init = tf.contrib.layers.xavier_initializer()
+        else:
+            init = initializer
 
         kernel = tf.Variable(
-            initializer([K, K, n_in_filter, n_out_filter]), name="kernel")
+            init([K, K, n_in_filter, n_out_filter]), name="kernel")
         ret = tf.map_fn(lambda a: tf.nn.conv2d(
             a, kernel, S, padding=P), sequence, name="conv_sequence")
+
+        for i in range(24):
+            feature_map = tf.expand_dims(
+                ret[:, i, :, :, choice(n_out_filter)], -1)
+            tf.summary.image("feature_map", feature_map)
 
     return ret
 
 
-def max_pool_sequence(sequence, K=[1, 2, 2, 1], S=[1, 1, 1, 1], P="SAME"):
+def max_pool_sequence(sequence, K=[1, 2, 2, 1], S=[1, 2, 2, 1], P="SAME"):
     with tf.name_scope("max_pool_sequence"):
         ret = tf.map_fn(lambda a: tf.nn.max_pool(a, K, S, padding=P),
                         sequence, name="max_pool_sequence")
@@ -24,6 +33,7 @@ def max_pool_sequence(sequence, K=[1, 2, 2, 1], S=[1, 1, 1, 1], P="SAME"):
 def relu_sequence(sequence):
     with tf.name_scope("relu_sequence"):
         ret = tf.map_fn(tf.nn.relu, sequence, name="relu_sequence")
+    print(ret.shape)
     return ret
 
 
@@ -34,6 +44,7 @@ def flatten_sequence(sequence):
 
         ret = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
             a, 1024, activation_fn=None), flat, name='fully_connected_sequence')
+
     return ret
 
 
@@ -41,7 +52,7 @@ class Original_Encoder:
     def __init__(self, sequence, feature_map_count=[3, 96, 128, 256, 256, 256, 256], initializer=None):
         assert (len(feature_map_count) == 7)
         if initializer is None:
-            init = tf.random_normal_initializer()
+            init = tf.contrib.layers.xavier_initializer()
         else:
             init = initializer
 
