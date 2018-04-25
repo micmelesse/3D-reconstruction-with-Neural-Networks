@@ -15,10 +15,9 @@ def conv_sequence(sequence, n_in_filter, n_out_filter, initializer=None, K=3, S=
         ret = tf.map_fn(lambda a: tf.nn.conv2d(
             a, kernel, S, padding=P), sequence, name="conv_sequence")
 
-        for i in range(24):
-            feature_map = tf.expand_dims(
-                ret[:, i, :, :, choice(n_out_filter)], -1)
-            tf.summary.image("feature_map", feature_map)
+        feature_map = tf.expand_dims(
+            ret[:, 0, :, :, choice(n_out_filter)], -1)
+        tf.summary.image("feature_map", feature_map)
 
     return ret
 
@@ -56,6 +55,7 @@ class Original_Encoder:
         else:
             init = initializer
 
+        sequence = tf.transpose(sequence, [1, 0, 2, 3, 4])
         # block 0
         conv0 = conv_sequence(
             sequence, feature_map_count[0], feature_map_count[1], K=7, initializer=init)
@@ -94,7 +94,8 @@ class Original_Encoder:
 
         # final block
         flat = flatten_sequence(relu6)
-        self.out_tensor = relu_sequence(flat)
+        relu7 = relu_sequence(flat)
+        self.out_tensor = tf.transpose(relu7, [1, 0, 2])
 
 
 class Original_Encoder_old:

@@ -29,10 +29,6 @@ class GRU_Grid:
         return W.multiply(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
     def call(self, fc_input, prev_hidden):
-        if prev_hidden is None:
-            prev_hidden = tf.zeros(
-                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
-
         # update gate
         u_t = tf.sigmoid(
             self.linear_sum(self.W[0], fc_input, self.U[0], prev_hidden, self.b[0]))

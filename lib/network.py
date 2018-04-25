@@ -34,8 +34,8 @@ class Network:
         # place holders
         self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
         n_batchsize = tf.shape(self.X)[0]
-        n_timesteps = tf.shape(self.X)[1]
-        # n_timesteps = 24
+        # n_timesteps = tf.shape(self.X)[1]
+        n_timesteps = 24
         # randomly crop & drop alpha channel
         X_dropped_alpha = self.X[:, :, :, :, 0:3]
         X_cropped = tf.map_fn(lambda a: tf.random_crop(
@@ -45,7 +45,6 @@ class Network:
         print("encoder")
         en = encoder.Original_Encoder(X_cropped)
         encoded_input = en.out_tensor
-        print(encoded_input.shape)
 
         print("recurrent_module")
         # recurrent_module
