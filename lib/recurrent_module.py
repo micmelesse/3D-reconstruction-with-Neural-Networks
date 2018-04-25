@@ -7,15 +7,17 @@ from lib import utils
 
 
 class GRU_Grid:
-    def __init__(self, init=None, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
+    def __init__(self, initializer=None, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
         with tf.name_scope("GRU_Grid"):
             self.N = 3
             self.n_cells = 4
             self.n_input = 1024
             self.n_hidden_state = 128
 
-            if init is None:
-                init = tf.random_uniform_initializer()
+            if initializer is None:
+                init = tf.random_normal_initializer()
+            else:
+                init = initializer
 
             self.W = [Weight_Matrix_Grid(initalizer=init)]*N
             self.U = [tf.Variable(init(

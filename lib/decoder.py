@@ -4,7 +4,32 @@ import tensorflow as tf
 class ConvTranspose_Decoder:
     pass
 
+
 class Original_Decoder:
+    def __init__(self, prev_layer, filter_sizes=[128, 128, 128, 64, 32, 2]):
+        assert (len(filter_sizes) == 6)
+        self.out_tensor = prev_layer
+        kernel_shape = [3, 3, 3]
+
+        for i in range(6):
+            with tf.name_scope("deconv_block"):
+                if i == 0:
+                    self.out_tensor = unpooling3d(self.out_tensor)
+                elif i in range(1, 3):  # scale up hidden state to 32*32*32
+                    self.out_tensor = tf.layers.conv3d(
+                        self.out_tensor, padding='SAME', filters=filter_sizes[i], kernel_size=kernel_shape, activation=None)
+                    self.out_tensor = tf.nn.relu(self.out_tensor)
+                    self.out_tensor = unpooling3d(self.out_tensor)
+                elif i in range(3, 5):  # reduce number of channels to 2
+                    self.out_tensor = tf.layers.conv3d(
+                        self.out_tensor, padding='SAME', filters=filter_sizes[i], kernel_size=kernel_shape, activation=None)
+                    self.out_tensor = tf.nn.relu(self.out_tensor)
+                elif i == 5:  # final conv before softmax
+                    self.out_tensor = tf.layers.conv3d(
+                        self.out_tensor, padding='SAME', filters=filter_sizes[i], kernel_size=kernel_shape, activation=None)
+
+
+class Original_Decoder_old:
     def __init__(self, prev_layer, filter_sizes=[128, 128, 128, 64, 32, 2]):
         assert (len(filter_sizes) == 6)
         self.out_tensor = prev_layer

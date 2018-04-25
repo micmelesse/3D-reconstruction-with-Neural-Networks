@@ -25,45 +25,46 @@ class Network:
         with open(self.MODEL_DIR + '/train_params.json', 'w') as f:
             json.dump({"TRAIN_PARAMS": self.train_params}, f)
 
+        if self.train_params["INITIALIZER"] == "XAVIER":
+            init = tf.contrib.layers.xavier_initializer()
+        else:
+            init = tf.random_normal_initializer()
+
         # place holders
-        self.X = tf.placeholder(tf.float32, [None, 24, 137, 137, 4])
-        # n_timesteps = tf.shape(self.X)[1]
-        X_drop_alpha = self.X[:, :, :, :, 0:3]
+        self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+        n_timesteps = tf.shape(self.X)[1]
+        # randomly crop & drop alpha channel
         X_cropped = tf.map_fn(lambda a: tf.random_crop(
-            a, [24, 127, 127, 3]), X_drop_alpha, name="random_crops")
+            a, [n_timesteps, 127, 127, 3]), self.X[:, :, :, :, 0:3], name="random_crops")
 
         # encoder
         print("encoder")
-        en = encoder.Original_Encoder(X_cropped)
+        en = encoder.Original_Encoder(X_cropped, initializer=init)
         encoded_input = en.out_tensor
 
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("recurrent_module"):
-            if self.train_params["INITIALIZER"] == "XAVIER":
-                init = tf.contrib.layers.xavier_initializer()
-            else:
-                init = tf.random_uniform_initializer()
+            GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
+            hidden_state = tf.zeros(
+                [n_timesteps, 4, 4, 4, 128])
 
-            GRU_Grid = recurrent_module.GRU_Grid(init=init)
-            hidden_state = None
-            for t in range(24):
+            i = tf.constant(0)
+
+            def condition(h, i):
+                return tf.less(i, n_timesteps)
+
+            def body(h, i):
+                tf.add(i, 1)
                 hidden_state = GRU_Grid.call(
-                    encoded_input[:, t, :], hidden_state)
+                    encoded_input[:, i, :], h)
+                return hidden_state, i
 
-            # i = tf.constant(0)
-            # def condition(i):
-            #     return tf.less(i, n_timesteps)
-
-            # def body(i):
-            #     tf.add(i, 1)
-            #     return GRU_Grid.call(
-            #         encoded_input[:, i, :], hidden_state)
-            # hidden_state = tf.while_loop(condition, body, [i])
+            hidden_state, i = tf.while_loop(condition, body, [hidden_state, i])
 
         # decoder
         print("decoder")
-        de = decoder.Original_Decoder(hidden_state)
+        de = decoder.Original_Decoder_old(hidden_state)
         self.logits = de.out_tensor
 
         # loss
