@@ -185,7 +185,7 @@ class Network:
 
     def get_params(self):
         utils.make_dir(self.MODEL_DIR)
-        with open(self.MODEL_DIR+"/train_params.json") as fp:
+        with open(self.MODEL_DIR+"/params.json") as fp:
             return json.load(fp)
 
     def create_epoch_dir(self):

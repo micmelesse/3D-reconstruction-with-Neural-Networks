@@ -46,6 +46,7 @@ if __name__ == '__main__':
     # net.init_parameters()
 
     train_params = net.get_params()["TRAIN_PARAMS"]
+    print(train_params["BATCH_SIZE"])
 
     # split dataset
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
@@ -62,9 +63,9 @@ if __name__ == '__main__':
         # training and validaiton loops
         try:
             # split traning and validation set into batchs
-            X_train_batchs, y_train_batchs = dataset.get_suffeled_batchs(
+            X_train_batchs, y_train_batchs = dataset.shuffle_batchs(
                 X_train, y_train, train_params["BATCH_SIZE"])
-            X_val_batchs, y_val_batchs = dataset.get_suffeled_batchs(
+            X_val_batchs, y_val_batchs = dataset.shuffle_batchs(
                 X_val, y_val, train_params["BATCH_SIZE"])
             val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
             # print("training: {}, validation: {}" .format(

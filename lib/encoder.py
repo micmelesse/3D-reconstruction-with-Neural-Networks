@@ -57,7 +57,6 @@ def max_pool_sequence(sequence, K=[1, 2, 2, 1], S=[1, 2, 2, 1], P="SAME"):
 def relu_sequence(sequence):
     with tf.name_scope("relu_sequence"):
         ret = tf.map_fn(tf.nn.relu, sequence, name="relu_sequence")
-    print(ret.shape)
     return ret
 
 

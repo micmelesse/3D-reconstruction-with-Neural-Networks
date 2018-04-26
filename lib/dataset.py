@@ -118,7 +118,7 @@ def load_testset(model_dir):
     return X_test, y_test
 
 
-def get_suffeled_batchs(data, label, batch_size):
+def shuffle_batchs(data, label, batch_size):
     assert(len(data) == len(label))
     num_of_batches = math.ceil(len(data)/batch_size)
     perm = permutation(len(data))
