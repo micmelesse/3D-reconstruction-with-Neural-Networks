@@ -123,7 +123,6 @@ class Network:
 
         # pointers to summary objects
         print("summary writers")
-
         if params["MODE"] == "TEST":
             self.test_writer = tf.summary.FileWriter(
                 "{}/test".format(self.MODEL_DIR), self.sess.graph)

@@ -1,2 +1,2 @@
 git pull
-python trainer.py
+python run.py

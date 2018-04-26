@@ -16,14 +16,29 @@ def conv_sequence(sequence, n_in_filter, n_out_filter, initializer=None, K=3, S=
         ret = tf.map_fn(lambda a: tf.nn.bias_add(tf.nn.conv2d(
             a, kernel, S, padding=P), bias), sequence, name="conv_sequence")
 
-        feature_map = tf.expand_dims(
-            ret[:, 0, :, :, 0], -1)
+        feature_map = tf.transpose(tf.expand_dims(
+            ret[0, 0, :, :, :], -1), [2, 0, 1, 3])
 
-        # tf.summary.image("kernel", kernel)
         tf.summary.image("feature_map", feature_map)
+        # tf.summary.image("kernel", kernel)
         tf.summary.histogram("kernel", kernel)
         tf.summary.histogram("bias", bias)
 
+    return ret
+
+
+def fully_connected_sequence(sequence, initializer=None):
+    if initializer is None:
+        init = tf.contrib.layers.xavier_initializer()
+    else:
+        init = initializer
+
+    weights = tf.Variable(
+        init([1024, 1024]), name="weights")
+    bias = tf.Variable(init([1024]), name="bias")
+
+    ret = tf.map_fn(lambda a: tf.nn.bias_add(
+        tf.matmul(a, weights), bias), sequence, name='fully_connected_sequence')
     return ret
 
 
@@ -43,12 +58,8 @@ def relu_sequence(sequence):
 
 def flatten_sequence(sequence):
     with tf.name_scope("flatten_sequence"):
-        flat = tf.map_fn(
+        ret = tf.map_fn(
             tf.contrib.layers.flatten,  sequence, name="flatten_sequence")
-
-        ret = tf.map_fn(lambda a: tf.contrib.layers.fully_connected(
-            a, 1024, activation_fn=None), flat, name='fully_connected_sequence')
-
     return ret
 
 
@@ -99,7 +110,8 @@ class Original_Encoder:
 
         # final block
         flat = flatten_sequence(relu6)
-        relu7 = relu_sequence(flat)
+        fc0 = fully_connected_sequence(flat)
+        relu7 = relu_sequence(fc0)
         # self.out_tensor = tf.transpose(relu7, [1, 0, 2])
         self.out_tensor = relu7
 

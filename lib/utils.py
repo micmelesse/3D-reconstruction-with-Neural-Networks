@@ -18,6 +18,12 @@ from filecmp import dircmp
 from lib import dataset, encoder, recurrent_module, decoder, loss, vis, utils
 
 
+# inspired by numpy move axis function
+# def tf_move_axis(X, src, dst):
+#     ndim = len(X.get_shape())
+#     order = [for i in range(ndim)]
+
+
 def is_epoch_dir(epoch_dir):
     return "epoch_" in epoch_dir
 
