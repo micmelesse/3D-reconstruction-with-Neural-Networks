@@ -120,7 +120,7 @@ def load_testset(model_dir):
 
 
 def shuffle_batchs(data, label, batch_size):
-    print(data, label, batch_size)
+    # print(data, label, batch_size)
     assert(len(data) == len(label))
     num_of_batches = math.ceil(len(data)/batch_size)
     perm = permutation(len(data))
