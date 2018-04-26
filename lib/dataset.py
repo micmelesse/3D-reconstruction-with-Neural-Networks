@@ -16,7 +16,7 @@ from third_party import binvox_rw
 from lib import utils, dataset
 from sklearn import model_selection
 from keras.utils import to_categorical
-from numpy.random import randint, permutation
+from numpy.random import randint, permutation, shuffle
 from numpy import radians
 from natsort import natsorted
 
@@ -33,17 +33,31 @@ def id_to_path(obj_id, data_dir="./data/ShapeNetRendering/", label_dir="./data/S
     return ret_1, ret_2
 
 
-# img loading functions
+# loading functions
 def load_img(img_path):
     return np.array(Image.open(img_path))
 
 
+def load_vox(vox_path):
+    with open(vox_path, 'rb') as f:
+        return to_categorical(binvox_rw.read_as_3d_array(f).data)
+
+
 def load_imgs(img_path_list):
-    assert(isinstance(img_path_list, list))
+    assert(isinstance(img_path_list, (list, np.ndarray)))
 
     ret = []
     for p in img_path_list:
         ret.append(load_img(p))
+    return np.stack(ret)
+
+
+def load_voxs(vox_path_list):
+    assert(isinstance(vox_path_list, (list, np.ndarray)))
+
+    ret = []
+    for p in vox_path_list:
+        ret.append(load_vox(p))
     return np.stack(ret)
 
 
@@ -52,52 +66,25 @@ def load_imgs_from_dir(img_dir):
     return load_imgs(img_path_list)
 
 
-# voxel loading functions
-def load_vox(vox_path):
-    with open(vox_path, 'rb') as f:
-        return to_categorical(binvox_rw.read_as_3d_array(f).data)
-
-
-def load_voxs(vox_path_list):
-    assert(isinstance(vox_path_list, list))
-
-    ret = []
-    for p in vox_path_list:
-        ret.append(load_vox(p))
-    return np.stack(ret)
-
-
 def load_voxs_from_dir(vox_dir):
     vox_path_list = construct_file_path_list_from_dir(vox_dir, [".binvox"])
     return load_voxs(vox_path_list)
 
 
-#  dataset loading functions
+# #  dataset loading functions
 def load_data(data_samples):
     if isinstance(data_samples, str):
         data_samples = [data_samples]
-
-    ret = []
-    for data_path in data_samples:
-        data_row = load_imgs(data_path)
-        ret.append(data_row)
-
-    return (np.stack(ret) if len(ret) != 1 else ret[0])
+    return load_imgs(data_samples)
 
 
 def load_label(label_samples):
     if isinstance(label_samples, str):
         label_samples = [label_samples]
-
-    ret = []
-    for voxel_path in label_samples:
-        with open(voxel_path, 'rb') as f:
-            ret.append(binvox_rw.read_as_3d_array(f).data)
-
-    return (np.stack(ret) if len(ret) != 1 else ret[0])
+    return load_voxs(label_samples)
 
 
-# get data and labels
+# load preprocessed data and labels
 def load_preprocessed_dataset():
     data_all = sorted(
         dataset.construct_file_path_list_from_dir("out", ["_x.npy"]))
@@ -131,32 +118,6 @@ def load_testset(model_dir):
     return X_test, y_test
 
 
-def to_npy(out_dir, arr):
-    np.save(out_dir, arr)
-
-
-def from_npy(npy_path):
-    if isinstance(npy_path, str):
-        return np.expand_dims(np.load(npy_path), 0)
-    ret = []
-    for p in npy_path:
-        ret.append(np.load(p))
-    return np.stack(ret)
-
-
-def convert_dataset_to_npy(paths, N=None):
-    if N is None or N <= 0 or N >= len(paths):
-        N = len(paths)
-
-    print("convert {} datapoints and labels to npy".format(N))
-    for i in range(N):
-        model_name = paths[i, 0]
-        to_npy('out/{}_x'.format(model_name),
-               load_data(paths[i, 1:-1]))
-        to_npy('out/{}_y'.format(model_name),
-               (to_categorical(load_label(paths[i, -1]))).astype(np.uint8))
-
-
 def get_suffeled_batchs(data, label, batch_size):
     assert(len(data) == len(label))
     num_of_batches = math.ceil(len(data)/batch_size)
@@ -178,27 +139,23 @@ def train_val_test_split(data, label, split=0.1):
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
-def read_path_csv(paths_dir="out/paths.csv"):
-    return pd.read_csv(paths_dir, index_col=0).as_matrix()
-
-
 def setup_dir():
-    TRAIN_DIRS = ["data", "data_preprocessed", "aws", "results"]
-    for d in TRAIN_DIRS:
+    params = utils.read_params()
+    DIR = params["DIRS"]
+    for d in DIR.values():
         utils.make_dir(d)
 
-    param_data = {
-        "MODE": "TRAIN",
-        "TRAIN_PARAMS": {
-        },
-        "AWS_PARAMS": {
-        },
-        "DIRS": {
-        }
-    }
     param_name = "params.json"
-
     if not os.path.exists(param_name):
+        param_data = {
+            "MODE": "TRAIN",
+            "TRAIN_PARAMS": {
+            },
+            "AWS_PARAMS": {
+            },
+            "DIRS": {
+            }
+        }
         with open(param_name, 'w') as param_file:
             json.dump(param_data, param_file)
 
@@ -225,6 +182,7 @@ def construct_file_path_list_from_dir(dir, file_filter):
 
 def create_path_csv(data_dir, label_dir):
     print("creating path csv for {} and {}".format(data_dir, label_dir))
+    params = utils.read_params()
 
     common_paths = []
     for dir_top, subdir_cmps in dircmp(data_dir, label_dir).subdirs.items():
@@ -246,7 +204,7 @@ def create_path_csv(data_dir, label_dir):
         table.append(data_row)
 
     paths = pd.DataFrame(table)
-    paths.to_csv("out/paths.csv")
+    paths.to_csv("{}/paths.csv".format(params["DIRS"]["OUTPUT"]))
     return paths
 
 
@@ -273,14 +231,31 @@ def download_dataset():
         download_from_link(DATA_LINK)
 
 
-def create_preprocessed_dataset():
+def preprocess_dataset():
     params = utils.read_params()
     dataset_size = params["MISC"]["DATASET_SIZE"]
+    output_dir = params["DIRS"]["OUTPUT"]
+    data_preprocessed_dir = params["DIRS"]["DATA_PREPROCESSED"]
+    data_dir = params["DIRS"]["DATA"]
 
-    if not os.path.isfile("{}/paths.csv".format(params["DIRS"]["OUTPUT_DIR"])):
-        dataset.create_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
-    path_list = read_path_csv()
-    convert_dataset_to_npy(path_list, N=dataset_size)
+    if not os.path.isfile("{}/paths.csv".format(output_dir)):
+        dataset.create_path_csv(
+            "{}/ShapeNetRendering".format(data_dir), "{}/ShapeNetVox32".format(data_dir))
+
+    path_list = pd.read_csv(
+        "{}/paths.csv".format(output_dir), index_col=0).as_matrix()
+    # randomly pick examples from dataset
+    shuffle(path_list)
+
+    if dataset_size <= 0 or dataset_size >= len(path_list):
+        dataset_size = len(path_list)
+
+    for i in range(dataset_size):
+        model_name = path_list[i, 0]
+        utils.to_npy('{}/{}_x'.format(data_preprocessed_dir, model_name),
+                     load_data(path_list[i, 1:-1]))
+        utils.to_npy('{}/{}_y'.format(data_preprocessed_dir, model_name),
+                     load_label(path_list[i, -1]))
 
 
 def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):

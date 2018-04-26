@@ -1,1 +1,1 @@
-rm -rf ./out/model*
+rm -rf ./models_local/model*

@@ -15,13 +15,26 @@ from skimage import exposure
 from PIL import Image
 from natsort import natsorted
 from filecmp import dircmp
-from lib import dataset, encoder, recurrent_module, decoder, loss, vis, utils
+from lib import dataset, network, encoder, recurrent_module, decoder, loss, vis, utils
 
 
 # inspired by numpy move axis function
 # def tf_move_axis(X, src, dst):
 #     ndim = len(X.get_shape())
 #     order = [for i in range(ndim)]
+
+
+def to_npy(out_dir, arr):
+    np.save(out_dir, arr)
+
+
+def load_npy(npy_path):
+    if isinstance(npy_path, str):
+        return np.expand_dims(np.load(npy_path), 0)
+    ret = []
+    for p in npy_path:
+        ret.append(np.load(p))
+    return np.stack(ret)
 
 
 def is_epoch_dir(epoch_dir):
@@ -59,7 +72,6 @@ def list_folders(path="."):
     for f in folder_list:
         ret.append(path+"/"+f)
     return ret
-
 
 
 def read_params(json_dir="params.json"):

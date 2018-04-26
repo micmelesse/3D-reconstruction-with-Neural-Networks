@@ -1,1 +1,1 @@
-rm -rf ./out/paths.csv
+rm -rf ./output/paths.csv

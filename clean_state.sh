@@ -1,1 +1,1 @@
-rm -rf ./out/stat*
+rm -rf ./output/stat*

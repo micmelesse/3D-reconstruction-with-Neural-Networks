@@ -1,1 +1,1 @@
-rm -rf ./out/*.npy
+rm -rf ./data_preprocessed/*.npy

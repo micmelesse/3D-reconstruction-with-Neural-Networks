@@ -25,7 +25,10 @@ docs
 data
 data_preprocessed
 models
+models_local
+models_remote
 aws
 out
+output
 results
 params.json

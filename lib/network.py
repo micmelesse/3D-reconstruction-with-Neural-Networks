@@ -14,22 +14,22 @@ class Network:
     def __init__(self, params=None):
         # read params
         if params is None:
-            params = utils.read_params()
-            self.train_params = params['TRAIN_PARAMS']
+            self.params = utils.read_params()
         else:
-            self.train_params = params
+            self.params = params
 
-        if self.train_params["INITIALIZER"] == "XAVIER":
+        if self.params["TRAIN_PARAMS"]["INITIALIZER"] == "XAVIER":
             init = tf.contrib.layers.xavier_initializer()
         else:
             init = tf.random_normal_initializer()
 
         self.CREATE_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        self.MODEL_DIR = "out/model_{}".format(self.CREATE_TIME)
+        self.MODEL_DIR = "{}/model_{}".format(
+            self.params["DIRS"]["MODELS_LOCAL"], self.CREATE_TIME)
         utils.make_dir(self.MODEL_DIR)
 
-        with open(self.MODEL_DIR + '/train_params.json', 'w') as f:
-            json.dump({"TRAIN_PARAMS": self.train_params}, f)
+        with open(self.MODEL_DIR + '/params.json', 'w') as f:
+            json.dump(self.params, f)
 
         # place holders
         self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
@@ -86,13 +86,13 @@ class Network:
         print("optimizer")
         self.step_count = tf.Variable(
             0, trainable=False, name="step_count")
-        if self.train_params["OPTIMIZER"] == "ADAM":
+        if self.params["TRAIN_PARAMS"]["OPTIMIZER"] == "ADAM":
             optimizer = tf.train.AdamOptimizer(
-                learning_rate=self.train_params["ADAM_LEARN_RATE"], epsilon=self.train_params["ADAM_EPSILON"])
+                learning_rate=self.params["TRAIN_PARAMS"]["ADAM_LEARN_RATE"], epsilon=self.params["TRAIN_PARAMS"]["ADAM_EPSILON"])
             tf.summary.scalar("adam_learning_rate", optimizer._lr)
         else:
             optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=self.train_params["LEARN_RATE"])
+                learning_rate=self.params["TRAIN_PARAMS"]["LEARN_RATE"])
             tf.summary.scalar("learning_rate", optimizer._learning_rate)
 
         grads_and_vars = optimizer.compute_gradients(self.loss)
@@ -127,7 +127,7 @@ class Network:
 
         # summaries
         print("summaries")
-        if params["MODE"] == "TEST":
+        if self.params["MODE"] == "TEST":
             self.test_writer = tf.summary.FileWriter(
                 "{}/test".format(self.MODEL_DIR), self.sess.graph)
         else:
@@ -141,7 +141,7 @@ class Network:
     def step(self, data, label, step_type):
         utils.make_dir(self.MODEL_DIR)
         cur_dir = self.get_cur_epoch_dir()
-        data_npy, label_npy = dataset.from_npy(data), dataset.from_npy(label)
+        data_npy, label_npy = utils.load_npy(data), utils.load_npy(label)
 
         if step_type == "train":
             out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count,
@@ -158,7 +158,7 @@ class Network:
 
             step_count = out[4]
             # display the result of each element of the validation batch
-            if self.train_params["VIS_VALIDATION"]:
+            if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
                 for x, y, yp, name in zip(data_npy, label_npy, out[0], data):
                     f_name = utils.get_file_name(name)[0:-2]
                     vis.img_sequence(
