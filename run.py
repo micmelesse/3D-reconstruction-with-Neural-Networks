@@ -46,7 +46,6 @@ if __name__ == '__main__':
     # net.init_parameters()
 
     train_params = net.get_params()["TRAIN_PARAMS"]
-    print(train_params["BATCH_SIZE"])
 
     # split dataset
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(

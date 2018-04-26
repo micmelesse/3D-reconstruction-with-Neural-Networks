@@ -81,25 +81,26 @@ def load_data(data_samples):
 def load_label(label_samples):
     if isinstance(label_samples, str):
         label_samples = [label_samples]
-    return load_voxs(label_samples)
+    return np.squeeze(load_voxs(label_samples))
 
 
 # load preprocessed data and labels
 def load_preprocessed_dataset():
+    data_preprocessed_dir = utils.read_params(
+    )["DIRS"]["DATA_PREPROCESSED"]
+
     data_all = sorted(
-        dataset.construct_file_path_list_from_dir("out", ["_x.npy"]))
+        dataset.construct_file_path_list_from_dir(data_preprocessed_dir, ["_x.npy"]))
     label_all = sorted(
-        dataset.construct_file_path_list_from_dir("out", ["_y.npy"]))
+        dataset.construct_file_path_list_from_dir(data_preprocessed_dir, ["_y.npy"]))
+
     return np.array(data_all), np.array(label_all)
 
 
 def load_preprocessed_sample():
-    data_all = sorted(
-        dataset.construct_file_path_list_from_dir("out", ["_x.npy"]))
-    label_all = sorted(
-        dataset.construct_file_path_list_from_dir("out", ["_y.npy"]))
-    i = randint(0, len(data_all))
-    return np.load(data_all[i]), np.load(label_all[i])
+    data, label = load_preprocessed_dataset()
+    i = randint(0, len(data))
+    return np.load(data), np.load(label)
 
 
 def load_testset(model_dir):
@@ -119,6 +120,7 @@ def load_testset(model_dir):
 
 
 def shuffle_batchs(data, label, batch_size):
+    print(data, label, batch_size)
     assert(len(data) == len(label))
     num_of_batches = math.ceil(len(data)/batch_size)
     perm = permutation(len(data))
