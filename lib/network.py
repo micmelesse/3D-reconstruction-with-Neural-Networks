@@ -38,7 +38,7 @@ class Network:
 
         # encoder
         print("encoder")
-        en = encoder.Original_Encoder(X_preprocessed)
+        en = encoder.Basic_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
 
         print("recurrent_module")
@@ -71,7 +71,7 @@ class Network:
 
         # decoder
         print("decoder")
-        de = decoder.Original_Decoder_old(hidden_state)
+        de = decoder.Basic_Decoder_old(hidden_state)
         self.logits = de.out_tensor
 
         # loss

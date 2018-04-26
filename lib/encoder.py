@@ -19,8 +19,8 @@ def conv_sequence(sequence, n_in_filter, n_out_filter, initializer=None, K=3, S=
         feature_map = tf.transpose(tf.expand_dims(
             ret[0, 0, :, :, :], -1), [2, 0, 1, 3])
 
-        tf.summary.image("feature_map", feature_map)
         # tf.summary.image("kernel", kernel)
+        tf.summary.image("feature_map", feature_map)
         tf.summary.histogram("kernel", kernel)
         tf.summary.histogram("bias", bias)
 
@@ -28,17 +28,22 @@ def conv_sequence(sequence, n_in_filter, n_out_filter, initializer=None, K=3, S=
 
 
 def fully_connected_sequence(sequence, initializer=None):
-    if initializer is None:
-        init = tf.contrib.layers.xavier_initializer()
-    else:
-        init = initializer
+    with tf.name_scope("fully_connected_sequence"):
+        if initializer is None:
+            init = tf.contrib.layers.xavier_initializer()
+        else:
+            init = initializer
 
-    weights = tf.Variable(
-        init([1024, 1024]), name="weights")
-    bias = tf.Variable(init([1024]), name="bias")
+        weights = tf.Variable(
+            init([1024, 1024]), name="weights")
+        bias = tf.Variable(init([1024]), name="bias")
 
-    ret = tf.map_fn(lambda a: tf.nn.bias_add(
-        tf.matmul(a, weights), bias), sequence, name='fully_connected_sequence')
+        ret = tf.map_fn(lambda a: tf.nn.bias_add(
+            tf.matmul(a, weights), bias), sequence, name='fully_connected_sequence')
+
+        tf.summary.histogram("weights", weights)
+        tf.summary.histogram("bias", bias)
+
     return ret
 
 
@@ -63,7 +68,7 @@ def flatten_sequence(sequence):
     return ret
 
 
-class Original_Encoder:
+class Basic_Encoder:
     def __init__(self, sequence, feature_map_count=[3, 96, 128, 256, 256, 256, 256], initializer=None):
         assert (len(feature_map_count) == 7)
         if initializer is None:
@@ -116,7 +121,7 @@ class Original_Encoder:
         self.out_tensor = relu7
 
 
-class Original_Encoder_old:
+class Basic_Encoder_old:
     def __init__(self, prev_layer, feature_map_count=[96, 128, 256, 256, 256, 256]):
 
         assert (len(feature_map_count) == 6)

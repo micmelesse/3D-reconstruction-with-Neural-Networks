@@ -5,7 +5,7 @@ class ConvTranspose_Decoder:
     pass
 
 
-class Original_Decoder:
+class Basic_Decoder:
     def __init__(self, prev_layer, filter_sizes=[128, 128, 128, 64, 32, 2]):
         assert (len(filter_sizes) == 6)
         self.out_tensor = prev_layer
@@ -29,7 +29,7 @@ class Original_Decoder:
                         self.out_tensor, padding='SAME', filters=filter_sizes[i], kernel_size=kernel_shape, activation=None)
 
 
-class Original_Decoder_old:
+class Basic_Decoder_old:
     def __init__(self, prev_layer, filter_sizes=[128, 128, 128, 64, 32, 2]):
         assert (len(filter_sizes) == 6)
         self.out_tensor = prev_layer

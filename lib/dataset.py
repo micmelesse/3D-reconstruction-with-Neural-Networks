@@ -1,5 +1,6 @@
 """deals with data for project"""
 import re
+import json
 import os
 import sys
 import math
@@ -15,6 +16,7 @@ from third_party import binvox_rw
 from lib import utils, dataset
 from sklearn import model_selection
 from keras.utils import to_categorical
+from np.random import randint
 
 
 def load_obj_id(obj_id):
@@ -103,7 +105,7 @@ def load_preprocessed_dataset():
 def load_preprocessed_sample():
     data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
     label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
-    i = np.random.randint(0, len(data_all))
+    i = randint(0, len(data_all))
     return np.load(data_all[i]), np.load(label_all[i])
 
 
@@ -170,16 +172,37 @@ def train_val_test_split(data, label, split=0.1):
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
-def read_paths(paths_dir="out/paths.csv"):
+def read_path_csv(paths_dir="out/paths.csv"):
     return pd.read_csv(paths_dir, index_col=0).as_matrix()
 
 
-def construct_path_lists(data_dir, file_filter):
+def setup_dir():
+    TRAIN_DIRS = ["data", "data_preprocessed", "aws", "results"]
+    for d in TRAIN_DIRS:
+        utils.make_dir(d)
+
+    param_data = {
+        "MODE": "TRAIN",
+        "TRAIN_PARAMS": {
+        },
+        "AWS_PARAMS": {
+        },
+        "DIRS": {
+        }
+    }
+    param_name = "params.json"
+
+    if not os.path.exists(param_name):
+        with open(param_name, 'w') as param_file:
+            json.dump(param_data, param_file)
+
+
+def construct_file_path_list_for_dir(dir, file_filter):
     if isinstance(file_filter, str):
         file_filter = [file_filter]
     paths = [[] for _ in range(len(file_filter))]
 
-    for root, _, files in os.walk(data_dir):
+    for root, _, files in os.walk(dir):
         for f_name in files:
             for i, f_substr in enumerate(file_filter):
                 if f_substr in f_name:
@@ -211,8 +234,8 @@ def write_path_csv(data_dir, label_dir):
     table = []
     for n, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
         data_row = [os.path.dirname(n)+"_"+os.path.basename(n)]
-        data_row += construct_path_lists(d, [".png"])
-        data_row += construct_path_lists(l, [".binvox"])
+        data_row += construct_file_path_list_for_dir(d, [".png"])
+        data_row += construct_file_path_list_for_dir(l, [".binvox"])
         table.append(data_row)
 
     paths = pd.DataFrame(table)
@@ -246,7 +269,7 @@ def download():
 def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
-    pathlist_tuple = dataset.construct_path_lists(
+    pathlist_tuple = construct_file_path_list_for_dir(
         dataset_dir, ['.obj', '.mtl'])
     pathlist = pathlist_tuple[0]  # DANGER, RANDOM
     random.shuffle(pathlist)
