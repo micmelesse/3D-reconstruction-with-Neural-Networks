@@ -82,6 +82,27 @@ class Network:
         self.softmax = voxel_loss.softmax
         tf.summary.scalar("loss", self.loss)
 
+        # optimizer
+        print("optimizer")
+        self.step_count = tf.Variable(
+            0, trainable=False, name="step_count")
+        if self.train_params["OPTIMIZER"] == "ADAM":
+            optimizer = tf.train.AdamOptimizer(
+                learning_rate=self.train_params["ADAM_LEARN_RATE"], epsilon=self.train_params["ADAM_EPSILON"])
+            tf.summary.scalar("adam_learning_rate", optimizer._lr)
+        else:
+            optimizer = tf.train.GradientDescentOptimizer(
+                learning_rate=self.train_params["LEARN_RATE"])
+            tf.summary.scalar("learning_rate", optimizer._learning_rate)
+
+        grads_and_vars = optimizer.compute_gradients(self.loss)
+        self.apply_grad = optimizer.apply_gradients(
+            grads_and_vars, global_step=self.step_count)
+
+        # trainable_parameters = tf.trainable_variables()
+        # for p in trainable_parameters:
+        #     tf.summary.histogram(p.name, p)
+
         # metric
         print("metrics")
         with tf.name_scope("metrics"):
@@ -96,33 +117,16 @@ class Network:
         tf.summary.scalar("rmse", rms)
         tf.summary.scalar("iou", iou)
 
-        # optimizer
-        print("optimizer")
-        self.step_count = tf.Variable(
-            0, trainable=False, name="step_count")
-        if self.train_params["OPTIMIZER"] == "ADAM":
-            optimizer = tf.train.AdamOptimizer(
-                learning_rate=self.train_params["ADAM_LEARN_RATE"], epsilon=self.train_params["ADAM_EPSILON"])
-        else:
-            optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=self.train_params["LEARN_RATE"])
-
-        grads_and_vars = optimizer.compute_gradients(self.loss)
-        self.apply_grad = optimizer.apply_gradients(
-            grads_and_vars, global_step=self.step_count)
-
-        # trainable_parameters = tf.trainable_variables()
-        # for p in trainable_parameters:
-        #     tf.summary.histogram(p.name, p)
-
-        # misc op
-        print("misc op")
+        # initalize
+        print("initalize")
         self.print = tf.Print(self.loss, [self.step_count, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
+        tf.global_variables_initializer().run()
+        tf.local_variables_initializer().run()
 
-        # pointers to summary objects
-        print("summary writers")
+        # summaries
+        print("summaries")
         if params["MODE"] == "TEST":
             self.test_writer = tf.summary.FileWriter(
                 "{}/test".format(self.MODEL_DIR), self.sess.graph)
@@ -132,12 +136,7 @@ class Network:
             self.val_writer = tf.summary.FileWriter(
                 "{}/val".format(self.MODEL_DIR), self.sess.graph)
 
-        print("ready!")
-
-    def init_parameters(self):
-        print("initalize variables")
-        tf.global_variables_initializer().run()
-        tf.local_variables_initializer().run()
+        print("...done!")
 
     def step(self, data, label, step_type):
         utils.make_dir(self.MODEL_DIR)

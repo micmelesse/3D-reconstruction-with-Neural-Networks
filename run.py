@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     # init network
     net = network.Network()
-    net.init_parameters()
+    # net.init_parameters()
 
     train_params = net.get_params()["TRAIN_PARAMS"]
 

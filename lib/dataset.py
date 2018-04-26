@@ -16,7 +16,9 @@ from third_party import binvox_rw
 from lib import utils, dataset
 from sklearn import model_selection
 from keras.utils import to_categorical
-from np.random import randint
+from numpy.random import randint, permutation
+from numpy import radians
+from natsort import natsorted
 
 
 def load_obj_id(obj_id):
@@ -46,7 +48,7 @@ def load_imgs(img_path_list):
 
 
 def load_imgs_from_dir(img_dir):
-    img_path_list = construct_path_lists(img_dir, [".png"])
+    img_path_list = construct_file_path_list_from_dir(img_dir, [".png"])
     return load_imgs(img_path_list)
 
 
@@ -66,7 +68,7 @@ def load_voxs(vox_path_list):
 
 
 def load_voxs_from_dir(vox_dir):
-    vox_path_list = construct_path_lists(vox_dir, [".binvox"])
+    vox_path_list = construct_file_path_list_from_dir(vox_dir, [".binvox"])
     return load_voxs(vox_path_list)
 
 
@@ -97,14 +99,18 @@ def load_label(label_samples):
 
 # get data and labels
 def load_preprocessed_dataset():
-    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
+    data_all = sorted(
+        dataset.construct_file_path_list_from_dir("out", ["_x.npy"]))
+    label_all = sorted(
+        dataset.construct_file_path_list_from_dir("out", ["_y.npy"]))
     return np.array(data_all), np.array(label_all)
 
 
 def load_preprocessed_sample():
-    data_all = sorted(dataset.construct_path_lists("out", ["_x.npy"]))
-    label_all = sorted(dataset.construct_path_lists("out", ["_y.npy"]))
+    data_all = sorted(
+        dataset.construct_file_path_list_from_dir("out", ["_x.npy"]))
+    label_all = sorted(
+        dataset.construct_file_path_list_from_dir("out", ["_y.npy"]))
     i = randint(0, len(data_all))
     return np.load(data_all[i]), np.load(label_all[i])
 
@@ -154,7 +160,7 @@ def convert_dataset_to_npy(paths, N=None):
 def get_suffeled_batchs(data, label, batch_size):
     assert(len(data) == len(label))
     num_of_batches = math.ceil(len(data)/batch_size)
-    perm = np.random.permutation(len(data))
+    perm = permutation(len(data))
     data_batchs = np.array_split(data[perm], num_of_batches)
     label_batchs = np.array_split(label[perm], num_of_batches)
 
@@ -197,7 +203,7 @@ def setup_dir():
             json.dump(param_data, param_file)
 
 
-def construct_file_path_list_for_dir(dir, file_filter):
+def construct_file_path_list_from_dir(dir, file_filter):
     if isinstance(file_filter, str):
         file_filter = [file_filter]
     paths = [[] for _ in range(len(file_filter))]
@@ -208,15 +214,16 @@ def construct_file_path_list_for_dir(dir, file_filter):
                 if f_substr in f_name:
                     (paths[i]).append(root + '/' + f_name)
 
-    for p in paths:
-        p.sort()
+    for i, p in enumerate(paths):
+        paths[i] = natsorted(p)
+
     if len(file_filter) == 1:
         return paths[0]
 
     return tuple(paths)
 
 
-def write_path_csv(data_dir, label_dir):
+def create_path_csv(data_dir, label_dir):
     print("creating path csv for {} and {}".format(data_dir, label_dir))
 
     common_paths = []
@@ -234,8 +241,8 @@ def write_path_csv(data_dir, label_dir):
     table = []
     for n, d, l in zip(common_paths, mapping.data_dirs, mapping.label_dirs):
         data_row = [os.path.dirname(n)+"_"+os.path.basename(n)]
-        data_row += construct_file_path_list_for_dir(d, [".png"])
-        data_row += construct_file_path_list_for_dir(l, [".binvox"])
+        data_row += construct_file_path_list_from_dir(d, [".png"])
+        data_row += construct_file_path_list_from_dir(l, [".binvox"])
         table.append(data_row)
 
     paths = pd.DataFrame(table)
@@ -243,7 +250,7 @@ def write_path_csv(data_dir, label_dir):
     return paths
 
 
-def download_dataset(link):
+def download_from_link(link):
     download_folder = os.path.splitext(os.path.basename(link))[0]
     archive = download_folder + ".tgz"
 
@@ -255,24 +262,33 @@ def download_dataset(link):
     os.system("rm -f {0}".format(archive))
 
 
-def download():
+def download_dataset():
     LABEL_LINK = 'ftp://cs.stanford.edu/cs/cvgl/ShapeNetVox32.tgz'
     DATA_LINK = "ftp://cs.stanford.edu/cs/cvgl/ShapeNetRendering.tgz"
 
     if not os.path.isdir("data/ShapeNetVox32"):
-        download_dataset(LABEL_LINK)
+        download_from_link(LABEL_LINK)
 
     if not os.path.isdir("data/ShapeNetRendering"):
-        download_dataset(DATA_LINK)
+        download_from_link(DATA_LINK)
+
+
+def create_preprocessed_dataset():
+    params = utils.read_params()
+    dataset_size = params["MISC"]["DATASET_SIZE"]
+
+    if not os.path.isfile("{}/paths.csv".format(params["DIRS"]["OUTPUT_DIR"])):
+        dataset.create_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
+    path_list = read_path_csv()
+    convert_dataset_to_npy(path_list, N=dataset_size)
 
 
 def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24):
     print("[load_dataset] loading from {0}".format(dataset_dir))
 
-    pathlist_tuple = construct_file_path_list_for_dir(
+    pathlist_tuple = construct_file_path_list_from_dir(
         dataset_dir, ['.obj', '.mtl'])
     pathlist = pathlist_tuple[0]  # DANGER, RANDOM
-    random.shuffle(pathlist)
     pathlist = pathlist[:num_of_examples] if num_of_examples is not None else pathlist
     render_list = []
 
@@ -297,10 +313,10 @@ def render_dataset(dataset_dir="ShapeNet", num_of_examples=None, render_count=24
             str.replace(mesh_path, dataset_dir, render_dir))
 
         if os.path.isdir(renders) and os.listdir(renders) != []:
-            render_list.append(fetch_renders_from_disk(renders))
+            render_list.append(load_imgs_from_dir(renders))
         else:
             write_renders_to_disk(compund_mesh, renders, render_count)
-            render_list.append(fetch_renders_from_disk(renders))
+            render_list.append(load_imgs_from_dir(renders))
 
     return render_list
 
@@ -313,7 +329,7 @@ def write_renders_to_disk(mesh, renders, render_count=10):
     utils.make_dir(renders)
     scene = mesh.scene()
     for i in range(render_count):
-        angle = np.radians(random.randint(15, 30))
+        angle = radians(random.randint(15, 30))
         axis = random.choice([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         rotate = trimesh.transformations.rotation_matrix(
             angle, axis, scene.centroid)
@@ -325,14 +341,3 @@ def write_renders_to_disk(mesh, renders, render_count=10):
             '{0}/{1}_{2}.png'.format(renders, os.path.basename(renders), i), resolution=(127, 127))
 
     return
-
-
-def main():
-    example_count = utils.read_params()['TRAIN_PARAMS']['SAMPLE_SIZE']
-    if not os.path.isfile("out/paths.csv"):
-        dataset.write_path_csv("data/ShapeNetRendering", "data/ShapeNetVox32")
-    convert_dataset_to_npy(read_paths(), N=example_count)
-
-
-if __name__ == '__main__':
-    main()
