@@ -1,3 +1,4 @@
+import io
 import os
 import re
 import json
@@ -44,15 +45,11 @@ def voxel(vox, color=None, f_name=None, ndarray=False):
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
+    ret = ax
     ax.voxels(vox, facecolors=color, edgecolor='k')
     ax.view_init(30, 45)
 
     if ndarray:
-        fig.set_tight_layout(True)
-        fig.canvas.draw()
-        ret = np.array(fig.canvas.renderer._renderer)
-        fig.clf()
-        plt.close()
         return ret
 
     if f_name is not None:
@@ -81,12 +78,12 @@ def scaled(im, axis, f_name=None):
 
 
 def multichannel(im, f_name=None):
-    mulitchannel_montage = montage_multichannel(im)
+    mulitchannel_montage = flatten_multichannel(im)
     return save_im(mulitchannel_montage, f_name)
 
 
 def img_sequence(im, f_name=None):
-    sequence_montage = montage_sequence(im)
+    sequence_montage = flatten_sequence(im)
     return save_im(sequence_montage, f_name)
 
 
@@ -117,13 +114,42 @@ def montage(packed_ims, axis):
     return matrix
 
 
-def montage_multichannel(im):
+def flatten_multichannel(im):
     return montage(im, -1)
 
 
-def montage_sequence(im):
+def flatten_sequence(im):
     return montage(im, 0)
 
 
 def create_video(im_list):
     pass
+
+
+def get_pylab_image(ax):
+    im = Image.open(ax.get_array())
+    return im
+    # im.show()
+    # buf.close()
+
+
+def sample(X, y, yp):
+    X = flatten_sequence(X)
+    y = voxel_ndarray(y)
+    yp = voxel_ndarray(yp)
+    n_r = 1
+    n_c = 3
+
+    plt.subplot(n_r, n_c, 1)
+    plt.imshow(X)
+
+    plt.subplot(n_r, n_c, 2)
+    plt.imshow(y)
+
+    plt.subplot(n_r, n_c, 3)
+    plt.imshow(yp)
+
+    gcf = plt.gcf()
+    gcf.set_size_inches(100, 92)
+
+    return plt.show()

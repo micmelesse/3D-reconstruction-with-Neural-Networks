@@ -45,7 +45,8 @@ if __name__ == '__main__':
     net = network.Network()
     # net.init_parameters()
 
-    train_params = net.get_params()["TRAIN_PARAMS"]
+    params = net.get_params()
+    train_params = params["TRAIN_PARAMS"]
 
     # split dataset
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
@@ -83,7 +84,10 @@ if __name__ == '__main__':
                 else:
                     X = X_train_batchs.popleft()
                     y = y_train_batchs.popleft()
-                    epoch_train_loss.append(net.step(X, y, 'train'))
+                    if params["MODE"] == "DEBUG":
+                        epoch_train_loss.append(net.step(X, y, 'debug'))
+                    else:
+                        epoch_train_loss.append(net.step(X, y, 'train'))
             train_loss.append(epoch_train_loss)
             val_loss.append(epoch_val_loss)
 

@@ -97,10 +97,10 @@ def load_preprocessed_dataset():
     return np.array(data_all), np.array(label_all)
 
 
-def load_preprocessed_sample():
+def load_random_sample():
     data, label = load_preprocessed_dataset()
     i = randint(0, len(data))
-    return np.load(data), np.load(label)
+    return np.load(data[i]), np.load(label[i])
 
 
 def load_testset(model_dir):

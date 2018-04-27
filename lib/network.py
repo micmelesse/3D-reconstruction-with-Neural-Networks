@@ -38,7 +38,7 @@ class Network:
 
         # encoder
         print("encoder")
-        en = encoder.Basic_Encoder(X_preprocessed)
+        en = encoder.Simple_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
 
         print("recurrent_module")
@@ -71,7 +71,7 @@ class Network:
 
         # decoder
         print("decoder")
-        de = decoder.Basic_Decoder_old(hidden_state)
+        de = decoder.Simple_Decoder_old(hidden_state)
         self.logits = de.out_tensor
 
         # loss
@@ -108,10 +108,11 @@ class Network:
         with tf.name_scope("metrics"):
             Y = tf.argmax(self.Y_onehot, -1)
             predictions = tf.argmax(self.softmax, -1)
-            acc, self.acc_op = tf.metrics.accuracy(Y, predictions)
-            rms, self.rms_op = tf.metrics.root_mean_squared_error(
+            acc, acc_op = tf.metrics.accuracy(Y, predictions)
+            rms, rms_op = tf.metrics.root_mean_squared_error(
                 self.Y_onehot, self.softmax)
-            iou, self.iou_op = tf.metrics.mean_iou(Y, predictions, 2)
+            iou, iou_op = tf.metrics.mean_iou(Y, predictions, 2)
+            self.metrics_op = tf.group(acc_op, rms_op, iou_op)
 
         tf.summary.scalar("accuracy", acc)
         tf.summary.scalar("rmse", rms)
@@ -122,6 +123,9 @@ class Network:
         self.print = tf.Print(self.loss, [self.step_count, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
+        if self.params["MODE"] == "DEBUG":
+            self.sess = debug.TensorBoardDebugWrapperSession(
+                self.sess, "nat-oitwireless-inside-vapornet100-c-15126.Princeton.EDU:6064")
         tf.global_variables_initializer().run()
         tf.local_variables_initializer().run()
 
@@ -142,24 +146,35 @@ class Network:
         utils.make_dir(self.MODEL_DIR)
         cur_dir = self.get_cur_epoch_dir()
         data_npy, label_npy = utils.load_npy(data), utils.load_npy(label)
+        feed_dict = {self.X: data_npy, self.Y_onehot: label_npy}
 
         if step_type == "train":
-            out = self.sess.run([self.apply_grad, self.loss, self.summary_op,  self.print, self.step_count,
-                                 self.acc_op, self.iou_op, self.rms_op], {self.X: data_npy, self.Y_onehot: label_npy})
-            self.train_writer.add_summary(out[2], global_step=out[4])
+            fetches = [self.apply_grad, self.loss, self.summary_op,  self.print,
+                       self.step_count, self.metrics_op]
+            out = self.sess.run(fetches, feed_dict)
+            summary, step_count = out[2], out[4]
+
+            self.train_writer.add_summary(summary, global_step=step_count)
+        elif step_type == "debug":
+            fetchs = [self.apply_grad]
+            options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            run_metadata = tf.RunMetadata()
+            out = self.sess.run(fetches, feed_dict,
+                                options=options, run_metadata=run_metadata)
         else:
-            out = self.sess.run([self.softmax, self.loss, self.summary_op, self.print, self.step_count,
-                                 self.acc_op, self.iou_op, self.rms_op], {self.X: data_npy, self.Y_onehot: label_npy})
+            fetchs = [self.softmax, self.loss, self.summary_op, self.print,
+                      self.step_count, self.metrics_op],
+            out = self.sess.run(fetchs, feed_dict)
+            softmax, summary, step_count = out[0], out[2], out[4]
 
             if step_type == "val":
-                self.val_writer.add_summary(out[2], global_step=out[4])
+                self.val_writer.add_summary(summary, global_step=step_count)
             elif step_type == "test":
-                self.test_writer.add_summary(out[2], global_step=out[4])
+                self.test_writer.add_summary(summary, global_step=step_count)
 
-            step_count = out[4]
             # display the result of each element of the validation batch
             if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
-                for x, y, yp, name in zip(data_npy, label_npy, out[0], data):
+                for x, y, yp, name in zip(data_npy, label_npy, softmax, data):
                     f_name = utils.get_file_name(name)[0:-2]
                     vis.img_sequence(
                         x, f_name="{}/{}_{}_x.png".format(cur_dir, step_count, f_name))
@@ -169,7 +184,6 @@ class Network:
                         yp, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
                     np.save(
                         "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
-
         return out[1]  # return the loss
 
     def save(self):

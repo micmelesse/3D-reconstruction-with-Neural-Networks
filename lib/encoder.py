@@ -67,7 +67,7 @@ def flatten_sequence(sequence):
     return ret
 
 
-class Basic_Encoder:
+class Simple_Encoder:
     def __init__(self, sequence, feature_map_count=[3, 96, 128, 256, 256, 256, 256], initializer=None):
         assert (len(feature_map_count) == 7)
         if initializer is None:
@@ -120,7 +120,7 @@ class Basic_Encoder:
         self.out_tensor = relu7
 
 
-class Basic_Encoder_old:
+class Simple_Encoder_old:
     def __init__(self, prev_layer, feature_map_count=[96, 128, 256, 256, 256, 256]):
 
         assert (len(feature_map_count) == 6)
