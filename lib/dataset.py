@@ -17,7 +17,6 @@ from lib import utils, dataset
 from sklearn import model_selection
 from keras.utils import to_categorical
 from numpy.random import randint, permutation, shuffle
-from numpy import radians
 from natsort import natsorted
 
 
@@ -306,7 +305,7 @@ def write_renders_to_disk(mesh, renders, render_count=10):
     utils.make_dir(renders)
     scene = mesh.scene()
     for i in range(render_count):
-        angle = radians(random.randint(15, 30))
+        angle = math.radians(random.randint(15, 30))
         axis = random.choice([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         rotate = trimesh.transformations.rotation_matrix(
             angle, axis, scene.centroid)

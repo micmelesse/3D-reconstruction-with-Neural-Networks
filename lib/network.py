@@ -3,10 +3,12 @@ import sys
 import re
 import json
 import numpy as np
+
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from datetime import datetime
 from lib import dataset, preprocessor, encoder, recurrent_module, decoder, loss, vis, utils
+from tensorflow.python import debug as tf_debug
 
 
 # Recurrent Reconstruction Neural Network (R2N2)
@@ -71,7 +73,7 @@ class Network:
 
         # decoder
         print("decoder")
-        de = decoder.Simple_Decoder_old(hidden_state)
+        de = decoder.Simple_Decoder(hidden_state)
         self.logits = de.out_tensor
 
         # loss
@@ -124,7 +126,7 @@ class Network:
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
         if self.params["MODE"] == "DEBUG":
-            self.sess = debug.TensorBoardDebugWrapperSession(
+            self.sess = tf_debug.TensorBoardDebugWrapperSession(
                 self.sess, "nat-oitwireless-inside-vapornet100-c-15126.Princeton.EDU:6064")
         tf.global_variables_initializer().run()
         tf.local_variables_initializer().run()
@@ -152,20 +154,20 @@ class Network:
             fetches = [self.apply_grad, self.loss, self.summary_op,  self.print,
                        self.step_count, self.metrics_op]
             out = self.sess.run(fetches, feed_dict)
-            summary, step_count = out[2], out[4]
+            loss, summary, step_count = out[1], out[2], out[4]
 
             self.train_writer.add_summary(summary, global_step=step_count)
         elif step_type == "debug":
             fetchs = [self.apply_grad]
-            options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            options = tf.RunOptions(trace_level=3)
             run_metadata = tf.RunMetadata()
             out = self.sess.run(fetches, feed_dict,
                                 options=options, run_metadata=run_metadata)
         else:
             fetchs = [self.softmax, self.loss, self.summary_op, self.print,
-                      self.step_count, self.metrics_op],
+                      self.step_count, self.metrics_op]
             out = self.sess.run(fetchs, feed_dict)
-            softmax, summary, step_count = out[0], out[2], out[4]
+            softmax, loss, summary, step_count = out[0], out[1], out[2], out[4]
 
             if step_type == "val":
                 self.val_writer.add_summary(summary, global_step=step_count)
@@ -173,18 +175,16 @@ class Network:
                 self.test_writer.add_summary(summary, global_step=step_count)
 
             # display the result of each element of the validation batch
-            if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
-                for x, y, yp, name in zip(data_npy, label_npy, softmax, data):
-                    f_name = utils.get_file_name(name)[0:-2]
-                    vis.img_sequence(
-                        x, f_name="{}/{}_{}_x.png".format(cur_dir, step_count, f_name))
-                    vis.voxel_binary(
-                        y, f_name="{}/{}_{}_y.png".format(cur_dir, step_count, f_name))
-                    vis.voxel_binary(
-                        yp, f_name="{}/{}_{}_yp.png".format(cur_dir, step_count, f_name))
-                    np.save(
-                        "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
-        return out[1]  # return the loss
+            # if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
+            # for x, y, yp, name in zip(data_npy, label_npy, softmax, data):
+            #     f_name = utils.get_file_name(name)[0:-2]
+            #     vis.sample(
+            #         x, y, yp, f_name="{}/{}_{}.png".format(cur_dir, step_count, f_name))
+            #     np.save(
+            #         "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
+            #     break
+
+        return loss
 
     def save(self):
         cur_dir = self.get_cur_epoch_dir()

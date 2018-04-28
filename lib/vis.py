@@ -133,10 +133,10 @@ def get_pylab_image(ax):
     # buf.close()
 
 
-def sample(X, y, yp):
+def sample(X, y, yp,  f_name=None):
     X = flatten_sequence(X)
-    y = voxel_ndarray(y)
-    yp = voxel_ndarray(yp)
+    y = voxel_binary(y)
+    yp = voxel_binary(yp)
     n_r = 1
     n_c = 3
 
@@ -151,5 +151,10 @@ def sample(X, y, yp):
 
     gcf = plt.gcf()
     gcf.set_size_inches(100, 92)
+
+    if f_name is not None:
+        plt.savefig(f_name, bbox_inches='tight')
+        plt.clf()
+        plt.close()
 
     return plt.show()
