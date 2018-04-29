@@ -125,14 +125,12 @@ class Network:
         tf.summary.scalar("iou", iou)
 
         # initalize
-        print("initalize")
+        print("setup")
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
         if self.params["MODE"] == "DEBUG":
             self.sess = tf_debug.TensorBoardDebugWrapperSession(
                 self.sess, "nat-oitwireless-inside-vapornet100-c-15126.Princeton.EDU:6064")
-        tf.global_variables_initializer().run()
-        tf.local_variables_initializer().run()
 
         # summaries
         print("summaries")
@@ -145,6 +143,10 @@ class Network:
             self.val_writer = tf.summary.FileWriter(
                 "{}/val".format(self.MODEL_DIR), self.sess.graph)
 
+        # initialize
+        print("initialize")
+        tf.global_variables_initializer().run()
+        tf.local_variables_initializer().run()
         print("...done!")
 
     def step(self, data, label, step_type):
