@@ -4,7 +4,7 @@ import tensorflow as tf
 
 class Voxel_Softmax:
     def __init__(self, Y, logits):
-        with tf.name_scope("loss"):
+        with tf.name_scope("Voxel_Softmax"):
             epsilon = 1e-10
             label = Y
             self.softmax = tf.clip_by_value(

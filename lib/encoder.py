@@ -56,14 +56,13 @@ def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=
         ret = tf.map_fn(lambda a: tf.nn.bias_add(tf.nn.conv2d(
             a, kernel, S, padding=P, name="conv2d"), bias), sequence, name="conv2d_map")
 
-        feature_map = tf.transpose(tf.expand_dims(
-            ret[0, 0, :, :, :], -1), [2, 0, 1, 3])
-
+        # feature_map = tf.transpose(tf.expand_dims(
+        #     ret[0, 0, :, :, :], -1), [2, 0, 1, 3])
         # tf.summary.image("kernel", kernel)
-        tf.summary.image("feature_map", feature_map)
+        # tf.summary.image("feature_map", feature_map)
+
         tf.summary.histogram("kernel", kernel)
         tf.summary.histogram("bias", bias)
-
     return ret
 
 
@@ -83,24 +82,25 @@ def encoder_block(sequence, fm_count_in, fm_count_out,  K=3, initializer=None):
 
 class Simple_Encoder:
     def __init__(self, sequence, feature_map_count=[96, 128, 256, 256, 256, 256], initializer=None):
-        if initializer is None:
-            init = tf.contrib.layers.xavier_initializer()
-        else:
-            init = initializer
+        with tf.name_scope("Simple_Encoder"):
+            if initializer is None:
+                init = tf.contrib.layers.xavier_initializer()
+            else:
+                init = initializer
 
-        N = len(feature_map_count)
+            N = len(feature_map_count)
 
-        # convolution stack
-        cur_tensor = encoder_block(
-            sequence, 3, feature_map_count[0], K=7, initializer=init)
-        for i in range(1, N):
+            # convolution stack
             cur_tensor = encoder_block(
-                cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
+                sequence, 3, feature_map_count[0], K=7, initializer=init)
+            for i in range(1, N):
+                cur_tensor = encoder_block(
+                    cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
 
-        # final block
-        flat = flatten_sequence(cur_tensor)
-        fc0 = fully_connected_sequence(flat)
-        self.out_tensor = relu_sequence(fc0)
+            # final block
+            flat = flatten_sequence(cur_tensor)
+            fc0 = fully_connected_sequence(flat)
+            self.out_tensor = relu_sequence(fc0)
 
 
 # class Simple_Encoder_old:

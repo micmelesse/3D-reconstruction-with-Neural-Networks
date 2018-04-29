@@ -34,7 +34,10 @@ class Network:
             json.dump(self.params, f)
 
         # place holders
-        self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+        with tf.name_scope("input_placeholder"):
+            self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+            self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
+
         pp = preprocessor.Preprocessor(self.X)
         X_preprocessed = pp.out_tensor
 
@@ -78,16 +81,20 @@ class Network:
 
         # loss
         print("loss")
-        self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
         voxel_loss = loss.Voxel_Softmax(self.Y_onehot, self.logits)
         self.loss = voxel_loss.loss
         self.softmax = voxel_loss.softmax
         tf.summary.scalar("loss", self.loss)
 
+        # misc
+        print("misc")
+        with tf.name_scope("misc"):
+            self.step_count = tf.Variable(
+                0, trainable=False, name="step_count")
+            self.print = tf.Print(self.loss, [self.step_count, self.loss])
+
         # optimizer
         print("optimizer")
-        self.step_count = tf.Variable(
-            0, trainable=False, name="step_count")
         if self.params["TRAIN_PARAMS"]["OPTIMIZER"] == "ADAM":
             optimizer = tf.train.AdamOptimizer(
                 learning_rate=self.params["TRAIN_PARAMS"]["ADAM_LEARN_RATE"], epsilon=self.params["TRAIN_PARAMS"]["ADAM_EPSILON"])
@@ -122,7 +129,6 @@ class Network:
 
         # initalize
         print("initalize")
-        self.print = tf.Print(self.loss, [self.step_count, self.loss])
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession()
         if self.params["MODE"] == "DEBUG":
