@@ -37,6 +37,8 @@ class Network:
         with tf.name_scope("input_placeholder"):
             self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
             self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
+            n_batchsize = tf.shape(self.X)[0]
+            n_timesteps = tf.shape(self.X)[1]
 
         pp = preprocessor.Preprocessor(self.X)
         X_preprocessed = pp.out_tensor
@@ -49,30 +51,25 @@ class Network:
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("recurrent_module"):
-            n_batchsize = tf.shape(self.X)[0]
             hidden_state = tf.zeros([n_batchsize, 4, 4, 4, 128])
             GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
-            for t in range(24):
-                hidden_state = GRU_Grid.call(
-                    encoded_input[:, t, :], hidden_state)
 
-            # GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
-            # hidden_state = tf.zeros(
-            #     [n_batchsize, 4, 4, 4, 128])
-
-            # i = tf.constant(0)`
-
-            # def condition(h, i):
-            #     return tf.less(i, n_timesteps)
-
-            # def body(h, i):
-            #
+            # for t in range(24):
             #     hidden_state = GRU_Grid.call(
-            #         encoded_input[:, i, :], h)
-            #       tf.add(i, 1)
-            #     return hidden_state, i
+            #         encoded_input[:, t, :], hidden_state)
 
-            # hidden_state, i = tf.while_loop(condition, body, [hidden_state, i])
+            t = tf.constant(0)
+
+            def condition(h, t_i):
+                return tf.less(t_i, n_timesteps)
+
+            def body(h, t_i):
+                h_t_i = GRU_Grid.call(
+                    encoded_input[:, t_i, :], h)
+                tf.add(t_i, 1)
+                return h_t_i, t_i
+
+            hidden_state, t = tf.while_loop(condition, body, [hidden_state, t])
 
         # decoder
         print("decoder")
@@ -157,8 +154,8 @@ class Network:
         feed_dict = {self.X: data_npy, self.Y_onehot: label_npy}
 
         if step_type == "train":
-            fetches = [self.apply_grad, self.loss, self.summary_op,  self.print,
-                       self.step_count, self.metrics_op]
+            fetches = [self.apply_grad, self.loss, self.summary_op,
+                       self.print, self.step_count, self.metrics_op]
             out = self.sess.run(fetches, feed_dict)
             loss, summary, step_count = out[1], out[2], out[4]
 
