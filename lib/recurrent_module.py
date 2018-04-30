@@ -19,14 +19,18 @@ class GRU_Grid:
             else:
                 init = initializer
 
-            self.W = [Weight_Matrix_Grid(initalizer=init)]*N
+            self.W = [Weight_Matrix_Grid(initializer=init)]*N
             self.U = [tf.Variable(init(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
             self.b = [tf.Variable(init(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
+            for i in range(N):
+                tf.summary.histogram("U[{}]".format(i), self.U[i])
+                tf.summary.histogram("b[{}]".format(i), self.b[i])
+
     def linear_sum(self, W, x, U, h, b):
-        return W.multiply(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
+        return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
     def call(self, fc_input, prev_hidden):
         # update gate
@@ -53,14 +57,14 @@ class LSTM_Grid:
             self.n_hidden_state = 128
 
             xavier = tf.contrib.layers.xavier_initializer()
-            self.W = [Weight_Matrix_Grid(initalizer=xavier)]*N
+            self.W = [Weight_Matrix_Grid(initializer=xavier)]*N
             self.U = [tf.Variable(xavier(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
             self.b = [tf.Variable(xavier(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
     def linear_sum(self, W, x, U, h, b):
-        return W.multiply(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
+        return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
     def call(self, fc_input, state_tuple):
         if state_tuple is None:
@@ -93,38 +97,47 @@ class LSTM_Grid:
 
 
 class Weight_Matrix_Grid:
-    def __init__(self,  n_x=1024, n_h=128, n_cells=4, initalizer=tf.random_normal):
+    def __init__(self,  n_x=1024, n_h=128, n_cells=4, initializer=None):
         with tf.name_scope("Weight_Matrix_Grid"):
             # class variables
             self.n_x = n_x
             self.n_h = n_h
             self.n_cells = n_cells
-            self.initalizer = initalizer
+
+            if initializer is None:
+                init = tf.contrib.layers.xavier_initializer()
+            else:
+                init = initializer
+
             x_list = []
             for i in range(self.n_cells):
                 y_list = []
                 for j in range(self.n_cells):
                     z_list = []
                     for k in range(self.n_cells):
-                        weight_matrix = tf.Variable(self.initalizer(
-                            [self.n_x, self.n_h]), name="W_{}{}{}".format(i, j, k))  # added on more wieght vector as the bias
-                        z_list.append(weight_matrix)
+                        w_name = "W_{}{}{}".format(i, j, k)
+                        W = tf.Variable(init(
+                            [self.n_x, self.n_h]), name=w_name)
+                        tf.summary.histogram(w_name, W)
+
+                        z_list.append(W)
                     y_list.append(z_list)
                 x_list.append(y_list)
             self.weight_matrix_grid = x_list
 
     # multiply each of weight matrix with x
-    def multiply(self, x):
-        x_list = []
-        for i in range(self.n_cells):
-            y_list = []
-            for j in range(self.n_cells):
-                z_list = []
-                for k in range(self.n_cells):
-                    transformed_vector = tf.matmul(
-                        x, self.weight_matrix_grid[i][j][k])
-                    z_list.append(transformed_vector)
-                y_list.append(z_list)
-            x_list.append(y_list)
+    def multiply_grid(self, x):
+        with tf.name_scope("multiply_grid"):
+            x_list = []
+            for i in range(self.n_cells):
+                y_list = []
+                for j in range(self.n_cells):
+                    z_list = []
+                    for k in range(self.n_cells):
+                        transformed_vector = tf.matmul(
+                            x, self.weight_matrix_grid[i][j][k])
+                        z_list.append(transformed_vector)
+                    y_list.append(z_list)
+                x_list.append(y_list)
 
         return tf.transpose(tf.convert_to_tensor(x_list), [3, 0, 1, 2, 4])

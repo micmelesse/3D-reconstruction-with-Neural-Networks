@@ -33,9 +33,8 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], initializer
         bias = tf.Variable(init([fv_count_out]), name="bias")
         ret = tf.nn.bias_add(tf.nn.conv3d(
             vox, kernel, S, padding=P, name="conv3d"), bias)
-
-    tf.summary.histogram("kernel", kernel)
-    tf.summary.histogram("bias", bias)
+        tf.summary.histogram("kernel", kernel)
+        tf.summary.histogram("bias", bias)
 
     return ret
 
