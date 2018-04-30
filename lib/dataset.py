@@ -250,6 +250,7 @@ def preprocess_dataset():
 
     if dataset_size <= 0 or dataset_size >= len(path_list):
         dataset_size = len(path_list)
+        print(dataset_size)
 
     for i in range(dataset_size):
         model_name = path_list[i, 0]
