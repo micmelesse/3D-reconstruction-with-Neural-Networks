@@ -34,8 +34,9 @@ class Network:
             json.dump(self.params, f)
 
         # place holders
-        with tf.name_scope("input_placeholder"):
+        with tf.name_scope("data"):
             self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+        with tf.name_scope("label"):
             self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
 
         pp = preprocessor.Preprocessor(self.X)
@@ -56,18 +57,18 @@ class Network:
 
             t = tf.constant(0)
 
-            def condition(x, h, t):
+            def condition(h, t):
                 return tf.less(t, n_timesteps)
 
-            def body(x, h, t):
+            def body(h, t):
                 h = GRU_Grid.call(
-                    x[:, t, :], h)
+                    encoded_input[:, t, :], h)
                 tf.add(t, 1)
 
-                return x, h, t
+                return h, t
 
-            encoded_input, hidden_state, t = tf.while_loop(
-                condition, body, (encoded_input, hidden_state, t), maximum_iterations=25)
+            hidden_state, t = tf.while_loop(
+                condition, body, (hidden_state, t), maximum_iterations=25)
 
             # for t in range(24):
             #     hidden_state = GRU_Grid.call(
