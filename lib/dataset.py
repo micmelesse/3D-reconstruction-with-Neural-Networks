@@ -148,15 +148,7 @@ def setup_dir():
 
     param_name = "params.json"
     if not os.path.exists(param_name):
-        param_data = {
-            "MODE": "TRAIN",
-            "TRAIN_PARAMS": {
-            },
-            "AWS_PARAMS": {
-            },
-            "DIRS": {
-            }
-        }
+        param_data = {}
         with open(param_name, 'w') as param_file:
             json.dump(param_data, param_file)
 
