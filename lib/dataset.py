@@ -247,12 +247,9 @@ def preprocess_dataset():
         "{}/paths.csv".format(output_dir), index_col=0).as_matrix()
     # randomly pick examples from dataset
     shuffle(path_list)
-    print(len(path_list))
-    print(path_list.shape)
 
     if dataset_size <= 0 or dataset_size >= len(path_list):
         dataset_size = len(path_list)
-        print(path_list)
 
     for i in range(dataset_size):
         model_name = path_list[i, 0]
