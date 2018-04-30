@@ -54,11 +54,8 @@ class Network:
             hidden_state = tf.zeros([n_batchsize, 4, 4, 4, 128])
             GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
 
-            # for t in range(24):
-            #     hidden_state = GRU_Grid.call(
-            #         encoded_input[:, t, :], hidden_state)
-
             t = tf.constant(0)
+            n_timesteps = 3
 
             def condition(h, t_i):
                 return tf.less(t_i, n_timesteps)
@@ -70,6 +67,10 @@ class Network:
                 return h_t_i, t_i
 
             hidden_state, t = tf.while_loop(condition, body, [hidden_state, t])
+
+            # for t in range(24):
+            #     hidden_state = GRU_Grid.call(
+            #         encoded_input[:, t, :], hidden_state)
 
         # decoder
         print("decoder")
