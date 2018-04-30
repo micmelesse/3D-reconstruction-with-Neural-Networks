@@ -37,11 +37,11 @@ class Network:
         with tf.name_scope("input_placeholder"):
             self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
             self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
-            n_batchsize = tf.shape(self.X)[0]
-            n_timesteps = tf.shape(self.X)[1]
 
         pp = preprocessor.Preprocessor(self.X)
         X_preprocessed = pp.out_tensor
+        n_batchsize = tf.shape(X_preprocessed)[0]
+        n_timesteps = tf.shape(X_preprocessed)[1]
 
         # encoder
         print("encoder")
@@ -55,18 +55,19 @@ class Network:
             GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
 
             t = tf.constant(0)
-            # n_timesteps = 3
 
-            def condition(h, t_i):
-                return tf.less(t_i, n_timesteps)
+            def condition(x, h, t):
+                return tf.less(t, n_timesteps)
 
-            def body(h, t_i):
-                h_t_i = GRU_Grid.call(
-                    encoded_input[:, t_i, :], h)
-                tf.add(t_i, 1)
-                return h_t_i, t_i
+            def body(x, h, t):
+                h = GRU_Grid.call(
+                    x[:, t, :], h)
+                tf.add(t, 1)
 
-            hidden_state, t = tf.while_loop(condition, body, [hidden_state, t])
+                return x, h, t
+
+            encoded_input, hidden_state, t = tf.while_loop(
+                condition, body, (encoded_input, hidden_state, t), maximum_iterations=25)
 
             # for t in range(24):
             #     hidden_state = GRU_Grid.call(

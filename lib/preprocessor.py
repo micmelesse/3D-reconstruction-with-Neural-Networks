@@ -9,9 +9,11 @@ def tf_sequence_shuffle(value):
 
 
 class Preprocessor():
-    def __init__(self, X):
+    def __init__(self, X, n_timesteps=None):
         with tf.name_scope("preprocessor"):
-            n_timesteps = tf.shape(X)[1]
+            if n_timesteps is None:
+                n_timesteps = tf.shape(X)[1]
+
             # drop alpha channel
             X_dropped_alpha = X[:, :, :, :, 0:3]
             # randomly crop
