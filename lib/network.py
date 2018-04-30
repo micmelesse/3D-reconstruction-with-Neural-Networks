@@ -130,7 +130,8 @@ class Network:
         # initalize
         print("setup")
         self.summary_op = tf.summary.merge_all()
-        self.sess = tf.InteractiveSession()
+        self.sess = tf.InteractiveSession(
+            config=tf.ConfigProto(log_device_placement=True))
         if self.params["MODE"] == "DEBUG":
             self.sess = tf_debug.TensorBoardDebugWrapperSession(
                 self.sess, "nat-oitwireless-inside-vapornet100-c-15126.Princeton.EDU:6064")
