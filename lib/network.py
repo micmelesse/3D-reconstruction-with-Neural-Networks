@@ -55,7 +55,7 @@ class Network:
             GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
 
             t = tf.constant(0)
-            n_timesteps = 3
+            # n_timesteps = 3
 
             def condition(h, t_i):
                 return tf.less(t_i, n_timesteps)
