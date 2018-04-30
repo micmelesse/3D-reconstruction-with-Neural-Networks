@@ -145,12 +145,8 @@ def setup_dir():
     DIR = params["DIRS"]
     for d in DIR.values():
         utils.make_dir(d)
-
-    param_name = "params.json"
-    if not os.path.exists(param_name):
-        param_data = {}
-        with open(param_name, 'w') as param_file:
-            json.dump(param_data, param_file)
+        
+    utils.check_params_json("params.json")
 
 
 def construct_file_path_list_from_dir(dir, file_filter):
