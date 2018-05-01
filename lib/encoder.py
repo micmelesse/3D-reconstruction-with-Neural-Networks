@@ -114,10 +114,10 @@ class Residual_Encoder:
             N = len(feature_map_count)
 
             # convolution stack
-            cur_tensor = residual_block(
+            cur_tensor = residual_encoder_block(
                 sequence, 3, feature_map_count[0], K_1=7, K_2=3, initializer=init)
             for i in range(1, N):
-                cur_tensor = simple_encoder_block(
+                cur_tensor = residual_encoder_block(
                     cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
 
             # final block
