@@ -49,7 +49,12 @@ class Network:
 
         # encoder
         print("encoder")
-        en = encoder.Simple_Encoder(X_preprocessed)
+        if self.params["TRAIN_PARAMS"]["ENCODER_MODE"] == "DILATED":
+            en = encoder.Dilated_Encoder(X_preprocessed)
+        elif self.params["TRAIN_PARAMS"]["ENCODER_MODE"] == "RESIDUAL":
+            en = encoder.Residual_Encoder(X_preprocessed)
+        else:
+            en = encoder.Simple_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
 
         print("recurrent_module")
@@ -83,7 +88,13 @@ class Network:
         if isinstance(hidden_state, tuple):
             hidden_state = hidden_state[0]
 
-        de = decoder.Simple_Decoder(hidden_state)
+        if self.params["TRAIN_PARAMS"]["DECODER_MODE"] == "DILATED":
+            de = decoder.Dilated_Decoder(hidden_state)
+        elif self.params["TRAIN_PARAMS"]["DECODER_MODE"] == "RESIDUAL":
+            en = decoder.Residual_Decoder(hidden_state)
+        else:
+            en = decoder.Simple_Decoder(hidden_state)
+
         self.logits = de.out_tensor
 
         # loss

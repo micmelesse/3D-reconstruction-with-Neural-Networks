@@ -66,8 +66,8 @@ def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=
     return ret
 
 
-def encoder_block(sequence, fm_count_in, fm_count_out,  K=3, D=[1, 1, 1, 1], initializer=None):
-    with tf.name_scope("encoder_block"):
+def simple_encoder_block(sequence, fm_count_in, fm_count_out,  K=3, D=[1, 1, 1, 1], initializer=None):
+    with tf.name_scope("simple_encoder_block"):
         if initializer is None:
             init = tf.contrib.layers.xavier_initializer()
         else:
@@ -80,27 +80,23 @@ def encoder_block(sequence, fm_count_in, fm_count_out,  K=3, D=[1, 1, 1, 1], ini
         return relu
 
 
-class Simple_Encoder:
-    def __init__(self, sequence, feature_map_count=[96, 128, 256, 256, 256, 256], initializer=None):
-        with tf.name_scope("Simple_Encoder"):
-            if initializer is None:
-                init = tf.contrib.layers.xavier_initializer()
-            else:
-                init = initializer
+def residual_encoder_block(sequence, fm_count_in, fm_count_out,  K_1=3, K_2=3, D=[1, 1, 1, 1], initializer=None):
+    with tf.name_scope("residual_encoder_block"):
+        if initializer is None:
+            init = tf.contrib.layers.xavier_initializer()
+        else:
+            init = initializer
 
-            N = len(feature_map_count)
+        conv1 = conv_sequence(sequence, fm_count_in,
+                              fm_count_out, K=K_1, D=D, initializer=init)
+        relu1 = relu_sequence(conv1)
+        conv2 = conv_sequence(relu1, fm_count_out,
+                              fm_count_out, K=K_2, D=D, initializer=init)
+        relu2 = relu_sequence(conv2)
+        out = sequence + relu2
 
-            # convolution stack
-            cur_tensor = encoder_block(
-                sequence, 3, feature_map_count[0], K=7, initializer=init)
-            for i in range(1, N):
-                cur_tensor = encoder_block(
-                    cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
-
-            # final block
-            flat = flatten_sequence(cur_tensor)
-            fc0 = fully_connected_sequence(flat)
-            self.out_tensor = relu_sequence(fc0)
+        pool = max_pool_sequence(out)
+        return pool
 
 
 class Residual_Encoder:
@@ -114,10 +110,10 @@ class Residual_Encoder:
             N = len(feature_map_count)
 
             # convolution stack
-            cur_tensor = encoder_block(
-                sequence, 3, feature_map_count[0], K=7, initializer=init)
+            cur_tensor = residual_block(
+                sequence, 3, feature_map_count[0], K_1=7, K_2=3, initializer=init)
             for i in range(1, N):
-                cur_tensor = encoder_block(
+                cur_tensor = simple_encoder_block(
                     cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
 
             # final block
@@ -137,11 +133,34 @@ class Dilated_Encoder:
             N = len(feature_map_count)
 
             # convolution stack
-            cur_tensor = encoder_block(
+            cur_tensor = simple_encoder_block(
                 sequence, 3, feature_map_count[0], K=7, D=[1, 2, 2, 1], initializer=init)
             for i in range(1, N):
-                cur_tensor = encoder_block(
+                cur_tensor = simple_encoder_block(
                     cur_tensor, feature_map_count[i-1], feature_map_count[i], D=[1, 2, 2, 1], initializer=init)
+
+            # final block
+            flat = flatten_sequence(cur_tensor)
+            fc0 = fully_connected_sequence(flat)
+            self.out_tensor = relu_sequence(fc0)
+
+
+class Simple_Encoder:
+    def __init__(self, sequence, feature_map_count=[96, 128, 256, 256, 256, 256], initializer=None):
+        with tf.name_scope("Simple_Encoder"):
+            if initializer is None:
+                init = tf.contrib.layers.xavier_initializer()
+            else:
+                init = initializer
+
+            N = len(feature_map_count)
+
+            # convolution stack
+            cur_tensor = simple_encoder_block(
+                sequence, 3, feature_map_count[0], K=7, initializer=init)
+            for i in range(1, N):
+                cur_tensor = simple_encoder_block(
+                    cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
 
             # final block
             flat = flatten_sequence(cur_tensor)
