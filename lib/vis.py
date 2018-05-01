@@ -139,16 +139,16 @@ def sample(X, y, yp, f_name=None):
     a = 1
     fs = (100, 100)
 
-    ax1 = plt.subplot(131, adjustable='box', aspect=a, figsize=fs)
+    ax1 = plt.subplot(131, adjustable='box', aspect=a)
     ax1.imshow(flatten_sequence(X))
 
-    ax2 = plt.subplot(132, projection='3d', adjustable='box', aspect=a, figsize=fs)
+    ax2 = plt.subplot(132, projection='3d', adjustable='box', aspect=a)
     vox = (np.argmax(yp, axis=-1)).transpose(2, 0, 1)
     color = (plt.get_cmap('coolwarm'))((yp[:, :, :, 1]).transpose(2, 0, 1))
     ax2.voxels(vox, facecolors=color, edgecolor='k')
     ax2.view_init(30, 45)
 
-    ax3 = plt.subplot(133, projection='3d', adjustable='box', aspect=a, figsize=fs)
+    ax3 = plt.subplot(133, projection='3d', adjustable='box', aspect=a)
     vox = (np.argmax(yp, axis=-1)).transpose(2, 0, 1)
     color = (plt.get_cmap('coolwarm'))((yp[:, :, :, 1]).transpose(2, 0, 1))
     ax3.voxels(vox, facecolors=color, edgecolor='k')
