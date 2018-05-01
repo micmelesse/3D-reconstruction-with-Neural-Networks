@@ -68,7 +68,7 @@ if __name__ == '__main__':
             X_val_batchs, y_val_batchs = dataset.shuffle_batchs(
                 X_val, y_val, train_params["BATCH_SIZE"])
 
-            if params["TRAIN_PARAMS"]["VALIDATION_INTERVAL"]:
+            if params["TRAIN_PARAMS"]["VALIDATION_INTERVAL"] > 0:
                 val_interval = params["TRAIN_PARAMS"]["VALIDATION_INTERVAL"]
             else:
                 val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))

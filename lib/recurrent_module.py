@@ -106,6 +106,7 @@ class LSTM_Grid:
 class Weight_Matrix_Grid:
     def __init__(self,  n_x=1024, n_h=128, n_cells=4, initializer=None):
         with tf.name_scope("Weight_Matrix_Grid"):
+            params = utils.read_params()
             # class variables
             self.n_x = n_x
             self.n_h = n_h
@@ -125,7 +126,9 @@ class Weight_Matrix_Grid:
                         w_name = "W_{}{}{}".format(i, j, k)
                         W = tf.Variable(init(
                             [self.n_x, self.n_h]), name=w_name)
-                        tf.summary.histogram(w_name, W)
+
+                        if params["VIS"]["HISTOGRAMS"]:
+                            tf.summary.histogram(w_name, W)
 
                         z_list.append(W)
                     y_list.append(z_list)

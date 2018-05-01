@@ -60,6 +60,8 @@ def voxel(vox, color=None, f_name=None, ndarray=False):
     return fig.show()
 
 
+
+
 def voxel_binary(y_hat, f_name=None):
     return voxel(np.argmax(y_hat, axis=-1), y_hat[:, :, :, 1], f_name=f_name)
 
@@ -134,26 +136,33 @@ def get_pylab_image(ax):
 
 
 def sample(X, y, yp, f_name=None):
-    X = flatten_sequence(X)
-    y = voxel_binary(y)
-    yp = voxel_binary(yp)
     n_r = 1
     n_c = 3
 
-    plt.subplot(n_r, n_c, 1)
-    plt.imshow(X)
+    ax1 = plt.subplot(131)
 
-    plt.subplot(n_r, n_c, 2)
-    plt.imshow(X)
+    ax1.imshow(flatten_sequence(X))
 
-    plt.subplot(n_r, n_c, 3)
-    plt.imshow(X)
+    ax2 = plt.subplot(132, projection='3d')
+    vox = (np.argmax(yp, axis=-1)).transpose(2, 0, 1)
+    color = (yp[:, :, :, 1]).transpose(2, 0, 1)
+    color_map = plt.get_cmap('coolwarm')
+    color = color_map(color)
 
-    # gcf = plt.gcf()
-    # gcf.set_size_inches(100, 92)
+    ax2.voxels(vox, facecolors=color, edgecolor='k')
+    ax2.view_init(30, 45)
+
+    ax3 = plt.subplot(133, projection='3d')
+    vox = (np.argmax(yp, axis=-1)).transpose(2, 0, 1)
+    color = (yp[:, :, :, 1]).transpose(2, 0, 1)
+    color_map = plt.get_cmap('coolwarm')
+    color = color_map(color)
+
+    ax3.voxels(vox, facecolors=color, edgecolor='k')
+    ax3.view_init(30, 45)
 
     if f_name is not None:
-        plt.savefig(f_name, bbox_inches='tight')
+        plt.savefig(f_name)
         plt.clf()
         plt.close()
         return

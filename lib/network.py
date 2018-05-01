@@ -198,13 +198,13 @@ class Network:
                 self.test_writer.add_summary(summary, global_step=step_count)
 
             # display the result of each element of the validation batch
-            if self.params["VIS"]["VALIDATION"]:
+            if self.params["VIS"]["VALIDATION_STEP"]:
                 i = random.randint(0, len(data_npy)-1)
                 x, y, yp = data_npy[i], label_npy[i], softmax[i]
                 name = "{}/{}_{}".format(cur_dir, step_count,
                                          utils.get_file_name(data[i])[0:-2])
                 vis.sample(x, y, yp, "{}_x.png".format(name))
-                np.save("{}_y.png".format(name), yp)
+                np.save("{}_yp.npy".format(name), yp)
 
         return loss
 
