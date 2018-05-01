@@ -91,9 +91,9 @@ class Network:
         if self.params["TRAIN_PARAMS"]["DECODER_MODE"] == "DILATED":
             de = decoder.Dilated_Decoder(hidden_state)
         elif self.params["TRAIN_PARAMS"]["DECODER_MODE"] == "RESIDUAL":
-            en = decoder.Residual_Decoder(hidden_state)
+            de = decoder.Residual_Decoder(hidden_state)
         else:
-            en = decoder.Simple_Decoder(hidden_state)
+            de = decoder.Simple_Decoder(hidden_state)
 
         self.logits = de.out_tensor
 
@@ -145,8 +145,7 @@ class Network:
         # config=tf.ConfigProto(log_device_placement=True)
         print("setup")
         self.summary_op = tf.summary.merge_all()
-        self.sess = tf.InteractiveSession(
-        )
+        self.sess = tf.InteractiveSession()
         if self.params["MODE"] == "DEBUG":
             self.sess = tf_debug.TensorBoardDebugWrapperSession(
                 self.sess, "nat-oitwireless-inside-vapornet100-c-15126.Princeton.EDU:6064")
