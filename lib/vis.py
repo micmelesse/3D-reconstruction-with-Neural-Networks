@@ -144,17 +144,18 @@ def sample(X, y, yp,  f_name=None):
     plt.imshow(X)
 
     plt.subplot(n_r, n_c, 2)
-    plt.imshow(y)
+    plt.imshow(X)
 
     plt.subplot(n_r, n_c, 3)
-    plt.imshow(yp)
+    plt.imshow(X)
 
-    gcf = plt.gcf()
-    gcf.set_size_inches(100, 92)
+    # gcf = plt.gcf()
+    # gcf.set_size_inches(100, 92)
 
     if f_name is not None:
         plt.savefig(f_name, bbox_inches='tight')
         plt.clf()
         plt.close()
+        return
 
     return plt.show()
