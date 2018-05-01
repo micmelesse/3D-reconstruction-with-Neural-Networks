@@ -49,51 +49,50 @@ class GRU_Grid:
 
 
 class LSTM_Grid:
-    def __init__(self, N=4, n_cells=4, n_input=1024, n_hidden_state=128):
+    def __init__(self, initializer=None, N=4, n_cells=4, n_input=1024, n_hidden_state=128):
         with tf.name_scope("LSTM_Grid"):
             self.N = 4
             self.n_cells = 4
             self.n_input = 1024
             self.n_hidden_state = 128
 
-            xavier = tf.contrib.layers.xavier_initializer()
-            self.W = [Weight_Matrix_Grid(initializer=xavier)]*N
-            self.U = [tf.Variable(xavier(
+            if initializer is None:
+                init = tf.contrib.layers.xavier_initializer()
+            else:
+                init = initializer
+
+            self.W = [Weight_Matrix_Grid(initializer=init)]*N
+            self.U = [tf.Variable(init(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
-            self.b = [tf.Variable(xavier(
+            self.b = [tf.Variable(init(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
     def linear_sum(self, W, x, U, h, b):
         return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
-    def call(self, fc_input, state_tuple):
-        if state_tuple is None:
-            prev_memory, prev_hidden = tf.zeros(
-                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state]), tf.zeros(
-                [1, self.n_cells, self.n_cells, self.n_cells,  self.n_hidden_state])
-
-        prev_memory, prev_hidden = state_tuple
+    def call(self, fc_input, prev_state):
+        prev_hidden_state, prev_cell_state = prev_state
 
         # forget gate
         f_t = tf.sigmoid(
-            self.linear_sum(self.W[0], fc_input, self.U[0], prev_hidden, self.b[0]))
+            self.linear_sum(self.W[0], fc_input, self.U[0], prev_hidden_state, self.b[0]))
 
         # input gate
         i_t = tf.sigmoid(
-            self.linear_sum(self.W[1], fc_input, self.U[1], prev_hidden,  self.b[1]))
+            self.linear_sum(self.W[1], fc_input, self.U[1], prev_hidden_state,  self.b[1]))
 
         # output gate
         o_t = tf.sigmoid(
-            self.linear_sum(self.W[2], fc_input, self.U[2], prev_hidden, self.b[2]))
+            self.linear_sum(self.W[2], fc_input, self.U[2], prev_hidden_state, self.b[2]))
 
         # memory state
-        s_t_1 = f_t * prev_memory
+        s_t_1 = f_t * prev_cell_state
         s_t_2 = i_t * tf.tanh(self.linear_sum(self.W[3], fc_input,
-                                              self.U[3], prev_hidden, self.b[3]))
+                                              self.U[3], prev_hidden_state, self.b[3]))
         s_t = s_t_1 + s_t_2
         h_t = o_t*tf.tanh(s_t)
 
-        return (s_t, h_t)
+        return (h_t, s_t)
 
 
 class Weight_Matrix_Grid:

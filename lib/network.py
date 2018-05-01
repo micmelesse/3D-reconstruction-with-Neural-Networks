@@ -2,6 +2,9 @@ import os
 import sys
 import re
 import json
+import math
+import random
+import keyboard
 import numpy as np
 
 import tensorflow as tf
@@ -52,8 +55,13 @@ class Network:
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("recurrent_module"):
-            hidden_state = tf.zeros([n_batchsize, 4, 4, 4, 128])
-            GRU_Grid = recurrent_module.GRU_Grid(initializer=init)
+            if self.params["TRAIN_PARAMS"]["RNN_MODE"] == "LSTM":
+                rnn = recurrent_module.LSTM_Grid(initializer=init)
+                hidden_state = (tf.zeros([n_batchsize, 4, 4, 4, 128]), tf.zeros(
+                    [n_batchsize, 4, 4, 4, 128]))
+            else:
+                rnn = recurrent_module.GRU_Grid(initializer=init)
+                hidden_state = tf.zeros([n_batchsize, 4, 4, 4, 128])
 
             t = tf.constant(0)
 
@@ -61,7 +69,7 @@ class Network:
                 return tf.less(t, n_timesteps)
 
             def body(h, t):
-                h = GRU_Grid.call(
+                h = rnn.call(
                     encoded_input[:, t, :], h)
                 tf.add(t, 1)
 
@@ -76,6 +84,9 @@ class Network:
 
         # decoder
         print("decoder")
+        if isinstance(hidden_state, tuple):
+            hidden_state = hidden_state[0]
+
         de = decoder.Simple_Decoder(hidden_state)
         self.logits = de.out_tensor
 
@@ -128,10 +139,11 @@ class Network:
         tf.summary.scalar("iou", iou)
 
         # initalize
+        # config=tf.ConfigProto(log_device_placement=True)
         print("setup")
         self.summary_op = tf.summary.merge_all()
         self.sess = tf.InteractiveSession(
-            config=tf.ConfigProto(log_device_placement=True))
+        )
         if self.params["MODE"] == "DEBUG":
             self.sess = tf_debug.TensorBoardDebugWrapperSession(
                 self.sess, "nat-oitwireless-inside-vapornet100-c-15126.Princeton.EDU:6064")
@@ -183,15 +195,14 @@ class Network:
             elif step_type == "test":
                 self.test_writer.add_summary(summary, global_step=step_count)
 
-            # display the result of each element of the validation batch
-            # if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
-            # for x, y, yp, name in zip(data_npy, label_npy, softmax, data):
-            #     f_name = utils.get_file_name(name)[0:-2]
-            #     vis.sample(
-            #         x, y, yp, f_name="{}/{}_{}.png".format(cur_dir, step_count, f_name))
-            #     np.save(
-            #         "{}/{}_{}_yp.npy".format(cur_dir, step_count, f_name), yp)
-            #     break
+        # display the result of each element of the validation batch
+            if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
+                i = random.randint(0, len(data_npy))
+                x, y, yp = data_npy[i], label_npy[i], softmax[i]
+                name = "{}/{}_{}".format(cur_dir, step_count,
+                                         utils.get_file_name(data[i])[0:-2])
+                vis.sample(x, y, yp, "{}_x.png" % name)
+                np.save("{}_y.png" % name, yp)
 
         return loss
 
