@@ -37,9 +37,9 @@ class Network:
             json.dump(self.params, f)
 
         # place holders
-        with tf.name_scope("data"):
+        with tf.name_scope("Data"):
             self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
-        with tf.name_scope("label"):
+        with tf.name_scope("Labels"):
             self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
 
         pp = preprocessor.Preprocessor(self.X)
@@ -77,10 +77,6 @@ class Network:
 
             hidden_state, t = tf.while_loop(
                 condition, body, (hidden_state, t), maximum_iterations=25)
-
-            # for t in range(24):
-            #     hidden_state = GRU_Grid.call(
-            #         encoded_input[:, t, :], hidden_state)
 
         # decoder
         print("decoder")
@@ -197,7 +193,7 @@ class Network:
 
         # display the result of each element of the validation batch
             if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
-                i = random.randint(0, len(data_npy))
+                i = random.randint(0, len(data_npy)-1)
                 x, y, yp = data_npy[i], label_npy[i], softmax[i]
                 name = "{}/{}_{}".format(cur_dir, step_count,
                                          utils.get_file_name(data[i])[0:-2])
