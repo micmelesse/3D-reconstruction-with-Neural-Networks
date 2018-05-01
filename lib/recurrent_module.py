@@ -26,7 +26,7 @@ class GRU_Grid:
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
             params = utils.read_params()
-            if params["VIS"]["HISTOGRAM"]:
+            if params["VIS"]["HISTOGRAMS"]:
                 for i in range(N):
                     tf.summary.histogram("U[{}]".format(i), self.U[i])
                     tf.summary.histogram("b[{}]".format(i), self.b[i])
@@ -70,7 +70,7 @@ class LSTM_Grid:
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
             params = utils.read_params()
-            if params["VIS"]["HISTOGRAM"]:
+            if params["VIS"]["HISTOGRAMS"]:
                 for i in range(N):
                     tf.summary.histogram("U[{}]".format(i), self.U[i])
                     tf.summary.histogram("b[{}]".format(i), self.b[i])

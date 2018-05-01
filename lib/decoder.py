@@ -36,7 +36,7 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
             vox, kernel, S, padding=P, dilations=D, name="conv3d"), bias)
 
         params = utils.read_params()
-        if params["VIS"]["HISTOGRAM"]:
+        if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("kernel", kernel)
             tf.summary.histogram("bias", bias)
 

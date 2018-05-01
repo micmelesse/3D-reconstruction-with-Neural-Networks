@@ -19,7 +19,7 @@ def fully_connected_sequence(sequence, initializer=None):
             tf.matmul(a, weights), bias), sequence, name='fully_connected_map')
 
         params = utils.read_params()
-        if params["VIS"]["HISTOGRAM"]:
+        if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("weights", weights)
             tf.summary.histogram("bias", bias)
 
@@ -64,7 +64,7 @@ def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=
         # tf.summary.image("kernel", kernel)
         # tf.summary.image("feature_map", feature_map)
         params = utils.read_params()
-        if params["VIS"]["HISTOGRAM"]:
+        if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("kernel", kernel)
             tf.summary.histogram("bias", bias)
     return ret
