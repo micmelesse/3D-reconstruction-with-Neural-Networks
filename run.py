@@ -67,7 +67,8 @@ if __name__ == '__main__':
                 X_train, y_train, train_params["BATCH_SIZE"])
             X_val_batchs, y_val_batchs = dataset.shuffle_batchs(
                 X_val, y_val, train_params["BATCH_SIZE"])
-            val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
+            # val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
+            val_interval = 100
             # print("training: {}, validation: {}" .format(
             #     len(X_train_batchs), len(X_val_batchs)))
 

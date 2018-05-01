@@ -203,7 +203,7 @@ class Network:
                 self.test_writer.add_summary(summary, global_step=step_count)
 
             # display the result of each element of the validation batch
-            if self.params["TRAIN_PARAMS"]["VIS_VALIDATION"]:
+            if self.params["VIS"]["VALIDATION"]:
                 i = random.randint(0, len(data_npy)-1)
                 x, y, yp = data_npy[i], label_npy[i], softmax[i]
                 name = "{}/{}_{}".format(cur_dir, step_count,
