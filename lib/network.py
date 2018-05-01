@@ -203,8 +203,8 @@ class Network:
                 x, y, yp = data_npy[i], label_npy[i], softmax[i]
                 name = "{}/{}_{}".format(cur_dir, step_count,
                                          utils.get_file_name(data[i])[0:-2])
-                vis.sample(x, y, yp, "{}_x.png".format(name))
-                np.save("{}_yp.npy".format(name), yp)
+                vis.sample(x, y, yp, "{}.png".format(name))
+                np.save("{}.npy".format(name), yp)
 
         return loss
 
