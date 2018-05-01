@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from lib import utils
 from numpy.random import choice
 
 
@@ -17,8 +18,10 @@ def fully_connected_sequence(sequence, initializer=None):
         ret = tf.map_fn(lambda a: tf.nn.bias_add(
             tf.matmul(a, weights), bias), sequence, name='fully_connected_map')
 
-        tf.summary.histogram("weights", weights)
-        tf.summary.histogram("bias", bias)
+        params = utils.read_params()
+        if params["VIS"]["HISTOGRAM"]:
+            tf.summary.histogram("weights", weights)
+            tf.summary.histogram("bias", bias)
 
     return ret
 
@@ -60,9 +63,10 @@ def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=
         #     ret[0, 0, :, :, :], -1), [2, 0, 1, 3])
         # tf.summary.image("kernel", kernel)
         # tf.summary.image("feature_map", feature_map)
-
-        tf.summary.histogram("kernel", kernel)
-        tf.summary.histogram("bias", bias)
+        params = utils.read_params()
+        if params["VIS"]["HISTOGRAM"]:
+            tf.summary.histogram("kernel", kernel)
+            tf.summary.histogram("bias", bias)
     return ret
 
 

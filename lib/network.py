@@ -126,10 +126,6 @@ class Network:
         self.apply_grad = optimizer.apply_gradients(
             grads_and_vars, global_step=self.step_count)
 
-        # trainable_parameters = tf.trainable_variables()
-        # for p in trainable_parameters:
-        #     tf.summary.histogram(p.name, p)
-
         # metric
         print("metrics")
         with tf.name_scope("metrics"):

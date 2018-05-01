@@ -133,7 +133,7 @@ def get_pylab_image(ax):
     # buf.close()
 
 
-def sample(X, y, yp,  f_name=None):
+def sample(X, y, yp, f_name=None):
     X = flatten_sequence(X)
     y = voxel_binary(y)
     yp = voxel_binary(yp)

@@ -25,9 +25,11 @@ class GRU_Grid:
             self.b = [tf.Variable(init(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
 
-            for i in range(N):
-                tf.summary.histogram("U[{}]".format(i), self.U[i])
-                tf.summary.histogram("b[{}]".format(i), self.b[i])
+            params = utils.read_params()
+            if params["VIS"]["HISTOGRAM"]:
+                for i in range(N):
+                    tf.summary.histogram("U[{}]".format(i), self.U[i])
+                    tf.summary.histogram("b[{}]".format(i), self.b[i])
 
     def linear_sum(self, W, x, U, h, b):
         return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
@@ -66,6 +68,12 @@ class LSTM_Grid:
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
             self.b = [tf.Variable(init(
                 [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
+
+            params = utils.read_params()
+            if params["VIS"]["HISTOGRAM"]:
+                for i in range(N):
+                    tf.summary.histogram("U[{}]".format(i), self.U[i])
+                    tf.summary.histogram("b[{}]".format(i), self.b[i])
 
     def linear_sum(self, W, x, U, h, b):
         return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b

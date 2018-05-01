@@ -1,4 +1,5 @@
 import tensorflow as tf
+from lib import utils
 
 
 def relu_vox(vox):
@@ -33,8 +34,11 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
         bias = tf.Variable(init([fv_count_out]), name="bias")
         ret = tf.nn.bias_add(tf.nn.conv3d(
             vox, kernel, S, padding=P, dilations=D, name="conv3d"), bias)
-        tf.summary.histogram("kernel", kernel)
-        tf.summary.histogram("bias", bias)
+
+        params = utils.read_params()
+        if params["VIS"]["HISTOGRAM"]:
+            tf.summary.histogram("kernel", kernel)
+            tf.summary.histogram("bias", bias)
 
     return ret
 
