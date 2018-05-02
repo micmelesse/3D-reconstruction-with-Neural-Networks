@@ -32,7 +32,7 @@ def save_im(im, f_name=None, ndarray=False):
     return plt.imshow(im)
 
 
-def voxel(vox, color=None, f_name=None, ndarray=False):
+def voxel(vox, color=None, f_name=None):
     assert(vox.ndim == 3)
 
     vox = vox.transpose(2, 0, 1)
@@ -45,27 +45,20 @@ def voxel(vox, color=None, f_name=None, ndarray=False):
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ret = ax
     ax.voxels(vox, facecolors=color, edgecolor='k')
     ax.view_init(30, 45)
-
-    if ndarray:
-        return ret
 
     if f_name is not None:
         fig.savefig(f_name, bbox_inches='tight')
         fig.clf()
         plt.close()
+        return
 
     return fig.show()
 
 
 def voxel_binary(y_hat, f_name=None):
     return voxel(np.argmax(y_hat, axis=-1), y_hat[:, :, :, 1], f_name=f_name)
-
-
-def voxel_ndarray(y_hat):
-    return voxel(np.argmax(y_hat, axis=-1), y_hat[:, :, :, 1], ndarray=True)
 
 
 def label(y, f_name=None):
@@ -134,17 +127,17 @@ def get_pylab_image(ax):
 
 
 def sample(X, y, yp, f_name=None):
-    a = 1
-    ax1 = plt.subplot(131, adjustable='box', aspect=1)
+
+    ax1 = plt.subplot(223)
     ax1.imshow(flatten_sequence(X))
 
-    ax2 = plt.subplot(132, projection='3d', adjustable='box', aspect=1)
+    ax2 = plt.subplot(221, projection='3d')
     vox = (np.argmax(y, axis=-1)).transpose(2, 0, 1)
     color = (plt.get_cmap('coolwarm'))((y[:, :, :, 1]).transpose(2, 0, 1))
     ax2.voxels(vox, facecolors=color, edgecolor='k')
     ax2.view_init(30, 45)
 
-    ax3 = plt.subplot(133, projection='3d', adjustable='box', aspect=1)
+    ax3 = plt.subplot(222, projection='3d')
     vox = (np.argmax(yp, axis=-1)).transpose(2, 0, 1)
     color = (plt.get_cmap('coolwarm'))((yp[:, :, :, 1]).transpose(2, 0, 1))
     ax3.voxels(vox, facecolors=color, edgecolor='k')
