@@ -139,8 +139,8 @@ def sample(X, y, yp, f_name=None):
     ax1.imshow(flatten_sequence(X))
 
     ax2 = plt.subplot(132, projection='3d', adjustable='box', aspect=1)
-    vox = (np.argmax(yp, axis=-1)).transpose(2, 0, 1)
-    color = (plt.get_cmap('coolwarm'))((yp[:, :, :, 1]).transpose(2, 0, 1))
+    vox = (np.argmax(y, axis=-1)).transpose(2, 0, 1)
+    color = (plt.get_cmap('coolwarm'))((y[:, :, :, 1]).transpose(2, 0, 1))
     ax2.voxels(vox, facecolors=color, edgecolor='k')
     ax2.view_init(30, 45)
 
