@@ -1,2 +1,2 @@
-source latest_model_remote.sh
-tensorboard --logdir=$LOG_DIR --reload_interval=1
+source read_params.sh
+tensorboard --logdir=$LATEST_REMOTE --reload_interval=1

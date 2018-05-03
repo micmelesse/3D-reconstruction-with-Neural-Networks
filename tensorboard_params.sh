@@ -1,3 +1,4 @@
+sh read_param.sh
 BEST=$(jq -r '.SESSIONS.BEST' params.json)
 LONGEST=$(jq -r '.SESSIONS.LONGEST' params.json)
 LSTM=$(jq -r '.SESSIONS.LSTM' params.json)

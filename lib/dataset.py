@@ -145,7 +145,7 @@ def setup_dir():
     DIR = params["DIRS"]
     for d in DIR.values():
         utils.make_dir(d)
-        
+
     utils.check_params_json("params.json")
 
 
@@ -222,7 +222,7 @@ def download_dataset():
 
 def preprocess_dataset():
     params = utils.read_params()
-    dataset_size = params["MISC"]["DATASET_SIZE"]
+    dataset_size = params["DATASET_SIZE"]
     output_dir = params["DIRS"]["OUTPUT"]
     data_preprocessed_dir = params["DIRS"]["DATA_PREPROCESSED"]
     data_dir = params["DIRS"]["DATA"]

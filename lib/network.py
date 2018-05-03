@@ -23,7 +23,7 @@ class Network:
         else:
             self.params = params
 
-        if self.params["TRAIN_PARAMS"]["INITIALIZER"] == "XAVIER":
+        if self.params["TRAIN"]["INITIALIZER"] == "XAVIER":
             init = tf.contrib.layers.xavier_initializer()
         else:
             init = tf.random_normal_initializer()
@@ -45,13 +45,12 @@ class Network:
         pp = preprocessor.Preprocessor(self.X)
         X_preprocessed = pp.out_tensor
         n_batchsize = tf.shape(X_preprocessed)[0]
-        n_timesteps = tf.shape(X_preprocessed)[1]
 
         # encoder
         print("encoder")
-        if self.params["TRAIN_PARAMS"]["ENCODER_MODE"] == "DILATED":
+        if self.params["TRAIN"]["ENCODER_MODE"] == "DILATED":
             en = encoder.Dilated_Encoder(X_preprocessed)
-        elif self.params["TRAIN_PARAMS"]["ENCODER_MODE"] == "RESIDUAL":
+        elif self.params["TRAIN"]["ENCODER_MODE"] == "RESIDUAL":
             en = encoder.Residual_Encoder(X_preprocessed)
         else:
             en = encoder.Simple_Encoder(X_preprocessed)
@@ -60,7 +59,7 @@ class Network:
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("recurrent_module"):
-            if self.params["TRAIN_PARAMS"]["RNN_MODE"] == "LSTM":
+            if self.params["TRAIN"]["RNN_MODE"] == "LSTM":
                 rnn = recurrent_module.LSTM_Grid(initializer=init)
                 hidden_state = (tf.zeros([n_batchsize, 4, 4, 4, 128], name="zero_hidden_state"), tf.zeros(
                     [n_batchsize, 4, 4, 4, 128], name="zero_cell_state"))
@@ -69,29 +68,37 @@ class Network:
                 hidden_state = tf.zeros(
                     [n_batchsize, 4, 4, 4, 128], name="zero_hidden_state")
 
-            t = tf.constant(0)
+            # feed a limited seqeuence of images
+            if self.params["TRAIN"]["TIME_STEPS"] > 0:
+                n_timesteps = self.params["TRAIN"]["TIME_STEPS"]
+                for t in range(n_timesteps):
+                    hidden_state = rnn.call(
+                        encoded_input[:, t, :], hidden_state)
+            else:
+                n_timesteps = tf.shape(X_preprocessed)[1]
 
-            def condition(h, t):
-                return tf.less(t, n_timesteps)
+                t = tf.constant(0)
 
-            def body(h, t):
-                h = rnn.call(
-                    encoded_input[:, t, :], h)
-                tf.add(t, 1)
+                def condition(h, t):
+                    return tf.less(t, n_timesteps)
 
-                return h, t
+                def body(h, t):
+                    h = rnn.call(
+                        encoded_input[:, t, :], h)
+                    tf.add(t, 1)
+                    return h, t
 
-            hidden_state, t = tf.while_loop(
-                condition, body, (hidden_state, t), maximum_iterations=25)
+                hidden_state, t = tf.while_loop(
+                    condition, body, (hidden_state, t), maximum_iterations=25)
 
         # decoder
         print("decoder")
         if isinstance(hidden_state, tuple):
             hidden_state = hidden_state[0]
 
-        if self.params["TRAIN_PARAMS"]["DECODER_MODE"] == "DILATED":
+        if self.params["TRAIN"]["DECODER_MODE"] == "DILATED":
             de = decoder.Dilated_Decoder(hidden_state)
-        elif self.params["TRAIN_PARAMS"]["DECODER_MODE"] == "RESIDUAL":
+        elif self.params["TRAIN"]["DECODER_MODE"] == "RESIDUAL":
             de = decoder.Residual_Decoder(hidden_state)
         else:
             de = decoder.Simple_Decoder(hidden_state)
@@ -114,13 +121,13 @@ class Network:
 
         # optimizer
         print("optimizer")
-        if self.params["TRAIN_PARAMS"]["OPTIMIZER"] == "ADAM":
+        if self.params["TRAIN"]["OPTIMIZER"] == "ADAM":
             optimizer = tf.train.AdamOptimizer(
-                learning_rate=self.params["TRAIN_PARAMS"]["ADAM_LEARN_RATE"], epsilon=self.params["TRAIN_PARAMS"]["ADAM_EPSILON"])
+                learning_rate=self.params["TRAIN"]["ADAM_LEARN_RATE"], epsilon=self.params["TRAIN"]["ADAM_EPSILON"])
             tf.summary.scalar("adam_learning_rate", optimizer._lr)
         else:
             optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=self.params["TRAIN_PARAMS"]["LEARN_RATE"])
+                learning_rate=self.params["TRAIN"]["GD_LEARN_RATE"])
             tf.summary.scalar("learning_rate", optimizer._learning_rate)
 
         grads_and_vars = optimizer.compute_gradients(self.loss)

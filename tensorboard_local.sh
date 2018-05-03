@@ -1,2 +1,2 @@
-source latest_model_local.sh
-tensorboard --logdir=$LOG_DIR --reload_interval=1
+source read_params.sh
+tensorboard --logdir=$LATEST_LOCAL --reload_interval=1

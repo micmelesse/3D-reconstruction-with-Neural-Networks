@@ -36,7 +36,7 @@ if __name__ == '__main__':
         plt.close()
 
     # params on disk
-    print(utils.read_params()["TRAIN_PARAMS"])
+    print(utils.read_params()["TRAIN"])
 
     # get preprocessed data
     data, label = dataset.load_preprocessed_dataset()
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     # net.init_parameters()
 
     params = net.get_params()
-    train_params = params["TRAIN_PARAMS"]
+    train_params = params["TRAIN"]
 
     # split dataset
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.train_val_test_split(
@@ -68,8 +68,8 @@ if __name__ == '__main__':
             X_val_batchs, y_val_batchs = dataset.shuffle_batchs(
                 X_val, y_val, train_params["BATCH_SIZE"])
 
-            if params["TRAIN_PARAMS"]["VALIDATION_INTERVAL"] > 0:
-                val_interval = params["TRAIN_PARAMS"]["VALIDATION_INTERVAL"]
+            if params["TRAIN"]["VALIDATION_INTERVAL"] > 0:
+                val_interval = params["TRAIN"]["VALIDATION_INTERVAL"]
             else:
                 val_interval = math.ceil(len(X_train_batchs)/len(X_val_batchs))
 

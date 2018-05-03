@@ -34,17 +34,17 @@ class GRU_Grid:
     def linear_sum(self, W, x, U, h, b):
         return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
-    def call(self, fc_input, prev_hidden):
+    def call(self, input_tensor, prev_hidden):
         # update gate
         u_t = tf.sigmoid(
-            self.linear_sum(self.W[0], fc_input, self.U[0], prev_hidden, self.b[0]))
+            self.linear_sum(self.W[0], input_tensor, self.U[0], prev_hidden, self.b[0]))
         # reset gate
         r_t = tf.sigmoid(
-            self.linear_sum(self.W[1], fc_input, self.U[1], prev_hidden,  self.b[1]))
+            self.linear_sum(self.W[1], input_tensor, self.U[1], prev_hidden,  self.b[1]))
 
         # hidden state
         h_t_1 = (1 - u_t) * prev_hidden
-        h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], fc_input,
+        h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], input_tensor,
                                               self.U[2], r_t * prev_hidden, self.b[2]))
         h_t = h_t_1 + h_t_2
         return h_t
@@ -78,24 +78,24 @@ class LSTM_Grid:
     def linear_sum(self, W, x, U, h, b):
         return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
-    def call(self, fc_input, prev_state):
+    def call(self, input_tensor, prev_state):
         prev_hidden_state, prev_cell_state = prev_state
 
         # forget gate
         f_t = tf.sigmoid(
-            self.linear_sum(self.W[0], fc_input, self.U[0], prev_hidden_state, self.b[0]))
+            self.linear_sum(self.W[0], input_tensor, self.U[0], prev_hidden_state, self.b[0]))
 
         # input gate
         i_t = tf.sigmoid(
-            self.linear_sum(self.W[1], fc_input, self.U[1], prev_hidden_state,  self.b[1]))
+            self.linear_sum(self.W[1], input_tensor, self.U[1], prev_hidden_state,  self.b[1]))
 
         # output gate
         o_t = tf.sigmoid(
-            self.linear_sum(self.W[2], fc_input, self.U[2], prev_hidden_state, self.b[2]))
+            self.linear_sum(self.W[2], input_tensor, self.U[2], prev_hidden_state, self.b[2]))
 
         # memory state
         s_t_1 = f_t * prev_cell_state
-        s_t_2 = i_t * tf.tanh(self.linear_sum(self.W[3], fc_input,
+        s_t_2 = i_t * tf.tanh(self.linear_sum(self.W[3], input_tensor,
                                               self.U[3], prev_hidden_state, self.b[3]))
         s_t = s_t_1 + s_t_2
         h_t = o_t*tf.tanh(s_t)
