@@ -62,11 +62,12 @@ class Network:
         with tf.name_scope("recurrent_module"):
             if self.params["TRAIN_PARAMS"]["RNN_MODE"] == "LSTM":
                 rnn = recurrent_module.LSTM_Grid(initializer=init)
-                hidden_state = (tf.zeros([n_batchsize, 4, 4, 4, 128]), tf.zeros(
-                    [n_batchsize, 4, 4, 4, 128]))
+                hidden_state = (tf.zeros([n_batchsize, 4, 4, 4, 128], name="zero_hidden_state"), tf.zeros(
+                    [n_batchsize, 4, 4, 4, 128], name="zero_cell_state"))
             else:
                 rnn = recurrent_module.GRU_Grid(initializer=init)
-                hidden_state = tf.zeros([n_batchsize, 4, 4, 4, 128])
+                hidden_state = tf.zeros(
+                    [n_batchsize, 4, 4, 4, 128], name="zero_hidden_state")
 
             t = tf.constant(0)
 

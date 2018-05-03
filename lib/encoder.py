@@ -4,6 +4,49 @@ from lib import utils
 from numpy.random import choice
 
 
+def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=[1, 1, 1, 1], D=[1, 1, 1, 1], P="SAME"):
+    with tf.name_scope("conv_sequence"):
+        if initializer is None:
+            init = tf.contrib.layers.xavier_initializer()
+        else:
+            init = initializer
+
+        kernel = tf.Variable(
+            init([K, K, fm_count_in, fm_count_out]), name="kernel")
+        bias = tf.Variable(init([fm_count_out]), name="bias")
+        ret = tf.map_fn(lambda a: tf.nn.bias_add(tf.nn.conv2d(
+            a, kernel, S, padding=P, dilations=D, name="conv2d"), bias), sequence, name="conv2d_map")
+
+        params = utils.read_params()
+        if params["VIS"]["KERNELS"]:
+            kern_1 = tf.unstack(kernel, axis=-1)
+            kern_2 = tf.unstack(kern_1[0], axis=-1)
+            kern_3 = tf.expand_dims(kern_2[0], axis=-1)
+            tf.summary.image("kernel", kern_3)
+
+        if params["VIS"]["FEATURE_MAPS"]:
+            feature_map = tf.expand_dims(ret[0, :, :, :, 0], -1)
+            tf.summary.image("feature_map", feature_map, max_outputs=24)
+
+        if params["VIS"]["HISTOGRAMS"]:
+            tf.summary.histogram("kernel", kernel)
+            tf.summary.histogram("bias", bias)
+    return ret
+
+
+def max_pool_sequence(sequence, K=[1, 2, 2, 1], S=[1, 2, 2, 1], P="SAME"):
+    with tf.name_scope("max_pool_sequence"):
+        ret = tf.map_fn(lambda a: tf.nn.max_pool(a, K, S, padding=P),
+                        sequence, name="max_pool_map")
+    return ret
+
+
+def relu_sequence(sequence):
+    with tf.name_scope("relu_sequence"):
+        ret = tf.map_fn(tf.nn.relu, sequence, name="relu_map")
+    return ret
+
+
 def fully_connected_sequence(sequence, initializer=None):
     with tf.name_scope("fully_connected_sequence"):
         if initializer is None:
@@ -26,19 +69,6 @@ def fully_connected_sequence(sequence, initializer=None):
     return ret
 
 
-def max_pool_sequence(sequence, K=[1, 2, 2, 1], S=[1, 2, 2, 1], P="SAME"):
-    with tf.name_scope("max_pool_sequence"):
-        ret = tf.map_fn(lambda a: tf.nn.max_pool(a, K, S, padding=P),
-                        sequence, name="max_pool_map")
-    return ret
-
-
-def relu_sequence(sequence):
-    with tf.name_scope("relu_sequence"):
-        ret = tf.map_fn(tf.nn.relu, sequence, name="relu_map")
-    return ret
-
-
 def flatten_sequence(sequence):
     with tf.name_scope("flatten_sequence"):
         ret = tf.map_fn(
@@ -46,37 +76,8 @@ def flatten_sequence(sequence):
     return ret
 
 
-def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=[1, 1, 1, 1], D=[1, 1, 1, 1], P="SAME"):
-    with tf.name_scope("conv_sequence"):
-        if initializer is None:
-            init = tf.contrib.layers.xavier_initializer()
-        else:
-            init = initializer
-
-        kernel = tf.Variable(
-            init([K, K, fm_count_in, fm_count_out]), name="kernel")
-        bias = tf.Variable(init([fm_count_out]), name="bias")
-        ret = tf.map_fn(lambda a: tf.nn.bias_add(tf.nn.conv2d(
-            a, kernel, S, padding=P, dilations=D, name="conv2d"), bias), sequence, name="conv2d_map")
-
-        
-        params = utils.read_params()
-        if params["VIS"]["KERNELS"]:
-            tf.summary.image("kernel", kernel)
-
-        if params["VIS"]["FEATURE_MAPS"]:
-            feature_map = tf.transpose(tf.expand_dims(
-                ret[0, 0, :, :, :], -1), [2, 0, 1, 3])
-            tf.summary.image("feature_map", feature_map)
-
-        if params["VIS"]["HISTOGRAMS"]:
-            tf.summary.histogram("kernel", kernel)
-            tf.summary.histogram("bias", bias)
-    return ret
-
-
-def simple_encoder_block(sequence, fm_count_in, fm_count_out,  K=3, D=[1, 1, 1, 1], initializer=None):
-    with tf.name_scope("simple_encoder_block"):
+def block_simple_encoder(sequence, fm_count_in, fm_count_out,  K=3, D=[1, 1, 1, 1], initializer=None):
+    with tf.name_scope("block_simple_encoder"):
         if initializer is None:
             init = tf.contrib.layers.xavier_initializer()
         else:
@@ -86,11 +87,11 @@ def simple_encoder_block(sequence, fm_count_in, fm_count_out,  K=3, D=[1, 1, 1, 
                              fm_count_out, K=K, D=D, initializer=init)
         pool = max_pool_sequence(conv)
         relu = relu_sequence(pool)
-        return relu
+    return relu
 
 
-def residual_encoder_block(sequence, fm_count_in, fm_count_out,  K_1=3, K_2=3, K_3=1, D=[1, 1, 1, 1], initializer=None, pool=True):
-    with tf.name_scope("residual_encoder_block"):
+def block_residual_encoder(sequence, fm_count_in, fm_count_out,  K_1=3, K_2=3, K_3=1, D=[1, 1, 1, 1], initializer=None, pool=True):
+    with tf.name_scope("block_residual_encoder"):
         if initializer is None:
             init = tf.contrib.layers.xavier_initializer()
         else:
@@ -129,12 +130,12 @@ class Residual_Encoder:
             else:
                 init = initializer
 
-            cur_tensor = residual_encoder_block(
+            cur_tensor = block_residual_encoder(
                 sequence, 3, feature_map_count[0], K_1=7, K_2=3, K_3=0, initializer=init)
             # convolution stack
             N = len(feature_map_count)
             for i in range(1, N):
-                cur_tensor = residual_encoder_block(
+                cur_tensor = block_residual_encoder(
                     cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
 
             # final block
@@ -154,10 +155,10 @@ class Simple_Encoder:
             N = len(feature_map_count)
 
             # convolution stack
-            cur_tensor = simple_encoder_block(
+            cur_tensor = block_simple_encoder(
                 sequence, 3, feature_map_count[0], K=7, initializer=init)
             for i in range(1, N):
-                cur_tensor = simple_encoder_block(
+                cur_tensor = block_simple_encoder(
                     cur_tensor, feature_map_count[i-1], feature_map_count[i], initializer=init)
 
             # final block
@@ -177,10 +178,10 @@ class Dilated_Encoder:
             N = len(feature_map_count)
 
             # convolution stack
-            cur_tensor = simple_encoder_block(
+            cur_tensor = block_simple_encoder(
                 sequence, 3, feature_map_count[0], K=7, D=[1, 2, 2, 1], initializer=init)
             for i in range(1, N):
-                cur_tensor = simple_encoder_block(
+                cur_tensor = block_simple_encoder(
                     cur_tensor, feature_map_count[i-1], feature_map_count[i], D=[1, 2, 2, 1], initializer=init)
 
             # final block

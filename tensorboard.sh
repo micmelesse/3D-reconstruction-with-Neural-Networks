@@ -1,3 +1,1 @@
-source read_params.sh
-tensorboard --logdir=$LOG_DIR --reload_interval=1 
-
+sh tensorboard_local.sh

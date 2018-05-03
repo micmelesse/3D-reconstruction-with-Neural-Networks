@@ -19,7 +19,7 @@ class GRU_Grid:
             else:
                 init = initializer
 
-            self.W = [Weight_Matrix_Grid(initializer=init)]*N
+            self.W = [Weight_Matrices(initializer=init)]*N
             self.U = [tf.Variable(init(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
             self.b = [tf.Variable(init(
@@ -63,7 +63,7 @@ class LSTM_Grid:
             else:
                 init = initializer
 
-            self.W = [Weight_Matrix_Grid(initializer=init)]*N
+            self.W = [Weight_Matrices(initializer=init)]*N
             self.U = [tf.Variable(init(
                 [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
             self.b = [tf.Variable(init(
@@ -103,9 +103,9 @@ class LSTM_Grid:
         return (h_t, s_t)
 
 
-class Weight_Matrix_Grid:
+class Weight_Matrices:
     def __init__(self,  n_x=1024, n_h=128, n_cells=4, initializer=None):
-        with tf.name_scope("Weight_Matrix_Grid"):
+        with tf.name_scope("Weight_Matrices"):
             params = utils.read_params()
             # class variables
             self.n_x = n_x
@@ -117,22 +117,25 @@ class Weight_Matrix_Grid:
             else:
                 init = initializer
 
-            x_list = []
-            for i in range(self.n_cells):
-                y_list = []
-                for j in range(self.n_cells):
-                    z_list = []
-                    for k in range(self.n_cells):
-                        w_name = "W_{}{}{}".format(i, j, k)
-                        W = tf.Variable(init(
-                            [self.n_x, self.n_h]), name=w_name)
+            with tf.name_scope("x_list"):
+                x_list = []
+                for x in range(self.n_cells):
+                    with tf.name_scope("y_list"):
+                        y_list = []
+                        for y in range(self.n_cells):
+                            z_list = []
+                            with tf.name_scope("z_list"):
+                                for z in range(self.n_cells):
+                                    name = "W_{}{}{}".format(x, y, z)
+                                    W = tf.Variable(init(
+                                        [self.n_x, self.n_h]), name=name)
 
-                        if params["VIS"]["HISTOGRAMS"]:
-                            tf.summary.histogram(w_name, W)
+                                    if params["VIS"]["HISTOGRAMS"]:
+                                        tf.summary.histogram(name, W)
+                                    z_list.append(W)
+                            y_list.append(z_list)
+                    x_list.append(y_list)
 
-                        z_list.append(W)
-                    y_list.append(z_list)
-                x_list.append(y_list)
             self.weight_matrix_grid = x_list
 
     # multiply each of weight matrix with x
