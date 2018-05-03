@@ -74,7 +74,7 @@ class Network:
                 for t in range(n_timesteps):
                     hidden_state = rnn.call(
                         encoded_input[:, t, :], hidden_state)
-            else:
+            else:  # feed an arbitray seqeuence of images
                 n_timesteps = tf.shape(X_preprocessed)[1]
 
                 t = tf.constant(0)
@@ -211,7 +211,9 @@ class Network:
                 x, y, yp = data_npy[i], label_npy[i], softmax[i]
                 name = "{}/{}_{}".format(cur_dir, step_count,
                                          utils.get_file_name(data[i])[0:-2])
-                vis.voxel_binary(yp, "{}.png".format(name))
+                vis.img_sequence(x, "{}_x.png".format(name))
+                vis.voxel_binary(y, "{}_y.png".format(name))
+                vis.voxel_binary(yp, "{}_yp.png".format(name))
 
         return loss
 
