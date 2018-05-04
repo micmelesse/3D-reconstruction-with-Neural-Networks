@@ -28,6 +28,9 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
         if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("kernel", kernel)
             tf.summary.histogram("bias", bias)
+        
+        if params["VIS"]["SHAPES"]:
+            print(ret.shape)
 
     return ret
 
@@ -43,6 +46,7 @@ def unpool_vox(value):  # from tenorflow github board
 
         out_size = [-1] + [s * 2 for s in sh[1:-1]] + [sh[-1]]
         out = tf.reshape(out, out_size)
+
     return out
 
 
