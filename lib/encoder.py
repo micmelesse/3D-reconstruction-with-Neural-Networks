@@ -17,19 +17,22 @@ def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=
         ret = tf.map_fn(lambda a: tf.nn.bias_add(tf.nn.conv2d(
             a, kernel, S, padding=P, dilations=D, name="conv2d"), bias), sequence, name="conv2d_map")
 
+        # visualization code
         params = utils.read_params()
+        image_count = params["VIS"]["IMAGE_COUNT"]
         if params["VIS"]["KERNELS"]:
-            kern_1 = tf.concat(tf.unstack(kernel, axis=-1), axis=0)
-            kern_2 = tf.concat(tf.unstack(kern_1, axis=-1), axis=1)
+            kern_1 = tf.concat(tf.unstack(kernel, axis=-1), axis=-1)
+            kern_2 = tf.transpose(kern_1, [2, 0, 1])
             kern_3 = tf.expand_dims(kern_2, -1)
-            kern_4 = tf.expand_dims(kern_3, 0)
-            tf.summary.image("kernel", kern_4)
+            tf.summary.image("2d kernel", kern_3, max_outputs=image_count)
 
         if params["VIS"]["FEATURE_MAPS"]:
-            feature_map = tf.concat(tf.unstack(ret, axis=-1), axis=2)
-            feature_map_1 = tf.concat(tf.unstack(feature_map, axis=1), axis=2)
-            feature_map_2 = tf.expand_dims(feature_map_1, -1)
-            tf.summary.image("feature_map", feature_map_2)
+            feature_map_1 = tf.concat(tf.unstack(ret, axis=4), axis=2)
+            feature_map_2 = tf.concat(
+                tf.unstack(feature_map_1, axis=1), axis=2)
+            feature_map_3 = tf.expand_dims(feature_map_2, -1)
+            tf.summary.image("feature_map", feature_map_3,
+                             max_outputs=image_count)
 
         if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("kernel", kernel)

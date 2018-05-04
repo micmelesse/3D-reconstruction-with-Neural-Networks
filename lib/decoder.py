@@ -15,15 +15,22 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
         ret = tf.nn.bias_add(tf.nn.conv3d(
             vox, kernel, S, padding=P, dilations=D, name="conv3d"), bias)
 
+        # visualization code
         params = utils.read_params()
+        image_count = params["VIS"]["IMAGE_COUNT"]
         if params["VIS"]["KERNELS"]:
-            kernel_3 = tf.unstack(kernel, axis=-1)
-            kernel_2 = tf.unstack(kernel_3[0], axis=-1)
-            tf.summary.image("kernel", kernel_2)
+            kern_1 = tf.concat(tf.unstack(kernel, axis=-1), axis=-1)
+            kern_2 = tf.transpose(kern_1, [3, 0, 1, 2])
+            kern_3 = tf.expand_dims(kern_2, -1)
+            kern_4 = tf.concat(tf.unstack(kern_3, axis=1), axis=1)
+            tf.summary.image("3d kernel", kern_4, max_outputs=image_count)
 
         if params["VIS"]["VOXEL_SLICES"]:
-            x_slice = tf.expand_dims(ret[0, :, :, :, 0], -1)
-            tf.summary.image("x_slice", x_slice)
+            vox_slice_1 = tf.unstack(ret, axis=4)[0]
+            vox_slice_2 = tf.concat(tf.unstack(vox_slice_1, axis=3), axis=1)
+            vox_slice_3 = tf.expand_dims(vox_slice_2, -1)
+            tf.summary.image("vox_slices", vox_slice_3,
+                             max_outputs=image_count)
 
         if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("kernel", kernel)

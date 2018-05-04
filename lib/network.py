@@ -56,7 +56,7 @@ class Network:
         else:
             en = encoder.Simple_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
-        
+
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("Recurrent_module"):
@@ -70,7 +70,7 @@ class Network:
                     [n_batchsize, 4, 4, 4, 128], name="zero_hidden_state")
 
             # feed a limited seqeuence of images
-            if self.params["TRAIN"]["TIME_STEPS"] > 0:
+            if isinstance(self.params["TRAIN"]["TIME_STEPS"], int) and self.params["TRAIN"]["TIME_STEPS"] > 0:
                 n_timesteps = self.params["TRAIN"]["TIME_STEPS"]
                 for t in range(n_timesteps):
                     hidden_state = rnn.call(
@@ -86,11 +86,11 @@ class Network:
                 def body(h, t):
                     h = rnn.call(
                         encoded_input[:, t, :], h)
-                    tf.add(t, 1)
+                    t = tf.add(t, 1)
                     return h, t
 
                 hidden_state, t = tf.while_loop(
-                    condition, body, (hidden_state, t), maximum_iterations=25)
+                    condition, body, (hidden_state, t))
 
         # decoder
         print("decoder")
@@ -118,7 +118,8 @@ class Network:
         with tf.name_scope("misc"):
             self.step_count = tf.Variable(
                 0, trainable=False, name="step_count")
-            self.print = tf.Print(self.loss, [self.step_count, self.loss])
+            self.print = tf.Print(
+                self.loss, [self.step_count, self.loss, t])
 
         # optimizer
         print("optimizer")
