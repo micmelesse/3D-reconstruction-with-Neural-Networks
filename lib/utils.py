@@ -135,6 +135,12 @@ def make_dir(file_dir):
         os.makedirs(file_dir)
 
 
+def make_prev_dirs(file_dir):
+    file_dir = os.path.dirname(file_dir)
+    if not os.path.isdir(file_dir):
+        os.makedirs(file_dir)
+
+
 def clean_dir(file_dir):
     if os.path.isdir(file_dir):
         shutil.rmtree(file_dir)

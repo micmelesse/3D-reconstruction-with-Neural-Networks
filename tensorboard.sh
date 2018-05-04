@@ -1,1 +1,4 @@
-sh tensorboard_local.sh
+source read_params.sh
+echo $LONGEST
+tensorboard --logdir=$LONGEST --reload_interval=1 
+

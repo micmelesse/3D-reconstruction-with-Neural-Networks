@@ -15,6 +15,7 @@ from tensorflow.python import debug as tf_debug
 
 
 # Recurrent Reconstruction Neural Network (R2N2)
+
 class Network:
     def __init__(self, params=None):
         # read params
@@ -55,10 +56,11 @@ class Network:
         else:
             en = encoder.Simple_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
-
+        print(encoded_input.shape)
+        
         print("recurrent_module")
         # recurrent_module
-        with tf.name_scope("recurrent_module"):
+        with tf.name_scope("Recurrent_module"):
             if self.params["TRAIN"]["RNN_MODE"] == "LSTM":
                 rnn = recurrent_module.LSTM_Grid(initializer=init)
                 hidden_state = (tf.zeros([n_batchsize, 4, 4, 4, 128], name="zero_hidden_state"), tf.zeros(

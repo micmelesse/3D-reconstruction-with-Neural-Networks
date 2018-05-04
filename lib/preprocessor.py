@@ -12,7 +12,7 @@ def shuffle_sequence(value):
 
 class Preprocessor():
     def __init__(self, X):
-        with tf.name_scope("preprocessor"):
+        with tf.name_scope("Preprocessor"):
             params = utils.read_params()
             if params["TRAIN"]["TIME_STEPS"] > 0:
                 n_timesteps = params["TRAIN"]["TIME_STEPS"]
@@ -25,7 +25,7 @@ class Preprocessor():
             X_cropped = tf.map_fn(lambda a: tf.random_crop(
                 a, [n_timesteps, 127, 127, 3]), X_dropped_alpha, name="random_crops")
 
-            if params["TRAIN"]["SHUFFLE_SEQUENCE"]:
+            if params["TRAIN"]["SHUFFLE_TIME_SEQUENCE"]:
                 X_shuffled = shuffle_sequence(X_cropped)
                 self.out_tensor = X_shuffled
             else:

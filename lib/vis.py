@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from skimage import exposure
 from PIL import Image
-from lib import utils
+from lib import utils, dataset, network
+from moviepy.video.io.bindings import mplfig_to_npimage
 
 
 def save_im(im, f_name=None, ndarray=False):
@@ -25,6 +26,7 @@ def save_im(im, f_name=None, ndarray=False):
         return ret
 
     if f_name is not None:
+        utils.make_prev_dirs(f_name)
         plt.imsave(f_name, im)
         plt.clf()
         plt.close()
@@ -32,7 +34,7 @@ def save_im(im, f_name=None, ndarray=False):
     return plt.imshow(im)
 
 
-def voxel(vox, color=None, f_name=None, ndarray=False):
+def voxel(vox, color=None, f_name=None, npimage=False):
     assert(vox.ndim == 3)
 
     vox = vox.transpose(2, 0, 1)
@@ -48,15 +50,11 @@ def voxel(vox, color=None, f_name=None, ndarray=False):
     ax.voxels(vox, facecolors=color, edgecolor='k')
     ax.view_init(30, 45)
 
-    if ndarray:
-        fig.set_tight_layout(True)
-        fig.canvas.draw()
-        ret = np.array(fig.canvas.renderer._renderer)
-        fig.clf()
-        plt.close()
-        return ret
+    if npimage:
+        return mplfig_to_npimage(fig)
 
     if f_name is not None:
+        utils.make_prev_dirs(f_name)
         fig.savefig(f_name, bbox_inches='tight')
         fig.clf()
         plt.close()
@@ -66,11 +64,15 @@ def voxel(vox, color=None, f_name=None, ndarray=False):
 
 
 def voxel_binary(y_hat, f_name=None):
-    return voxel(np.argmax(y_hat, axis=-1), y_hat[:, :, :, 1], f_name=f_name)
+    vox = np.argmax(y_hat, axis=-1)
+    color = y_hat[:, :, :, 1]
+    return voxel(vox, color, f_name=f_name)
 
 
-def voxel_ndarray(y_hat):
-    return voxel(np.argmax(y_hat, axis=-1), y_hat[:, :, :, 1], ndarray=True)
+def voxel_npimage(y_hat):
+    vox = np.argmax(y_hat, axis=-1)
+    color = y_hat[:, :, :, 1]
+    return voxel(vox, color, npimage=True)
 
 
 def label(y, f_name=None):
@@ -127,10 +129,6 @@ def flatten_sequence(im):
     return montage(im, 0)
 
 
-def create_video(im_list):
-    pass
-
-
 def get_pylab_image(ax):
     im = Image.open(ax.get_array())
     return im
@@ -162,3 +160,17 @@ def sample(X, y, yp, f_name=None):
         return
 
     return plt.show()
+
+
+def create_video(obj_id="02691156_131db4a650873babad3ab188d086d4db"):
+    params = utils.read_params()
+    out_dir = params["DIRS"]["OUTPUT"]
+    model_dir = params["SESSIONS"]["LONGEST"]
+    model_info = utils.get_model_info(model_dir)
+    epoch_count = model_info["EPOCH_COUNT"]
+
+    x, _ = dataset.load_obj_id(obj_id)
+    for i in range(epoch_count):
+        net = network.Network_restored("{}/epoch_{}".format(model_dir, i))
+        yp = net.predict(x)
+        voxel_binary(yp[0], f_name="{}/{}/frame_{}".format(out_dir, obj_id, i))

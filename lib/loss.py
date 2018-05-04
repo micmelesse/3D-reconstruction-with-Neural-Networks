@@ -4,9 +4,9 @@ import tensorflow as tf
 
 class Voxel_Softmax:
     def __init__(self, Y, logits):
-        with tf.name_scope("Voxel_Softmax"):
-            epsilon = 1e-10
+        with tf.name_scope("Loss_Voxel_Softmax"):
             label = Y
+            epsilon = 1e-10
             self.softmax = tf.clip_by_value(
                 tf.nn.softmax(logits), epsilon, 1-epsilon)
             log_softmax = tf.log(self.softmax)
