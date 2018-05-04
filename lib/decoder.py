@@ -16,10 +16,10 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
             vox, kernel, S, padding=P, dilations=D, name="conv3d"), bias)
 
         params = utils.read_params()
-        # if params["VIS"]["KERNELS"]:
-        #     kernel_3 = tf.unstack(kernel, axis=-1)
-        #     kernel_2 = tf.unstack(kernel_3[0], axis=-1)
-        #     tf.summary.image("kernel", kernel_2)
+        if params["VIS"]["KERNELS"]:
+            kernel_3 = tf.unstack(kernel, axis=-1)
+            kernel_2 = tf.unstack(kernel_3[0], axis=-1)
+            tf.summary.image("kernel", kernel_2)
 
         if params["VIS"]["VOXEL_SLICES"]:
             x_slice = tf.expand_dims(ret[0, :, :, :, 0], -1)
