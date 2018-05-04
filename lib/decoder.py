@@ -28,7 +28,7 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
         if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("kernel", kernel)
             tf.summary.histogram("bias", bias)
-        
+
         if params["VIS"]["SHAPES"]:
             print(ret.shape)
 
@@ -67,13 +67,13 @@ def block_simple_decoder(vox, fv_count_in, fv_count_out, K=3, D=[1, 1, 1, 1, 1],
                         K=K,  D=D, initializer=init)
         if unpool:
             out = relu_vox(unpool_vox(conv))
-
-        out = relu_vox(conv)
+        else:
+            out = relu_vox(conv)
 
     return out
 
 
-def block_residual_decoder(vox, fv_count_in, fv_count_out, K_1=3, K_2=3, K_3=1, D=[1, 1, 1, 1, 1], initializer=None, unpool=True):
+def block_residual_decoder(vox, fv_count_in, fv_count_out, K_1=3, K_2=3, K_3=1, D=[1, 1, 1, 1, 1], initializer=None, unpool=False):
     with tf.name_scope("block_residual_decoder"):
         if initializer is None:
             init = tf.contrib.layers.xavier_initializer()
@@ -118,29 +118,8 @@ class Residual_Decoder:
             cur_tensor = block_residual_decoder(
                 cur_tensor, 128, feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
-                unpool = False if i <= 3 else True
+                unpool = True if i <= 2 else False
                 cur_tensor = block_residual_decoder(
-                    cur_tensor, feature_vox_count[i-1], feature_vox_count[i], initializer=init, unpool=unpool)
-
-            self.out_tensor = conv_vox(
-                cur_tensor, feature_vox_count[-2], feature_vox_count[-1], initializer=init)
-
-
-class Simple_Decoder:
-    def __init__(self, hidden_state, feature_vox_count=[128, 128, 128, 64, 32, 2], initializer=None):
-        with tf.name_scope("Simple_Decoder"):
-            if initializer is None:
-                init = tf.contrib.layers.xavier_initializer()
-            else:
-                init = initializer
-
-            N = len(feature_vox_count)
-            cur_tensor = unpool_vox(hidden_state)
-            cur_tensor = block_simple_decoder(
-                cur_tensor, 128, feature_vox_count[0], initializer=init)
-            for i in range(1, N-1):
-                unpool = True if i < 3 else False
-                cur_tensor = block_simple_decoder(
                     cur_tensor, feature_vox_count[i-1], feature_vox_count[i], initializer=init, unpool=unpool)
 
             self.out_tensor = conv_vox(
@@ -160,9 +139,30 @@ class Dilated_Decoder:
             cur_tensor = block_simple_decoder(
                 cur_tensor, 128, feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
-                unpool = True if i < 3 else False
+                unpool = True if i <= 2 else False
                 cur_tensor = block_simple_decoder(
                     cur_tensor, feature_vox_count[i-1], feature_vox_count[i], D=[1, 2, 2, 2, 1], initializer=init, unpool=unpool)
+
+            self.out_tensor = conv_vox(
+                cur_tensor, feature_vox_count[-2], feature_vox_count[-1], initializer=init)
+
+
+class Simple_Decoder:
+    def __init__(self, hidden_state, feature_vox_count=[128, 128, 128, 64, 32, 2], initializer=None):
+        with tf.name_scope("Simple_Decoder"):
+            if initializer is None:
+                init = tf.contrib.layers.xavier_initializer()
+            else:
+                init = initializer
+
+            N = len(feature_vox_count)
+            cur_tensor = unpool_vox(hidden_state)
+            cur_tensor = block_simple_decoder(
+                cur_tensor, 128, feature_vox_count[0], initializer=init)
+            for i in range(1, N-1):
+                unpool = True if i <= 2 else False
+                cur_tensor = block_simple_decoder(
+                    cur_tensor, feature_vox_count[i-1], feature_vox_count[i], initializer=init, unpool=unpool)
 
             self.out_tensor = conv_vox(
                 cur_tensor, feature_vox_count[-2], feature_vox_count[-1], initializer=init)

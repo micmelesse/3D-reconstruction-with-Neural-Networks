@@ -32,8 +32,8 @@ def conv_sequence(sequence, fm_count_in, fm_count_out, initializer=None, K=3, S=
             tf.summary.histogram("kernel", kernel)
             tf.summary.histogram("bias", bias)
 
-        # if params["VIS"]["SHAPES"]:
-        #     print(ret.shape)
+        if params["VIS"]["SHAPES"]:
+            print(ret.shape)
     return ret
 
 
