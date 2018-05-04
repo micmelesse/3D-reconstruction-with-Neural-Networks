@@ -56,7 +56,6 @@ class Network:
         else:
             en = encoder.Simple_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
-        print(encoded_input.shape)
         
         print("recurrent_module")
         # recurrent_module
