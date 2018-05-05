@@ -60,18 +60,22 @@ class Network:
         print("recurrent_module")
         # recurrent_module
         with tf.name_scope("Recurrent_module"):
-            if self.params["TRAIN"]["RNN_MODE"] == "LSTM":
+            rnn_mode = self.params["TRAIN"]["RNN_MODE"]
+            n_cell = self.params["TRAIN"]["RNN_CELL_NUM"]
+            n_hidden = self.params["TRAIN"]["RNN_HIDDEN_SIZE"]
+
+            if rnn_mode == "LSTM":
                 rnn = recurrent_module.LSTM_Grid(initializer=init)
-                hidden_state = (tf.zeros([n_batchsize, 4, 4, 4, 128], name="zero_hidden_state"), tf.zeros(
-                    [n_batchsize, 4, 4, 4, 128], name="zero_cell_state"))
+                hidden_state = (tf.zeros([n_batchsize, n_cell, n_cell, n_cell, n_hidden], name="zero_hidden_state"), tf.zeros(
+                    [n_batchsize, n_cell, n_cell, n_cell, n_hidden], name="zero_cell_state"))
             else:
                 rnn = recurrent_module.GRU_Grid(initializer=init)
                 hidden_state = tf.zeros(
-                    [n_batchsize, 4, 4, 4, 128], name="zero_hidden_state")
+                    [n_batchsize, n_cell, n_cell, n_cell, n_hidden], name="zero_hidden_state")
 
+            n_timesteps = self.params["TRAIN"]["TIME_STEP_COUNT"]
             # feed a limited seqeuence of images
-            if isinstance(self.params["TRAIN"]["TIME_STEPS"], int) and self.params["TRAIN"]["TIME_STEPS"] > 0:
-                n_timesteps = self.params["TRAIN"]["TIME_STEPS"]
+            if isinstance(n_timesteps, int) and n_timesteps > 0:
                 for t in range(n_timesteps):
                     hidden_state = rnn.call(
                         encoded_input[:, t, :], hidden_state)

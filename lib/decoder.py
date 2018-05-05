@@ -2,7 +2,7 @@ import tensorflow as tf
 from lib import utils
 
 
-def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1, 1, 1], initializer=None, P="SAME"):
+def conv_vox(vox, in_featurevoxel_count, out_featurevoxel_count, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1, 1, 1], initializer=None, P="SAME"):
     with tf.name_scope("conv_vox"):
         if initializer is None:
             init = tf.contrib.layers.xavier_initializer()
@@ -10,8 +10,8 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
             init = initializer
 
         kernel = tf.Variable(
-            init([K, K, K, fv_count_in, fv_count_out]), name="kernel")
-        bias = tf.Variable(init([fv_count_out]), name="bias")
+            init([K, K, K, in_featurevoxel_count, out_featurevoxel_count]), name="kernel")
+        bias = tf.Variable(init([out_featurevoxel_count]), name="bias")
         ret = tf.nn.bias_add(tf.nn.conv3d(
             vox, kernel, S, padding=P, dilations=D, name="conv3d"), bias)
 
@@ -26,10 +26,12 @@ def conv_vox(vox, fv_count_in, fv_count_out, K=3, S=[1, 1, 1, 1, 1], D=[1, 1, 1,
             tf.summary.image("3d kernel", kern_4, max_outputs=image_count)
 
         if params["VIS"]["VOXEL_SLICES"]:
-            vox_slice_1 = tf.unstack(ret, axis=4)[0]
-            vox_slice_2 = tf.concat(tf.unstack(vox_slice_1, axis=3), axis=1)
-            vox_slice_3 = tf.expand_dims(vox_slice_2, -1)
-            tf.summary.image("vox_slices", vox_slice_3,
+            vox_slice_1 = tf.unstack(ret, axis=4)[1]
+            vox_slice_2 = tf.split(vox_slice_1, 4, axis=3)
+            vox_slice_3 = tf.concat(vox_slice_2, axis=1)
+            vox_slice_4 = tf.concat(tf.unstack(vox_slice_3, axis=-1), axis=2)
+            vox_slice_5 = tf.expand_dims(vox_slice_4, -1)
+            tf.summary.image("vox_slices", vox_slice_5,
                              max_outputs=image_count)
 
         if params["VIS"]["HISTOGRAMS"]:
@@ -63,14 +65,14 @@ def relu_vox(vox):
     return ret
 
 
-def block_simple_decoder(vox, fv_count_in, fv_count_out, K=3, D=[1, 1, 1, 1, 1], initializer=None, unpool=False):
+def block_simple_decoder(vox, in_featurevoxel_count, out_featurevoxel_count, K=3, D=[1, 1, 1, 1, 1], initializer=None, unpool=False):
     with tf.name_scope("block_simple_decoder"):
         if initializer is None:
             init = tf.contrib.layers.xavier_initializer()
         else:
             init = initializer
 
-        conv = conv_vox(vox, fv_count_in, fv_count_out,
+        conv = conv_vox(vox, in_featurevoxel_count, out_featurevoxel_count,
                         K=K,  D=D, initializer=init)
         if unpool:
             out = relu_vox(unpool_vox(conv))
@@ -80,7 +82,7 @@ def block_simple_decoder(vox, fv_count_in, fv_count_out, K=3, D=[1, 1, 1, 1, 1],
     return out
 
 
-def block_residual_decoder(vox, fv_count_in, fv_count_out, K_1=3, K_2=3, K_3=1, D=[1, 1, 1, 1, 1], initializer=None, unpool=False):
+def block_residual_decoder(vox, in_featurevoxel_count, out_featurevoxel_count, K_1=3, K_2=3, K_3=1, D=[1, 1, 1, 1, 1], initializer=None, unpool=False):
     with tf.name_scope("block_residual_decoder"):
         if initializer is None:
             init = tf.contrib.layers.xavier_initializer()
@@ -89,20 +91,20 @@ def block_residual_decoder(vox, fv_count_in, fv_count_out, K_1=3, K_2=3, K_3=1, 
 
         out = vox
         if K_1 != 0:
-            conv1 = conv_vox(out, fv_count_in,
-                             fv_count_out, K=K_1, D=D, initializer=init)
+            conv1 = conv_vox(out, in_featurevoxel_count,
+                             out_featurevoxel_count, K=K_1, D=D, initializer=init)
             relu1 = relu_vox(conv1)
             out = relu1
 
         if K_2 != 0:
-            conv2 = conv_vox(out, fv_count_out,
-                             fv_count_out, K=K_2, D=D, initializer=init)
+            conv2 = conv_vox(out, out_featurevoxel_count,
+                             out_featurevoxel_count, K=K_2, D=D, initializer=init)
             relu2 = relu_vox(conv2)
             out = relu2
 
         if K_3 != 0:
-            conv3 = conv_vox(out, fv_count_out,
-                             fv_count_out, K=K_3, D=D, initializer=init)
+            conv3 = conv_vox(out, out_featurevoxel_count,
+                             out_featurevoxel_count, K=K_3, D=D, initializer=init)
             out = conv3 + relu2
 
         if unpool:
@@ -123,7 +125,7 @@ class Residual_Decoder:
             N = len(feature_vox_count)
             cur_tensor = unpool_vox(hidden_state)
             cur_tensor = block_residual_decoder(
-                cur_tensor, 128, feature_vox_count[0], initializer=init)
+                cur_tensor, hidden_state.shape[-1], feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
                 unpool = True if i <= 2 else False
                 cur_tensor = block_residual_decoder(
@@ -144,7 +146,7 @@ class Dilated_Decoder:
             N = len(feature_vox_count)
             cur_tensor = unpool_vox(hidden_state)
             cur_tensor = block_simple_decoder(
-                cur_tensor, 128, feature_vox_count[0], initializer=init)
+                cur_tensor, hidden_state.shape[-1], feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
                 unpool = True if i <= 2 else False
                 cur_tensor = block_simple_decoder(
@@ -165,7 +167,7 @@ class Simple_Decoder:
             N = len(feature_vox_count)
             cur_tensor = unpool_vox(hidden_state)
             cur_tensor = block_simple_decoder(
-                cur_tensor, 128, feature_vox_count[0], initializer=init)
+                cur_tensor, hidden_state.shape[-1], feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
                 unpool = True if i <= 2 else False
                 cur_tensor = block_simple_decoder(

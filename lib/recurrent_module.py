@@ -7,75 +7,69 @@ from lib import utils
 
 
 class GRU_Grid:
-    def __init__(self, initializer=None, N=3, n_cells=4, n_input=1024, n_hidden_state=128):
+    def __init__(self,  n_cells=4,  n_input=1024, n_hidden_state=128, initializer=None):
         with tf.name_scope("GRU_Grid"):
-            self.N = 3
-            self.n_cells = 4
-            self.n_input = 1024
-            self.n_hidden_state = 128
-
             if initializer is None:
                 init = tf.contrib.layers.xavier_initializer()
             else:
                 init = initializer
 
-            self.W = [Weight_Matrices(initializer=init)]*N
+            # parameters for the hidden state and update & reset gates
+            self.W = [Weight_Matrices(
+                n_cells, n_input, n_hidden_state, initializer=init)]*3
             self.U = [tf.Variable(init(
-                [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
+                [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*3
             self.b = [tf.Variable(init(
-                [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
+                [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*3
 
             params = utils.read_params()
             if params["VIS"]["HISTOGRAMS"]:
-                for i in range(N):
+                for i in range(3):
                     tf.summary.histogram("U[{}]".format(i), self.U[i])
                     tf.summary.histogram("b[{}]".format(i), self.b[i])
 
-    def linear_sum(self, W, x, U, h, b):
+    def pre_activity(self, W, x, U, h, b):
         return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
     def call(self, input_tensor, prev_hidden):
         # update gate
         u_t = tf.sigmoid(
-            self.linear_sum(self.W[0], input_tensor, self.U[0], prev_hidden, self.b[0]))
+            self.pre_activity(self.W[0], input_tensor, self.U[0], prev_hidden, self.b[0]))
         # reset gate
         r_t = tf.sigmoid(
-            self.linear_sum(self.W[1], input_tensor, self.U[1], prev_hidden,  self.b[1]))
+            self.pre_activity(self.W[1], input_tensor, self.U[1], prev_hidden,  self.b[1]))
 
         # hidden state
         h_t_1 = (1 - u_t) * prev_hidden
-        h_t_2 = u_t * tf.tanh(self.linear_sum(self.W[2], input_tensor,
-                                              self.U[2], r_t * prev_hidden, self.b[2]))
+        h_t_2 = u_t * tf.tanh(self.pre_activity(self.W[2], input_tensor,
+                                                self.U[2], r_t * prev_hidden, self.b[2]))
         h_t = h_t_1 + h_t_2
         return h_t
 
 
 class LSTM_Grid:
-    def __init__(self, initializer=None, N=4, n_cells=4, n_input=1024, n_hidden_state=128):
+    def __init__(self, n_cells=4, n_input=1024, n_hidden_state=128, initializer=None):
         with tf.name_scope("LSTM_Grid"):
-            self.N = 4
-            self.n_cells = 4
-            self.n_input = 1024
-            self.n_hidden_state = 128
-
             if initializer is None:
                 init = tf.contrib.layers.xavier_initializer()
             else:
                 init = initializer
 
-            self.W = [Weight_Matrices(initializer=init)]*N
+            # parameters for the cell state and input,forget & output gates
+            self.W = [Weight_Matrices(
+                n_cells, n_input, n_hidden_state, initializer=init)]*4
             self.U = [tf.Variable(init(
-                [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*N
+                [3, 3, 3, n_hidden_state, n_hidden_state]), name="U")]*4
             self.b = [tf.Variable(init(
-                [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*N
+                [n_cells, n_cells, n_cells, n_hidden_state]), name="b")]*4
 
             params = utils.read_params()
             if params["VIS"]["HISTOGRAMS"]:
-                for i in range(N):
+                for i in range(4):
                     tf.summary.histogram("U[{}]".format(i), self.U[i])
                     tf.summary.histogram("b[{}]".format(i), self.b[i])
 
-    def linear_sum(self, W, x, U, h, b):
+    def pre_activity(self, W, x, U, h, b):
         return W.multiply_grid(x) + tf.nn.conv3d(h, U, strides=[1, 1, 1, 1, 1], padding="SAME") + b
 
     def call(self, input_tensor, prev_state):
@@ -83,20 +77,20 @@ class LSTM_Grid:
 
         # forget gate
         f_t = tf.sigmoid(
-            self.linear_sum(self.W[0], input_tensor, self.U[0], prev_hidden_state, self.b[0]))
+            self.pre_activity(self.W[0], input_tensor, self.U[0], prev_hidden_state, self.b[0]))
 
         # input gate
         i_t = tf.sigmoid(
-            self.linear_sum(self.W[1], input_tensor, self.U[1], prev_hidden_state,  self.b[1]))
+            self.pre_activity(self.W[1], input_tensor, self.U[1], prev_hidden_state,  self.b[1]))
 
         # output gate
         o_t = tf.sigmoid(
-            self.linear_sum(self.W[2], input_tensor, self.U[2], prev_hidden_state, self.b[2]))
+            self.pre_activity(self.W[2], input_tensor, self.U[2], prev_hidden_state, self.b[2]))
 
-        # memory state
+        # cell state
         s_t_1 = f_t * prev_cell_state
-        s_t_2 = i_t * tf.tanh(self.linear_sum(self.W[3], input_tensor,
-                                              self.U[3], prev_hidden_state, self.b[3]))
+        s_t_2 = i_t * tf.tanh(self.pre_activity(self.W[3], input_tensor,
+                                                self.U[3], prev_hidden_state, self.b[3]))
         s_t = s_t_1 + s_t_2
         h_t = o_t*tf.tanh(s_t)
 
@@ -104,12 +98,10 @@ class LSTM_Grid:
 
 
 class Weight_Matrices:
-    def __init__(self,  n_x=1024, n_h=128, n_cells=4, initializer=None):
+    def __init__(self,  n_cells, n_x, n_h,  initializer=None):
         with tf.name_scope("Weight_Matrices"):
             params = utils.read_params()
             # class variables
-            self.n_x = n_x
-            self.n_h = n_h
             self.n_cells = n_cells
 
             if initializer is None:
@@ -128,7 +120,7 @@ class Weight_Matrices:
                                 for z in range(self.n_cells):
                                     name = "W_{}{}{}".format(x, y, z)
                                     W = tf.Variable(init(
-                                        [self.n_x, self.n_h]), name=name)
+                                        [n_x, n_h]), name=name)
 
                                     if params["VIS"]["HISTOGRAMS"]:
                                         tf.summary.histogram(name, W)
