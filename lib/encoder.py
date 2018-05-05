@@ -220,7 +220,7 @@ class Dilated_Encoder:
 
             # convolution stack
             cur_tensor = block_dilated_encoder(
-                sequence, sequence.shape[-1], feature_map_count[0], K=7, D=[1, 2, 2, 1], initializer=init)
+                sequence, sequence.shape[-1], feature_map_count[0], D=[1, 2, 2, 1], initializer=init)
             for i in range(1, N):
                 cur_tensor = block_dilated_encoder(
                     cur_tensor, feature_map_count[i-1], feature_map_count[i], D=[1, 2, 2, 1], initializer=init)
