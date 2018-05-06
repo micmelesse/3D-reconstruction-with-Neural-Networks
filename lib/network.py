@@ -120,6 +120,30 @@ class Network:
         # misc
         print("misc")
         with tf.name_scope("misc"):
+            # visualize transformation of input state to voxel
+            feature_maps = tf.get_collection("feature_maps")
+            fm_list = []
+            for fm in feature_maps:
+                fm_slice = fm[0, 0, :, :, 0]
+                fm_shape = fm_slice.get_shape().as_list()
+                fm_slice = tf.pad(fm_slice, [[0, 0], [127-fm_shape[0], 0]])
+                fm_list.append(fm_slice)
+            fm_img = tf.concat(fm_list, axis=0)
+            tf.summary.image("feature_voxel_list", tf.expand_dims(
+                tf.expand_dims(fm_img, -1), 0))
+
+            # visualize transformation of hidden state to voxel
+            # feature_voxels = tf.get_collection("feature_voxels")
+            # fv_list = []
+            # for fv in feature_voxels:
+            #     fv_slice = fv[0, :, :, 0, 0]
+            #     fv_shape = fv_slice.get_shape().as_list()
+            #     fv_slice = tf.pad(fv_slice, [[0, 0], [32-fv_shape[0], 0]])
+            #     fv_list.append(fv_slice)
+            # fv_img = tf.concat(fv_list, axis=0)
+            # tf.summary.image("feature_voxel_list", tf.expand_dims(
+            #     tf.expand_dims(fv_img, -1), 0))
+
             self.step_count = tf.Variable(
                 0, trainable=False, name="step_count")
             self.print = tf.Print(

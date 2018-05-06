@@ -14,6 +14,7 @@ def conv_vox(vox, in_featurevoxel_count, out_featurevoxel_count, K=3, S=[1, 1, 1
         bias = tf.Variable(init([out_featurevoxel_count]), name="bias")
         ret = tf.nn.bias_add(tf.nn.conv3d(
             vox, kernel, S, padding=P, dilations=D, name="conv3d"), bias)
+        tf.add_to_collection("feature_voxels", ret)
 
         # visualization code
         params = utils.read_params()
@@ -33,6 +34,9 @@ def conv_vox(vox, in_featurevoxel_count, out_featurevoxel_count, K=3, S=[1, 1, 1
             vox_slice_5 = tf.expand_dims(vox_slice_4, -1)
             tf.summary.image("vox_slices", vox_slice_5,
                              max_outputs=image_count)
+
+        if params["VIS"]["FEATURE_VOXELS"]:
+            tf.summary.tensor_summary("feature_voxels", ret[0, :, :, :, 0])
 
         if params["VIS"]["HISTOGRAMS"]:
             tf.summary.histogram("kernel", kernel)
@@ -123,9 +127,10 @@ class Residual_Decoder:
                 init = initializer
 
             N = len(feature_vox_count)
+            hidden_shape = hidden_state.get_shape().as_list()
             cur_tensor = unpool_vox(hidden_state)
             cur_tensor = block_residual_decoder(
-                cur_tensor, hidden_state.shape[-1], feature_vox_count[0], initializer=init)
+                cur_tensor, hidden_shape[-1], feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
                 unpool = True if i <= 2 else False
                 cur_tensor = block_residual_decoder(
@@ -144,9 +149,10 @@ class Dilated_Decoder:
                 init = initializer
 
             N = len(feature_vox_count)
+            hidden_shape = hidden_state.get_shape().as_list()
             cur_tensor = unpool_vox(hidden_state)
             cur_tensor = block_simple_decoder(
-                cur_tensor, hidden_state.shape[-1], feature_vox_count[0], initializer=init)
+                cur_tensor, hidden_shape[-1], feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
                 unpool = True if i <= 2 else False
                 cur_tensor = block_simple_decoder(
@@ -165,9 +171,10 @@ class Simple_Decoder:
                 init = initializer
 
             N = len(feature_vox_count)
+            hidden_shape = hidden_state.get_shape().as_list()
             cur_tensor = unpool_vox(hidden_state)
             cur_tensor = block_simple_decoder(
-                cur_tensor, hidden_state.shape[-1], feature_vox_count[0], initializer=init)
+                cur_tensor, hidden_shape[-1], feature_vox_count[0], initializer=init)
             for i in range(1, N-1):
                 unpool = True if i <= 2 else False
                 cur_tensor = block_simple_decoder(

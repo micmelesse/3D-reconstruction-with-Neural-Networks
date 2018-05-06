@@ -1,2 +1,2 @@
 source read_params.sh
-tensorboard --logdir=$CUR_DIR --reload_interval=1 
+tensorboard --logdir=$LSTM --reload_interval=1 --port 6008

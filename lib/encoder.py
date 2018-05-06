@@ -19,6 +19,8 @@ def conv_sequence(sequence, in_featuremap_count, out_featuremap_count, initializ
             x, kernel, S, padding=P, dilations=D, name="conv2d"), bias)
         ret = tf.map_fn(conv2d, sequence, name="conv2d_map")
 
+        tf.add_to_collection("feature_maps", ret)
+
         # visualization code
         params = utils.read_params()
         image_count = params["VIS"]["IMAGE_COUNT"]
