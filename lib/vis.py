@@ -34,7 +34,7 @@ def save_im(im, f_name=None, ndarray=False):
     return plt.imshow(im)
 
 
-def voxel(vox, color=None, f_name=None, npimage=False):
+def voxel(vox, color=None, f_name=None, npimage=False, view=(30, 45)):
     assert(vox.ndim == 3)
 
     vox = vox.transpose(2, 0, 1)
@@ -48,7 +48,7 @@ def voxel(vox, color=None, f_name=None, npimage=False):
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.voxels(vox, facecolors=color, edgecolor='k')
-    ax.view_init(30, 45)
+    ax.view_init(view[0], view[1])
 
     if npimage:
         return mplfig_to_npimage(fig)
@@ -63,16 +63,16 @@ def voxel(vox, color=None, f_name=None, npimage=False):
     return fig.show()
 
 
-def voxel_binary(y_hat, f_name=None):
+def voxel_binary(y_hat, f_name=None, view=(30, 45)):
     vox = np.argmax(y_hat, axis=-1)
     color = y_hat[:, :, :, 1]
-    return voxel(vox, color, f_name=f_name)
+    return voxel(vox, color, f_name=f_name, view=view)
 
 
-def voxel_npimage(y_hat):
+def voxel_npimage(y_hat, view=(30, 45)):
     vox = np.argmax(y_hat, axis=-1)
     color = y_hat[:, :, :, 1]
-    return voxel(vox, color, npimage=True)
+    return voxel(vox, color, npimage=True, view=view)
 
 
 def label(y, f_name=None):
@@ -166,8 +166,7 @@ def create_video(obj_id="02691156_131db4a650873babad3ab188d086d4db"):
     params = utils.read_params()
     out_dir = params["DIRS"]["OUTPUT"]
     model_dir = params["SESSIONS"]["LONGEST"]
-    model_info = utils.get_model_info(model_dir)
-    epoch_count = model_info["EPOCH_COUNT"]
+    epoch_count = utils.get_latest_epoch_index(model_dir)+1
 
     x, _ = dataset.load_obj_id(obj_id)
     for i in range(epoch_count):

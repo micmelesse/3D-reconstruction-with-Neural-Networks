@@ -4,7 +4,6 @@ import json
 import os
 import sys
 import math
-import trimesh
 import random
 import tarfile
 import numpy as np

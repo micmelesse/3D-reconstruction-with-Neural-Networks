@@ -39,7 +39,7 @@ class Network:
 
         # place holders
         with tf.name_scope("Data"):
-            self.X = tf.placeholder(tf.float32, [None, None, 137, 137, 4])
+            self.X = tf.placeholder(tf.float32, [None, None, None, None, None])
         with tf.name_scope("Labels"):
             self.Y_onehot = tf.placeholder(tf.float32, [None, 32, 32, 32, 2])
 
@@ -57,8 +57,22 @@ class Network:
             en = encoder.Simple_Encoder(X_preprocessed)
         encoded_input = en.out_tensor
 
-        print("recurrent_module")
+        # visualize transformation of input state to voxel
+        if self.params["VIS"]["ENCODER_PROCESS"]:
+            with tf.name_scope("misc"):
+                feature_maps = tf.get_collection("feature_maps")
+                fm_list = []
+                for fm in feature_maps:
+                    fm_slice = fm[0, 0, :, :, 0]
+                    fm_shape = fm_slice.get_shape().as_list()
+                    fm_slice = tf.pad(fm_slice, [[0, 0], [127-fm_shape[0], 0]])
+                    fm_list.append(fm_slice)
+                fm_img = tf.concat(fm_list, axis=0)
+                tf.summary.image("feature_map_list", tf.expand_dims(
+                    tf.expand_dims(fm_img, -1), 0))
+
         # recurrent_module
+        print("recurrent_module")
         with tf.name_scope("Recurrent_module"):
             rnn_mode = self.params["TRAIN"]["RNN_MODE"]
             n_cell = self.params["TRAIN"]["RNN_CELL_NUM"]
@@ -100,15 +114,27 @@ class Network:
         print("decoder")
         if isinstance(hidden_state, tuple):
             hidden_state = hidden_state[0]
-
         if self.params["TRAIN"]["DECODER_MODE"] == "DILATED":
             de = decoder.Dilated_Decoder(hidden_state)
         elif self.params["TRAIN"]["DECODER_MODE"] == "RESIDUAL":
             de = decoder.Residual_Decoder(hidden_state)
         else:
             de = decoder.Simple_Decoder(hidden_state)
-
         self.logits = de.out_tensor
+
+        # visualize transformation of hidden state to voxel
+        if self.params["VIS"]["DECODER_PROCESS"]:
+            with tf.name_scope("misc"):
+                feature_voxels = tf.get_collection("feature_voxels")
+                fv_list = []
+                for fv in feature_voxels:
+                    fv_slice = fv[0, :, :, 0, 0]
+                    fv_shape = fv_slice.get_shape().as_list()
+                    fv_slice = tf.pad(fv_slice, [[0, 0], [32-fv_shape[0], 0]])
+                    fv_list.append(fv_slice)
+                fv_img = tf.concat(fv_list, axis=0)
+                tf.summary.image("feature_voxel_list", tf.expand_dims(
+                    tf.expand_dims(fv_img, -1), 0))
 
         # loss
         print("loss")
@@ -120,30 +146,6 @@ class Network:
         # misc
         print("misc")
         with tf.name_scope("misc"):
-            # visualize transformation of input state to voxel
-            feature_maps = tf.get_collection("feature_maps")
-            fm_list = []
-            for fm in feature_maps:
-                fm_slice = fm[0, 0, :, :, 0]
-                fm_shape = fm_slice.get_shape().as_list()
-                fm_slice = tf.pad(fm_slice, [[0, 0], [127-fm_shape[0], 0]])
-                fm_list.append(fm_slice)
-            fm_img = tf.concat(fm_list, axis=0)
-            tf.summary.image("feature_voxel_list", tf.expand_dims(
-                tf.expand_dims(fm_img, -1), 0))
-
-            # visualize transformation of hidden state to voxel
-            # feature_voxels = tf.get_collection("feature_voxels")
-            # fv_list = []
-            # for fv in feature_voxels:
-            #     fv_slice = fv[0, :, :, 0, 0]
-            #     fv_shape = fv_slice.get_shape().as_list()
-            #     fv_slice = tf.pad(fv_slice, [[0, 0], [32-fv_shape[0], 0]])
-            #     fv_list.append(fv_slice)
-            # fv_img = tf.concat(fv_list, axis=0)
-            # tf.summary.image("feature_voxel_list", tf.expand_dims(
-            #     tf.expand_dims(fv_img, -1), 0))
-
             self.step_count = tf.Variable(
                 0, trainable=False, name="step_count")
             self.print = tf.Print(
@@ -276,24 +278,29 @@ class Network:
         return save_dir
 
     def epoch_index(self):
-        model_info = utils.get_model_info(self.MODEL_DIR)
-        return model_info["EPOCH_INDEX"]
+        return utils.get_latest_epoch_index(self.MODEL_DIR)
 
 
 class Network_restored:
     def __init__(self, model_dir):
+        if "epoch" not in model_dir:
+            model_dir = utils.get_latest_epoch(model_dir)
+
         epoch_name = utils.grep_epoch_name(model_dir)
         self.sess = tf.Session(graph=tf.Graph())
         tf.saved_model.loader.load(
             self.sess, [epoch_name], model_dir + "/model")
 
-    def predict(self, x, in_name="Placeholder: 0", sm_name="loss/clip_by_value: 0"):
+    def predict(self, x, in_name="Data/Placeholder:0", sm_name="Loss_Voxel_Softmax/clip_by_value:0"):
         if x.ndim == 4:
             x = np.expand_dims(x, 0)
 
         softmax = self.sess.graph.get_tensor_by_name(sm_name)
         in_tensor = self.sess.graph.get_tensor_by_name(in_name)
         return self.sess.run(softmax, {in_tensor: x})
+
+    def get_operations(self):
+        return self.sess.graph.get_operations()
 
     def feature_maps(self, x):
         pass

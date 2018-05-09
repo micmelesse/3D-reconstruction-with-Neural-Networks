@@ -2,6 +2,7 @@
 import os
 import re
 import glob
+import trimesh
 import json
 import sys
 import math
@@ -41,23 +42,41 @@ def is_epoch_dir(epoch_dir):
     return "epoch_" in epoch_dir
 
 
-def get_model_info(model_dir):
+def get_latest_epoch_index(model_dir):
     if is_epoch_dir(model_dir):
         model_dir = os.path.dirname(model_dir)
-
-    model_info = {}
     i = 0
     while os.path.exists(os.path.join(model_dir, "epoch_{}".format(i))):
         i += 1
-    model_info["EPOCH_COUNT"] = i
-    model_info["EPOCH_INDEX"] = i-1
-    return model_info
+    return i-1
+
+
+def get_latest_epoch(model_dir):
+    return model_dir + "/epoch_{}".format(get_latest_epoch_index(model_dir))
+
+
+def get_latest_loss(model_dir, loss_type="train"):
+    epoch = get_latest_epoch(model_dir)
+    epoch_prev = model_dir + \
+        "/epoch_{}".format(get_latest_epoch_index(model_dir)-1)
+
+    try:
+        return np.load(epoch+"/{}_loss.npy".format(loss_type))
+    except:
+        return np.load(epoch_prev+"/{}_loss.npy".format(loss_type))
+
+
+def get_model_params(model_dir):
+    json_list = dataset.construct_file_path_list_from_dir(model_dir, ".json")
+    if json_list:
+        return read_params(json_list[0])
+    return {}
 
 
 def get_model_predictions(obj_id, model_dir):
-    model_info = get_model_info(model_dir)
+    epoch_count = get_latest_epoch_index(model_dir)+1
     x, y = dataset.load_obj_id(grep_obj_id(obj_id))
-    for i in range(model_info["EPOCH_COUNT"]):
+    for i in range(epoch_count):
         net = network.Network_restored("{}/epoch_{}".format(model_dir, i))
         yp = net.predict(x)
 
@@ -82,16 +101,22 @@ def check_params_json(param_json="params.json"):
 
 
 def read_params(params_json="params.json"):
-    check_params_json()
+    check_params_json(params_json)
     return json.loads(open(params_json).read())
 
 
 def fix_nparray(path):
     arr = np.load(path)
-    l = []
-    for i in arr:
-        l += i
+    N = len(arr)
+    l = arr[0]
+    for i in range(1, N):
+        l += arr[i]
     np.save(path, np.array(l))
+
+
+def replace_with_flat(path):
+    arr = np.load(path)
+    np.save(path, arr.flatten())
 
 
 def grep_params(s):
@@ -128,6 +153,12 @@ def grep_stepcount(s):
     s = os.path.basename(s)
     regex = "(.*)_(.*_.*)_(x|y|yp|p|sm).(png|npy)$"
     return re.search(regex, s).group(1)
+
+
+def grep_timestamp(s):
+    regex = ".*model_(.*)_(.*)"
+    ret = re.search(regex, s)
+    return ret.group(1), ret.group(2)
 
 
 def make_dir(file_dir):
