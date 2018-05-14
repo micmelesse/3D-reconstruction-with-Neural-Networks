@@ -291,16 +291,32 @@ class Network_restored:
         tf.saved_model.loader.load(
             self.sess, [epoch_name], model_dir + "/model")
 
-    def predict(self, x, in_name="Data/Placeholder:0", sm_name="Loss_Voxel_Softmax/clip_by_value:0"):
+    def predict(self, x, in_name="Placeholder", sm_name="clip_by_value"):
         if x.ndim == 4:
             x = np.expand_dims(x, 0)
 
-        softmax = self.sess.graph.get_tensor_by_name(sm_name)
-        in_tensor = self.sess.graph.get_tensor_by_name(in_name)
+        ops = self.get_operations()
+
+        in_tensor = self.sess.graph.get_tensor_by_name(
+            self.get_closest_tensor(in_name, 5))
+        softmax = self.sess.graph.get_tensor_by_name(
+            self.get_closest_tensor(sm_name, 5))
         return self.sess.run(softmax, {in_tensor: x})
 
     def get_operations(self):
         return self.sess.graph.get_operations()
+
+    def get_closest_tensor(self, name, ndim):
+        op_list = self.get_operations()
+        for op in op_list:
+            try:
+                n = len(op.inputs[0].shape)
+                if name in op.name and n == ndim:
+                    ret = op.name+":0"
+                    print(ret)
+                    return ret
+            except:
+                pass
 
     def feature_maps(self, x):
         pass

@@ -26,6 +26,8 @@ def save_im(im, f_name=None, ndarray=False):
         return ret
 
     if f_name is not None:
+        params = utils.read_params()
+        f_name = os.path.join(params["DIRS"]["OUTPUT"], f_name)
         utils.make_prev_dirs(f_name)
         plt.imsave(f_name, im)
         plt.clf()
@@ -54,8 +56,10 @@ def voxel(vox, color=None, f_name=None, npimage=False, view=(30, 45)):
         return mplfig_to_npimage(fig)
 
     if f_name is not None:
+        params = utils.read_params()
+        f_name = os.path.join(params["DIRS"]["OUTPUT"], f_name)
         utils.make_prev_dirs(f_name)
-        fig.savefig(f_name, bbox_inches='tight')
+        fig.savefig(f_name, bbox_inches='tight', dpi=2400)
         fig.clf()
         plt.close()
         return
@@ -163,6 +167,7 @@ def sample(X, y, yp, f_name=None):
 
 
 def create_video(obj_id="02691156_131db4a650873babad3ab188d086d4db"):
+
     params = utils.read_params()
     out_dir = params["DIRS"]["OUTPUT"]
     model_dir = params["SESSIONS"]["LONGEST"]

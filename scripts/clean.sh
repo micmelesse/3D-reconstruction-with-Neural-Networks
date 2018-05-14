@@ -1,1 +1,1 @@
-sh clean_models.sh
+sh scripts/clean_models.sh

@@ -16,6 +16,7 @@ from skimage import exposure
 from PIL import Image
 from natsort import natsorted
 from filecmp import dircmp
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 from lib import dataset, network, encoder, recurrent_module, decoder, loss, vis, utils
 
 
@@ -79,6 +80,44 @@ def get_model_predictions(obj_id, model_dir):
     for i in range(epoch_count):
         net = network.Network_restored("{}/epoch_{}".format(model_dir, i))
         yp = net.predict(x)
+
+
+def get_model_dataset_split(model_dir):
+    try:
+        X_train = np.load("{}/X_train.npy".format(model_dir))
+    except:
+        X_train = None
+
+    try:
+        X_train = np.load("{}/X_train.npy".format(model_dir))
+    except:
+        X_train = None
+
+    try:
+        y_train = np.load("{}/y_train.npy".format(model_dir))
+    except:
+        y_train = None
+
+    try:
+        X_val = np.load("{}/X_val.npy".format(model_dir))
+    except:
+        X_val = None
+
+    try:
+        y_val = np.load("{}/y_val.npy".format(model_dir))
+    except:
+        y_val = None
+
+    try:
+        X_test = np.load("{}/X_test.npy".format(model_dir))
+    except:
+        X_test = None
+    try:
+        y_test = np.load("{}/y_test.npy".format(model_dir))
+    except:
+        y_test = None
+
+    return X_train, X_val, X_test, y_train, y_val, y_test
 
 
 def filter_files(regex):
@@ -188,3 +227,19 @@ def hstack(a, b):
 
 def vstack(a, b):
     return np.vstack((a, b))
+
+
+def get_summary_as_array(model_dir, scalar="loss", run="train"):
+    name = "/{}_{}.npy".format(run, scalar)
+    if os.path.exists(model_dir+name):
+        return np.load(model_dir+name)
+
+    event_file_path = glob.glob(model_dir+"/{}/event*".format(run))[0]
+    event_acc = EventAccumulator(event_file_path)
+    event_acc.Reload()
+    ret = np.stack(
+        [np.asarray([s.step, s.value])
+         for s in event_acc.Scalars(scalar)])
+    np.save(model_dir+name, ret)
+
+    return ret

@@ -1,2 +1,2 @@
-source read_params.sh
+source scripts/read_params.sh
 ssh -i $KEY $USER@$DNS
