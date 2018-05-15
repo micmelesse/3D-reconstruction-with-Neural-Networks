@@ -13,7 +13,6 @@
 *.npy
 *.txt
 *.csv
-*.pdf
 *.pem
 *.params
 *.json

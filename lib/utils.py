@@ -229,7 +229,7 @@ def vstack(a, b):
     return np.vstack((a, b))
 
 
-def get_summary_as_array(model_dir, scalar="loss", run="train"):
+def get_summary_as_array(model_dir, run="train", scalar="loss"):
     name = "/{}_{}.npy".format(run, scalar)
     if os.path.exists(model_dir+name):
         return np.load(model_dir+name)
@@ -237,9 +237,7 @@ def get_summary_as_array(model_dir, scalar="loss", run="train"):
     event_file_path = glob.glob(model_dir+"/{}/event*".format(run))[0]
     event_acc = EventAccumulator(event_file_path)
     event_acc.Reload()
-    ret = np.stack(
-        [np.asarray([s.step, s.value])
-         for s in event_acc.Scalars(scalar)])
-    np.save(model_dir+name, ret)
+    ret = [[s.step, s.value] for s in event_acc.Scalars(scalar)]
+    # np.save(model_dir+name, ret)
 
     return ret
