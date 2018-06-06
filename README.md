@@ -8,8 +8,13 @@ See the video below to see the network in action over a period of 40 epochs. The
 
 # Getting Started
 The network was trainied using an AWS EC2 [p2.xlarge](https://aws.amazon.com/ec2/instance-types/p2/) instance.
-## prerequisite 
-To install tensorflow on your specific platform follow the instructions [here](https://www.tensorflow.org/install/)
+## Prerequisite 
+
+The projects make use of the several python pacakges. It is possible install these package using pip. For example to install the numpy package use the following command.
+'''
+pip install numpy
+'''
+It is possible to install tensorflow using pip as shown above but if you are having issue installing tensorflow on your specific platform follow the instructions [here](https://www.tensorflow.org/install/).
 ## Setup
 To start training the network, one must first setup the network using a shell script. This creates folders for the data, models and a JSON file to store the parameters of the network being trained.
 ```
