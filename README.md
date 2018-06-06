@@ -1,6 +1,5 @@
-# 3D reconstruction with Neural Networks (Senior Thesis)
-
-An implementation in Tensorflow of the network described by Choy et al in [3D-R2N2: A Unified Approach for Single and Multi-view 3D Object Reconstruction](https://arxiv.org/pdf/1604.00449.pdf). The network is able to perform 3D reconstruction from
+# 3D reconstruction with Neural Networks
+This is work that I did as part of my [Senior thesis](./3D_reconstruction_with_neural_networks.pdf) at Princeton University. It is an implementation in Tensorflow of the network described by Choy et al in [3D-R2N2: A Unified Approach for Single and Multi-view 3D Object Reconstruction](https://arxiv.org/pdf/1604.00449.pdf), which is capable of performing 3D reconstruction from a variable number of images.
 
 # Demonstration
 See the video below to see the network in action over a period over 40 epochs. The more red a voxel is the more sure the network is of it prediction in that specfic location.
