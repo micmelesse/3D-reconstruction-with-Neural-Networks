@@ -14,7 +14,7 @@ The projects make use of the several python pacakges. It is possible install the
 ```
 pip install numpy
 ```
-It is possible to install tensorflow using pip as shown above but if you are having issue installing tensorflow on your specific platform follow the instructions [here](https://www.tensorflow.org/install/).
+It is possible to install tensorflow using pip as shown above but if you are having issues installing tensorflow on your specific platform follow the instructions [here](https://www.tensorflow.org/install/).
 ## Setup
 To start training the network, one must first setup the network using a shell script. This creates folders for the data, models and a JSON file to store the parameters of the network being trained.
 ```
