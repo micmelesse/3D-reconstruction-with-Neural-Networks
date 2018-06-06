@@ -13,5 +13,14 @@ The network was trainied using an AWS EC2 [p2.xlarge](https://aws.amazon.com/ec2
 ## prerequisite 
 To install tensorflow on your specific platform follow the instructions [here](https://www.tensorflow.org/install/)
 
+## Training
+To start training the network use the following command
+```
+python run.py
+```
 
+In addition to that you can use preexisting shell scripts to train the network on macOS or Linux platforms.
+```
+sh scripts/train.sh
+```
 
