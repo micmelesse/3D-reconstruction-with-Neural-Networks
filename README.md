@@ -22,7 +22,7 @@ sh scripts/setup_dir.sh
 ```
 
 ## Training
-To start training the network use the following command, you can use the preexisting shell scripts to train the network. 
+You can use preexisting shell scripts to start training the network after setting up the directory. 
 ```
 sh scripts/train.sh
 ```
