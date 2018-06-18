@@ -15,7 +15,6 @@
 *.csv
 *.pem
 *.params
-*.json
 *.mp4
 __pycache__
 .ipynb_checkpoints
@@ -30,4 +29,3 @@ aws
 out
 output
 results
-params.json
