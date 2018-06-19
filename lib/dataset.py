@@ -205,7 +205,7 @@ def download_from_link(link):
 
     os.system("tar -xvzf {0}".format(archive))
     os.rename(download_folder, "data/{}".format(download_folder))
-    os.system("rm -f {0}".format(archive))
+    # os.system("rm -f {0}".format(archive))
 
 
 def download_dataset():
