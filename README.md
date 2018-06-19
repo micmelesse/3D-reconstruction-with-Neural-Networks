@@ -15,14 +15,22 @@ The projects make use of the several python pacakges. It is possible install the
 pip install numpy
 ```
 It is possible to install tensorflow using pip as shown above but if you are having issues installing tensorflow on your specific platform follow the instructions [here](https://www.tensorflow.org/install/).
-## Setup
+
+## Usage
+You can use preexisting shell scripts to make some of the tasks easier. For example
+### Setup
 To start training the network, one must first setup the network using a shell script. This creates folders for the data, models and a JSON file to store the parameters of the network being trained.
 ```
 sh scripts/setup_dir.sh
 ```
+After seting up the dirs, we use a shell script to download the renders and low dimensional voxel models used by choy et al to train the their network. We then preprocesses the dataset by serializing the data to numpy npy files for easy loading and manipulaiton. 
 
-## Training
-You can use preexisting shell scripts to start training the network after setting up the directory. 
+```
+sh scripts/preprocess_dataset.sh
+```
+
+### Training
+After preparing the dataset for training, you can start training the network with the following shell script
 ```
 sh scripts/train.sh
 ```
