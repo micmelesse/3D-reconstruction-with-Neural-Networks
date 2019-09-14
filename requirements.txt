@@ -1,0 +1,8 @@
+numpy
+trimesh
+scikit-image
+moviepy
+keyboard
+sklearn
+keras
+pandas

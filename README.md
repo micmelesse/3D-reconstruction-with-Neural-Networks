@@ -10,9 +10,9 @@ See the video below to see the network in action over a period of 40 epochs. The
 The network was trainied using an AWS EC2 [p2.xlarge](https://aws.amazon.com/ec2/instance-types/p2/) instance.
 ## Prerequisite 
 
-The projects make use of the several python pacakges. It is possible install these package using pip. For example to install the numpy package use the following command.
+The projects make use of the several python pacakges. It is possible install these packages using pip. Use the following command to install the list packages in the requirments.txt.
 ```
-pip install numpy
+pip3 install -r requirements.txt
 ```
 It is possible to install tensorflow using pip as shown above but if you are having issues installing tensorflow on your specific platform follow the instructions [here](https://www.tensorflow.org/install/).
 

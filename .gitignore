@@ -11,7 +11,7 @@
 *.jpeg
 *.pyc
 *.npy
-*.txt
+# *.txt
 *.csv
 *.pem
 *.params
