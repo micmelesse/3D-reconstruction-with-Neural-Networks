@@ -7,10 +7,10 @@ See the video below to see the network in action over a period of 40 epochs. The
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/iI6ZMST8Ri0/0.jpg)](https://www.youtube.com/watch?v=iI6ZMST8Ri0)
 
 # Getting Started
-The network was trainied using an AWS EC2 [p2.xlarge](https://aws.amazon.com/ec2/instance-types/p2/) instance.
+The network was trained using an AWS EC2 [p2.xlarge](https://aws.amazon.com/ec2/instance-types/p2/) instance.
 ## Prerequisite 
 
-The projects make use of the several python pacakges. It is possible install these packages using pip. Use the following command to install the list packages in the requirments.txt.
+The projects make use of the several python packages. It is possible install these packages using pip. Use the following command to install the list packages in the requirements.txt.
 ```
 pip3 install -r requirements.txt
 ```
@@ -23,7 +23,7 @@ To start training the network, one must first setup the network using a shell sc
 ```
 sh scripts/setup_dir.sh
 ```
-After seting up the dirs, we use a shell script to download the renders and low dimensional voxel models used by choy et al to train the their network. We then preprocesses the dataset by serializing the data to numpy npy files for easy loading and manipulaiton. 
+After setting up the dirs, we use a shell script to download the renders and low dimensional voxel models used by choy et al to train the their network. We then preprocesses the dataset by serializing the data to numpy npy files for easy loading and manipulation. 
 
 ```
 sh scripts/preprocess_dataset.sh
