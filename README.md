@@ -1,5 +1,5 @@
 # 3D reconstruction with Neural Networks
-# Note: This repo is no longer under development.
+***Note: This repo is no longer under development.***
 # Introduction
 This is work that I did as part of my [Senior thesis](./3D_reconstruction_with_neural_networks.pdf) at Princeton University. It is an implementation in Tensorflow of the network described by Choy et al in [3D-R2N2: A Unified Approach for Single and Multi-view 3D Object Reconstruction](https://arxiv.org/pdf/1604.00449.pdf). The project is a neural network capable of performing 3D reconstruction using a variable number of images.
 
